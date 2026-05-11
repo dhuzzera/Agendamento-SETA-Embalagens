@@ -36,6 +36,8 @@ export type AppointmentDetails = {
   status: Status;
   notes: string | null;
   representative_id: string;
+  meeting_type?: "online" | "presencial" | string;
+  location?: string | null;
   client: {
     name: string;
     company: string | null;
