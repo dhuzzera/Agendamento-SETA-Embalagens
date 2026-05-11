@@ -751,6 +751,25 @@ export function PublicBooking({ slug }: { slug: string }) {
   );
 }
 
+function SummaryRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="text-sm font-medium text-foreground sm:text-right">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
 function PublicHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
