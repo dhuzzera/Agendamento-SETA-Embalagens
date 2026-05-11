@@ -14,6 +14,8 @@ export type Profile = {
   slug: string | null;
   active: boolean;
   must_change_password: boolean;
+  allow_online: boolean;
+  allow_presencial: boolean;
 };
 
 type AuthState = {
