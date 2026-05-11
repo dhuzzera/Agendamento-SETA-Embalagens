@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -13,10 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  isSameDay,
+  parseISO,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { X, Download } from "lucide-react";
+import { X, Download, CalendarDays } from "lucide-react";
 import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
 import { ListRowSkeleton } from "@/components/Skeletons";
 
