@@ -37,6 +37,7 @@ type Profile = {
   id: string;
   full_name: string;
   avatar_url: string | null;
+  bio: string | null;
   active: boolean;
 };
 
@@ -81,7 +82,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     const load = async () => {
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, active")
+        .select("id, full_name, avatar_url, bio, active")
         .eq("slug", slug)
         .maybeSingle();
       if (!p || !p.active) {
@@ -372,6 +373,13 @@ export function PublicBooking({ slug }: { slug: string }) {
               </p>
             </div>
           </CardContent>
+          {profile.bio && (
+            <div className="border-t bg-muted/20 px-6 py-4">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                {profile.bio}
+              </p>
+            </div>
+          )}
         </Card>
 
         {!selected ? (
