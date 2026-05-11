@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getViewMode } from "@/lib/view-mode";
 
 export const Route = createFileRoute("/_app/admin")({
   beforeLoad: async ({ context }) => {
@@ -24,6 +25,11 @@ export const Route = createFileRoute("/_app/admin")({
         data: { user },
       } = await supabase.auth.getUser();
       throw redirect({ to: user ? "/dashboard" : "/login" });
+    }
+    // Admin navegando no "modo Representante" não deve acessar páginas admin
+    // mesmo digitando a URL diretamente.
+    if (isAdmin && getViewMode() === "representative") {
+      throw redirect({ to: "/dashboard" });
     }
   },
   component: () => <Outlet />,

@@ -38,6 +38,7 @@ export function AppHeader() {
   const { profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mode] = useViewMode();
 
   const handleLogout = async () => {
     await signOut();
@@ -45,7 +46,11 @@ export function AppHeader() {
   };
 
   const isAdmin = role === "admin";
-  const navItems = NAV.filter((n) => !n.adminOnly || isAdmin);
+  // Itens admin só aparecem para administradores E quando o modo de
+  // visualização atual é "admin". No modo Representante (mesmo para um
+  // admin), apenas as opções do representante são exibidas.
+  const showAdminItems = isAdmin && mode === "admin";
+  const navItems = NAV.filter((n) => !n.adminOnly || showAdminItems);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
