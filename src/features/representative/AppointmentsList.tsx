@@ -56,7 +56,9 @@ const ALL = "__all__";
 
 export function AppointmentsList() {
   const { profile, role } = useAuth();
-  const isAdmin = role === "admin";
+  const [viewMode] = useViewMode();
+  // Apenas admin (e no modo admin) pode filtrar/ver outros representantes.
+  const isAdmin = role === "admin" && viewMode === "admin";
 
   const [rows, setRows] = useState<Row[]>([]);
   const [reps, setReps] = useState<Rep[]>([]);
