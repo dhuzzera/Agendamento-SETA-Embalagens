@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 const KEY = "seta:viewMode";
 const EVT = "seta:viewModeChange";
@@ -15,16 +16,43 @@ export function setViewMode(mode: ViewMode) {
   window.dispatchEvent(new CustomEvent(EVT, { detail: mode }));
 }
 
+export class ViewModePermissionError extends Error {
+  constructor() {
+    super("Apenas administradores podem alternar para o modo Representante.");
+    this.name = "ViewModePermissionError";
+  }
+}
+
 export function useViewMode(): [ViewMode, (m: ViewMode) => void] {
-  const [mode, setMode] = useState<ViewMode>(() => getViewMode());
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
+
+  // Effective mode: non-admins are always locked to "representative".
+  const compute = (): ViewMode => {
+    if (!isAdmin) return "representative";
+    return getViewMode();
+  };
+
+  const [mode, setMode] = useState<ViewMode>(() => compute());
+
   useEffect(() => {
-    const onChange = () => setMode(getViewMode());
+    setMode(compute());
+    const onChange = () => setMode(compute());
     window.addEventListener(EVT, onChange);
     window.addEventListener("storage", onChange);
     return () => {
       window.removeEventListener(EVT, onChange);
       window.removeEventListener("storage", onChange);
     };
-  }, []);
-  return [mode, setViewMode];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
+
+  const guardedSet = (m: ViewMode) => {
+    if (!isAdmin) {
+      throw new ViewModePermissionError();
+    }
+    setViewMode(m);
+  };
+
+  return [mode, guardedSet];
 }
