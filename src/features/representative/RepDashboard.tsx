@@ -116,7 +116,7 @@ export function RepDashboard() {
         <CardContent className="space-y-3">
           {profile?.slug ? (
             <div className="flex items-center gap-2">
-              <Input readOnly value={link} />
+              <Input readOnly value={linkDisplay} />
               <Button variant="outline" onClick={copyLink}>
                 <Copy className="mr-1.5 h-4 w-4" /> Copiar
               </Button>
