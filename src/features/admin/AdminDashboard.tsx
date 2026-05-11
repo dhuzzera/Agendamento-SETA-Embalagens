@@ -37,7 +37,7 @@ type Upcoming = {
 
 export function AdminDashboard() {
   const [counts, setCounts] = useState<Counts | null>(null);
-  const [upcoming, setUpcoming] = useState<Upcoming[]>([]);
+  const [upcoming, setUpcoming] = useState<Upcoming[] | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -104,6 +104,8 @@ export function AdminDashboard() {
             client_name: cliMap.get(a.client_id) ?? "—",
           }))
         );
+      } else {
+        setUpcoming([]);
       }
     };
     void load();
