@@ -9,14 +9,14 @@ import { Calendar, Copy, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { StatCardSkeleton, ListRowSkeleton } from "@/components/Skeletons";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
-  const [today, setToday] = useState(0);
-  const [week, setWeek] = useState(0);
+  const [stats, setStats] = useState<{ today: number; week: number } | null>(null);
   const [upcoming, setUpcoming] = useState<
-    { id: string; appointment_date: string; start_time: string; client_name: string }[]
-  >([]);
+    { id: string; appointment_date: string; start_time: string; client_name: string }[] | null
+  >(null);
   const [slugInput, setSlugInput] = useState(profile?.slug ?? "");
 
   useEffect(() => setSlugInput(profile?.slug ?? ""), [profile?.slug]);
@@ -40,8 +40,7 @@ export function RepDashboard() {
         .eq("representative_id", profile.id)
         .gte("appointment_date", todayStr)
         .lte("appointment_date", weekEnd);
-      setToday(tdC ?? 0);
-      setWeek(wkC ?? 0);
+      setStats({ today: tdC ?? 0, week: wkC ?? 0 });
 
       const { data } = await supabase
         .from("appointments")
@@ -66,6 +65,8 @@ export function RepDashboard() {
             client_name: cMap.get(d.client_id) ?? "—",
           }))
         );
+      } else {
+        setUpcoming([]);
       }
     };
     void load();
@@ -103,11 +104,19 @@ export function RepDashboard() {
         <p className="text-muted-foreground">Sua agenda comercial Seta.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={today} />
-        <StatCard to="/agenda" icon={<Calendar />} label="Próximos 7 dias" value={week} />
-        <StatCard to="/disponibilidade" icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
-      </div>
+      {stats ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={stats.today} />
+          <StatCard to="/agenda" icon={<Calendar />} label="Próximos 7 dias" value={stats.week} />
+          <StatCard to="/disponibilidade" icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -145,7 +154,13 @@ export function RepDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {upcoming.length === 0 ? (
+          {upcoming === null ? (
+            <div className="divide-y">
+              <ListRowSkeleton />
+              <ListRowSkeleton />
+              <ListRowSkeleton />
+            </div>
+          ) : upcoming.length === 0 ? (
             <p className="text-sm text-muted-foreground">Sem reuniões agendadas.</p>
           ) : (
             <div className="divide-y">

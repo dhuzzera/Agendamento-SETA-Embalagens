@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { AppHeader } from "@/components/AppHeader";
+import { FullscreenSplashSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -9,12 +10,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const { user, loading, profile } = useAuth();
   const location = useLocation();
-  if (loading)
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Carregando…
-      </div>
-    );
+  if (loading) return <FullscreenSplashSkeleton />;
   if (!user) return <Navigate to="/login" />;
 
   if (

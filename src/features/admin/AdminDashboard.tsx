@@ -7,6 +7,12 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-f
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { lazy, Suspense } from "react";
+import {
+  PageHeaderSkeleton,
+  StatCardsRowSkeleton,
+  ListCardSkeleton,
+  ChartSkeleton,
+} from "@/components/Skeletons";
 const MonthlyMetrics = lazy(() =>
   import("./MonthlyMetrics").then((m) => ({ default: m.MonthlyMetrics })),
 );
@@ -31,7 +37,7 @@ type Upcoming = {
 
 export function AdminDashboard() {
   const [counts, setCounts] = useState<Counts | null>(null);
-  const [upcoming, setUpcoming] = useState<Upcoming[]>([]);
+  const [upcoming, setUpcoming] = useState<Upcoming[] | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -98,6 +104,8 @@ export function AdminDashboard() {
             client_name: cliMap.get(a.client_id) ?? "—",
           }))
         );
+      } else {
+        setUpcoming([]);
       }
     };
     void load();
@@ -110,15 +118,19 @@ export function AdminDashboard() {
         <p className="text-muted-foreground">Visão geral da operação comercial Seta.</p>
       </div>
 
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard to="/admin/usuarios" icon={<Users />} label="Representantes" value={counts?.reps ?? 0} />
-        <StatCard to="/admin/usuarios" icon={<Shield />} label="Administradores" value={counts?.admins ?? 0} />
-        <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={counts?.today ?? 0} />
-        <StatCard to="/agenda" icon={<TrendingUp />} label="Esta semana" value={counts?.week ?? 0} />
-        <StatCard to="/agenda" icon={<TrendingUp />} label="Este mês" value={counts?.month ?? 0} />
-      </div>
+      {counts ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard to="/admin/usuarios" icon={<Users />} label="Representantes" value={counts.reps} />
+          <StatCard to="/admin/usuarios" icon={<Shield />} label="Administradores" value={counts.admins} />
+          <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={counts.today} />
+          <StatCard to="/agenda" icon={<TrendingUp />} label="Esta semana" value={counts.week} />
+          <StatCard to="/agenda" icon={<TrendingUp />} label="Este mês" value={counts.month} />
+        </div>
+      ) : (
+        <StatCardsRowSkeleton count={5} />
+      )}
 
-    <Card>
+      <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Próximos agendamentos</CardTitle>
           <Link to="/agenda" className="text-sm font-medium text-primary hover:underline">
@@ -126,7 +138,9 @@ export function AdminDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {upcoming.length === 0 ? (
+          {upcoming === null ? (
+            <ListCardSkeleton title={false} rows={4} />
+          ) : upcoming.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum agendamento futuro.</p>
           ) : (
             <div className="divide-y">
@@ -158,7 +172,7 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted/50" />}>
+      <Suspense fallback={<ChartSkeleton height={256} />}>
         <MonthlyMetrics />
       </Suspense>
     </div>
