@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
         const { data: appts } = await supabaseAdmin
           .from("appointments")
           .select(
-            "id, appointment_date, start_time, end_time, status, notes, client_id, updated_at"
+            "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, client_id, updated_at"
           )
           .eq("representative_id", profile.id)
           .in("status", ["scheduled", "rescheduled", "completed"])
