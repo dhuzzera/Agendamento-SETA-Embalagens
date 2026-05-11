@@ -199,11 +199,65 @@ export function AppointmentDetailsDialog({
                   }}
                 >
                   <Copy className="mr-1.5 h-3.5 w-3.5" />
-                  Copiar endereço
                 </Button>
               </div>
             </div>
           )}
+
+          {appointment.status !== "cancelled" && (() => {
+            const isPresencial = appointment.meeting_type === "presencial";
+            const modalidade = isPresencial ? "Presencial" : "Online";
+            const descLines = [`Modalidade: ${modalidade}`];
+            if (isPresencial && appointment.location)
+              descLines.push(`Endereço: ${appointment.location}`);
+            if (appointment.notes) descLines.push(`Observações: ${appointment.notes}`);
+            const ensureSec = (t: string) => (t.length === 5 ? `${t}:00` : t);
+            const event: CalendarEvent = {
+              title: `Reunião ${modalidade} — ${appointment.client.name}${
+                appointment.client.company ? ` (${appointment.client.company})` : ""
+              }`,
+              description: descLines.join("\n"),
+              location:
+                isPresencial && appointment.location ? appointment.location : undefined,
+              date: date || appointment.appointment_date,
+              startTime: ensureSec(startTime || appointment.start_time),
+              endTime: ensureSec(endTime || appointment.end_time),
+              attendeeEmail: appointment.client.email,
+              attendeeName: appointment.client.name,
+              uid: `appointment-${appointment.id}@seta-agende`,
+            };
+            return (
+              <div className="rounded-md border bg-muted/30 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <CalendarPlus className="h-3.5 w-3.5" /> Adicionar ao calendário
+                </div>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Use após remarcar para atualizar o convite com o novo horário, modalidade
+                  {isPresencial ? " e endereço" : ""}.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" asChild>
+                    <a
+                      href={buildGoogleCalendarUrl(event)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                      Google Calendar
+                    </a>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => downloadIcsFile(event, `reuniao-${appointment.id}.ics`)}
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                    Baixar .ics (Outlook/Apple)
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
 
           {isAdmin ? (
             <>
