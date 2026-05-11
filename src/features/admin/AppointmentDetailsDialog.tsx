@@ -58,6 +58,9 @@ export function AppointmentDetailsDialog({
   onOpenChange,
   onChanged,
 }: Props) {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
+
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
