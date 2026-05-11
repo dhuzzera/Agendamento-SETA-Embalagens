@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MapPin, Copy, ExternalLink } from "lucide-react";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
