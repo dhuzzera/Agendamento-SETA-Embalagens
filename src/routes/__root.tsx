@@ -106,7 +106,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/maskable-icon-192.png", purpose: "maskable" } as any,
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/maskable-icon-512.png", purpose: "maskable" } as any,
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { name: "theme-color", content: "#1a3264" } as any,
       { rel: "stylesheet", href: appCss },
       // Preconnect ao backend Supabase (auth/session é uma das primeiras
       // requisições; antecipar DNS+TLS reduz tempo até o primeiro dado e
