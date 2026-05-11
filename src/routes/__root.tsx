@@ -12,11 +12,9 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/PwaRegister";
-import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch.client";
+import { installServerFnAuthFetch } from "@/integrations/supabase/server-fn-fetch";
 
-if (typeof window !== "undefined") {
-  installServerFnAuthFetch();
-}
+installServerFnAuthFetch();
 
 function NotFoundComponent() {
   return (
