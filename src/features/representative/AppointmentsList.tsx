@@ -43,7 +43,7 @@ export function AppointmentsList() {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [reps, setReps] = useState<Rep[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Row | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
