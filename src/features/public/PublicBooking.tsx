@@ -665,20 +665,30 @@ export function PublicBooking({ slug }: { slug: string }) {
 
 function PublicHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-8">
         <a
           href="https://setaembalagens.com.br"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center"
+          className="flex items-center transition-opacity hover:opacity-80"
           aria-label="Seta Embalagens — site institucional"
         >
-          <SetaLogo variant="dark" />
+          <SetaLogo variant="dark" className="h-12 w-auto sm:h-14" />
         </a>
-        <span className="hidden text-xs font-semibold uppercase tracking-[0.22em] text-primary sm:inline">
-          Agendamento Comercial
-        </span>
+        <div className="flex items-center gap-4 sm:gap-8">
+          <span className="hidden text-[13px] font-semibold uppercase tracking-[0.22em] text-primary md:inline">
+            Agendamento Comercial
+          </span>
+          <a
+            href="https://setaembalagens.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:px-6 sm:text-sm"
+          >
+            Voltar ao site
+          </a>
+        </div>
       </div>
     </header>
   );
