@@ -55,7 +55,10 @@ function LoginPage() {
       <div className="flex items-center justify-center bg-background p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 lg:hidden">
-            <div className="rounded-lg bg-sidebar p-3">
+            <div
+              className="rounded-lg p-4"
+              style={{ background: "var(--gradient-hero)" }}
+            >
               <SetaLogo variant="light" />
             </div>
           </div>
