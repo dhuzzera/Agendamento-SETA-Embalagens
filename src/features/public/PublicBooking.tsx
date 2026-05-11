@@ -373,6 +373,13 @@ export function PublicBooking({ slug }: { slug: string }) {
               </p>
             </div>
           </CardContent>
+          {profile.bio && (
+            <div className="border-t bg-muted/20 px-6 py-4">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                {profile.bio}
+              </p>
+            </div>
+          )}
         </Card>
 
         {!selected ? (
