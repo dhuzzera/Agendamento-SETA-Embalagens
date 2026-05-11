@@ -272,3 +272,14 @@ export function AppointmentDetailsDialog({
     </Dialog>
   );
 }
+
+function labelStatus(s: string) {
+  return (
+    {
+      scheduled: "Agendado",
+      completed: "Concluído",
+      cancelled: "Cancelado",
+      rescheduled: "Remarcado",
+    } as Record<string, string>
+  )[s] ?? s;
+}
