@@ -49,6 +49,8 @@ type Profile = {
   avatar_url: string | null;
   bio: string | null;
   active: boolean;
+  allow_online: boolean;
+  allow_presencial: boolean;
 };
 
 type Avail = {
@@ -107,7 +109,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     const load = async () => {
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, active")
+        .select("id, full_name, avatar_url, bio, active, allow_online, allow_presencial")
         .eq("slug", slug)
         .maybeSingle();
       if (!p || !p.active) {
@@ -115,6 +117,9 @@ export function PublicBooking({ slug }: { slug: string }) {
         return;
       }
       setProfile(p as Profile);
+      // Pré-seleciona modalidade conforme o que o representante aceita
+      if (!p.allow_online && p.allow_presencial) setMeetingType("presencial");
+      else setMeetingType("online");
       const today = new Date().toISOString().slice(0, 10);
       const [{ data: a }, { data: b }] = await Promise.all([
         supabase
@@ -817,26 +822,46 @@ export function PublicBooking({ slug }: { slug: string }) {
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label>Modalidade da reunião *</Label>
-                  <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-1">
-                    {(["online", "presencial"] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setMeetingType(opt)}
-                        className={cn(
-                          "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors",
-                          meetingType === opt
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {opt === "online" ? "Online" : "Presencial"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const options = (["online", "presencial"] as const).filter(
+                    (o) =>
+                      (o === "online" && profile.allow_online) ||
+                      (o === "presencial" && profile.allow_presencial),
+                  );
+                  if (options.length <= 1) {
+                    const only = options[0] ?? "online";
+                    return (
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label>Modalidade da reunião</Label>
+                        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm font-medium uppercase tracking-wide">
+                          {only === "online" ? "Online" : "Presencial"}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>Modalidade da reunião *</Label>
+                      <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-1">
+                        {options.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setMeetingType(opt)}
+                            className={cn(
+                              "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors",
+                              meetingType === opt
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            {opt === "online" ? "Online" : "Presencial"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {meetingType === "presencial" && (
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label>Endereço da reunião *</Label>
