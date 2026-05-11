@@ -14,6 +14,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
+import { Route as AppPerfilRouteImport } from './routes/_app/perfil'
 import { Route as AppDisponibilidadeRouteImport } from './routes/_app/disponibilidade'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAlterarSenhaRouteImport } from './routes/_app/alterar-senha'
@@ -46,6 +47,11 @@ const AgendarSlugRoute = AgendarSlugRouteImport.update({
   id: '/agendar/$slug',
   path: '/agendar/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppDisponibilidadeRoute = AppDisponibilidadeRouteImport.update({
   id: '/disponibilidade',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
+  '/perfil': typeof AppPerfilRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/admin/performance': typeof AppAdminPerformanceRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
+  '/perfil': typeof AppPerfilRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/admin/performance': typeof AppAdminPerformanceRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_app/alterar-senha': typeof AppAlterarSenhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidade': typeof AppDisponibilidadeRoute
+  '/_app/perfil': typeof AppPerfilRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/_app/admin/performance': typeof AppAdminPerformanceRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/alterar-senha'
     | '/dashboard'
     | '/disponibilidade'
+    | '/perfil'
     | '/agendar/$slug'
     | '/admin/performance'
     | '/admin/usuarios'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/alterar-senha'
     | '/dashboard'
     | '/disponibilidade'
+    | '/perfil'
     | '/agendar/$slug'
     | '/admin/performance'
     | '/admin/usuarios'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_app/alterar-senha'
     | '/_app/dashboard'
     | '/_app/disponibilidade'
+    | '/_app/perfil'
     | '/agendar/$slug'
     | '/_app/admin/performance'
     | '/_app/admin/usuarios'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agendar/$slug'
       preLoaderRoute: typeof AgendarSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/perfil': {
+      id: '/_app/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/disponibilidade': {
       id: '/_app/disponibilidade'
@@ -303,6 +322,7 @@ interface AppRouteRouteChildren {
   AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadeRoute: typeof AppDisponibilidadeRoute
+  AppPerfilRoute: typeof AppPerfilRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -311,6 +331,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAlterarSenhaRoute: AppAlterarSenhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadeRoute: AppDisponibilidadeRoute,
+  AppPerfilRoute: AppPerfilRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
