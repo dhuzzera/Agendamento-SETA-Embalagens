@@ -404,43 +404,43 @@ export function PublicBooking({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="flex min-h-screen flex-col bg-secondary">
       <PublicHeader />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         {/* Rep card */}
         <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
           <div
-            className="h-20 sm:h-24"
+            className="h-24 sm:h-32"
             style={{ background: "var(--gradient-hero)" }}
           />
-          <CardContent className="-mt-12 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-end">
+          <CardContent className="-mt-14 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-end sm:p-8">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.full_name}
-                className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-md"
+                className="h-28 w-28 rounded-full border-4 border-card object-cover shadow-md"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-card bg-secondary text-3xl font-bold text-primary shadow-md">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-card bg-secondary text-3xl font-bold text-primary shadow-md">
                 {profile.full_name[0]}
               </div>
             )}
             <div className="pb-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
                 Agendar reunião com
               </p>
-              <h1 className="mt-1 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
+              <h1 className="mt-1.5 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
                 {profile.full_name}
               </h1>
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <CalIcon className="h-3.5 w-3.5" />
                 Representante Seta Embalagens
               </p>
             </div>
           </CardContent>
           {profile.bio && (
-            <div className="border-t bg-muted/20 px-6 py-4">
+            <div className="border-t bg-muted/30 px-6 py-4 sm:px-8">
               <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                 {profile.bio}
               </p>
