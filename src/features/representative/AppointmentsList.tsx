@@ -125,6 +125,8 @@ export function AppointmentsList() {
     else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
 
     if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
+    if (meetingTypeFilter !== ALL) q = q.eq("meeting_type", meetingTypeFilter);
+    if (addressQuery.trim()) q = q.ilike("location", `%${addressQuery.trim()}%`);
     if (from) q = q.gte("appointment_date", from);
     if (to) q = q.lte("appointment_date", to);
 
