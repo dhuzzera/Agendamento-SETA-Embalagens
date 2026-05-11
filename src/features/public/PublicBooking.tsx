@@ -345,13 +345,18 @@ export function PublicBooking({ slug }: { slug: string }) {
     };
     const googleUrl = buildGoogleCalendarUrl(calendarEvent);
     return (
-      <div className="min-h-screen bg-secondary">
+      <div className="flex min-h-screen flex-col bg-secondary">
         <PublicHeader />
-        <div className="mx-auto max-w-xl px-4 py-16 text-center">
-          <div className="rounded-2xl border bg-card p-10 shadow-[var(--shadow-card)]">
+        <div className="mx-auto w-full max-w-xl flex-1 px-4 py-12 text-center sm:py-16">
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-card)] sm:p-10">
             <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
-            <h1 className="mt-4 text-2xl font-bold">Reunião confirmada!</h1>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+              Agendamento confirmado
+            </p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+              Reunião confirmada!
+            </h1>
+            <p className="mt-3 text-muted-foreground">
               Sua reunião com <strong>{profile.full_name}</strong> foi agendada para
             </p>
             <p className="mt-4 text-lg font-semibold text-primary">
@@ -362,14 +367,16 @@ export function PublicBooking({ slug }: { slug: string }) {
               Em breve você receberá uma confirmação no e-mail informado ({email}).
             </p>
 
-            <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium">Adicionar ao calendário</p>
+            <div className="mt-8 space-y-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Adicionar ao calendário
+              </p>
               <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row">
                 <a
                   href={googleUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm"
                 >
                   <CalIcon className="h-4 w-4" />
                   Google Calendar
@@ -379,60 +386,61 @@ export function PublicBooking({ slug }: { slug: string }) {
                   onClick={() =>
                     downloadIcsFile(
                       calendarEvent,
-                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`
+                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
                     )
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground sm:text-sm"
                 >
                   <Download className="h-4 w-4" />
-                  Baixar .ics (Apple/Outlook)
+                  Baixar .ics
                 </button>
               </div>
             </div>
           </div>
         </div>
+        <PublicFooter />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="flex min-h-screen flex-col bg-secondary">
       <PublicHeader />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         {/* Rep card */}
         <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
           <div
-            className="h-20 sm:h-24"
+            className="h-24 sm:h-32"
             style={{ background: "var(--gradient-hero)" }}
           />
-          <CardContent className="-mt-12 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-end">
+          <CardContent className="-mt-14 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-end sm:p-8">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.full_name}
-                className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-md"
+                className="h-28 w-28 rounded-full border-4 border-card object-cover shadow-md"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-card bg-secondary text-3xl font-bold text-primary shadow-md">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-card bg-secondary text-3xl font-bold text-primary shadow-md">
                 {profile.full_name[0]}
               </div>
             )}
             <div className="pb-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
                 Agendar reunião com
               </p>
-              <h1 className="mt-1 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
+              <h1 className="mt-1.5 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
                 {profile.full_name}
               </h1>
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <CalIcon className="h-3.5 w-3.5" />
                 Representante Seta Embalagens
               </p>
             </div>
           </CardContent>
           {profile.bio && (
-            <div className="border-t bg-muted/20 px-6 py-4">
+            <div className="border-t bg-muted/30 px-6 py-4 sm:px-8">
               <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                 {profile.bio}
               </p>
@@ -585,26 +593,31 @@ export function PublicBooking({ slug }: { slug: string }) {
           </Card>
         ) : (
           <Card className="mt-6 border-0 shadow-[var(--shadow-card)]">
-            <CardContent className="p-6">
-              <div className="mb-6 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mb-6 flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Confirme seus dados</h2>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <CalIcon className="h-3.5 w-3.5" />
-                    {format(selected.date, "EEEE, dd 'de' MMMM", {
-                      locale: ptBR,
-                    })}{" "}
-                    • {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+                    Confirme seus dados
+                  </p>
+                  <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    <CalIcon className="h-3.5 w-3.5 text-primary" />
+                    <span className="capitalize">
+                      {format(selected.date, "EEEE, dd 'de' MMMM", {
+                        locale: ptBR,
+                      })}
+                    </span>
+                    <span className="text-muted-foreground">•</span>
+                    {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
+                <button
+                  type="button"
                   onClick={() => setSelected(null)}
+                  className="inline-flex items-center justify-center gap-1.5 self-start rounded-full border-2 border-primary/30 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground sm:self-auto"
                 >
-                  <ArrowLeft className="mr-1.5 h-4 w-4" />
+                  <ArrowLeft className="h-3.5 w-3.5" />
                   Trocar horário
-                </Button>
+                </button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -647,18 +660,19 @@ export function PublicBooking({ slug }: { slug: string }) {
                 </div>
               </div>
 
-              <Button
+              <button
+                type="button"
                 onClick={submit}
                 disabled={busy}
-                className="mt-6 w-full"
-                size="lg"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-60"
               >
                 {busy ? "Confirmando…" : "Confirmar agendamento"}
-              </Button>
+              </button>
             </CardContent>
           </Card>
         )}
       </div>
+      <PublicFooter />
     </div>
   );
 }
@@ -694,15 +708,41 @@ function PublicHeader() {
   );
 }
 
+function PublicFooter() {
+  return (
+    <footer className="mt-12 border-t border-border/60 bg-background">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
+        <div className="flex items-center gap-3">
+          <SetaLogo variant="dark" className="h-9 w-auto" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Embalagens
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Seta Embalagens — Produzimos embalagens, entregamos confiança.
+        </p>
+        <a
+          href="https://setaembalagens.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary hover:text-primary-hover"
+        >
+          setaembalagens.com.br
+        </a>
+      </div>
+    </footer>
+  );
+}
+
 function BookingSkeleton() {
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="flex min-h-screen flex-col bg-secondary">
       <PublicHeader />
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
-          <Skeleton className="h-20 w-full sm:h-24" />
-          <CardContent className="-mt-12 flex items-end gap-4 p-6">
-            <Skeleton className="h-24 w-24 rounded-full" />
+          <Skeleton className="h-24 w-full sm:h-32" />
+          <CardContent className="-mt-14 flex items-end gap-4 p-6 sm:p-8">
+            <Skeleton className="h-28 w-28 rounded-full" />
             <div className="flex-1 space-y-2 pb-1">
               <Skeleton className="h-3 w-40" />
               <Skeleton className="h-7 w-56" />
@@ -728,6 +768,7 @@ function BookingSkeleton() {
           </CardContent>
         </Card>
       </div>
+      <PublicFooter />
     </div>
   );
 }
