@@ -104,6 +104,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Acelera primeiras chamadas ao backend (auth/sessão) reduzindo TTFB perceived
+      { rel: "preconnect", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co", crossOrigin: "anonymous" },
+      { rel: "dns-prefetch", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
