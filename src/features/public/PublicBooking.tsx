@@ -230,7 +230,8 @@ export function PublicBooking({ slug }: { slug: string }) {
 
   // Group slots by period of day for easier scanning on mobile
   const groupedSlots = useMemo(() => {
-    const groups: Record<"morning" | "afternoon" | "evening", typeof slotsForSelected> = {
+    type Slot = { start: string; end: string };
+    const groups: Record<"morning" | "afternoon" | "evening", Slot[]> = {
       morning: [],
       afternoon: [],
       evening: [],
