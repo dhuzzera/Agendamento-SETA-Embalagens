@@ -359,11 +359,13 @@ export function PublicBooking({ slug }: { slug: string }) {
   }
 
   if (success && selected) {
+    const isPresencial = meetingType === "presencial";
     const calendarEvent: CalendarEvent = {
       title: `Reunião com ${profile.full_name} — Seta Embalagens`,
-      description: `Reunião comercial com ${profile.full_name}.${
-        notes ? `\n\nObservações: ${notes}` : ""
-      }`,
+      description: `Reunião comercial ${isPresencial ? "presencial" : "online"} com ${profile.full_name}.${
+        isPresencial && address ? `\n\nEndereço: ${address}` : ""
+      }${notes ? `\n\nObservações: ${notes}` : ""}`,
+      location: isPresencial ? address : undefined,
       date: format(selected.date, "yyyy-MM-dd"),
       startTime: selected.start,
       endTime: selected.end,
