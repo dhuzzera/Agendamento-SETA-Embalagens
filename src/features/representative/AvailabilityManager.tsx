@@ -198,18 +198,13 @@ export function AvailabilityManager() {
                 </p>
               )}
               {avails.map((a) => (
-                <div key={a.id} className="flex items-center justify-between p-3">
-                  <div className="text-sm">
-                    <span className="font-medium">{WEEKDAYS[a.weekday]}</span>{" "}
-                    <span className="text-muted-foreground">
-                      {a.start_time.slice(0, 5)} – {a.end_time.slice(0, 5)} •{" "}
-                      {a.meeting_duration_min} min
-                    </span>
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => removeAvail(a.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
+                <AvailRow
+                  key={a.id}
+                  avail={a}
+                  onRemove={() => removeAvail(a.id)}
+                  onSave={(patch) => updateAvail(a.id, patch)}
+                  onToggle={() => toggleActive(a)}
+                />
               ))}
             </div>
           </CardContent>
