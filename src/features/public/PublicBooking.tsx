@@ -23,6 +23,9 @@ import {
   Clock,
   Calendar as CalIcon,
   ArrowLeft,
+  MapPin,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
