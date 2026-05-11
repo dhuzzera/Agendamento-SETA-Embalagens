@@ -83,6 +83,8 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [meetingType, setMeetingType] = useState<"online" | "presencial">("online");
+  const [address, setAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
 
@@ -286,6 +288,10 @@ export function PublicBooking({ slug }: { slug: string }) {
       toast.error("Preencha nome e e-mail");
       return;
     }
+    if (meetingType === "presencial" && !address.trim()) {
+      toast.error("Informe o endereço da reunião presencial");
+      return;
+    }
     setBusy(true);
     try {
       const { data: client, error: cErr } = await supabase
@@ -306,6 +312,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         start_time: selected.start,
         end_time: selected.end,
         notes: notes || null,
+        meeting_type: meetingType,
+        location: meetingType === "presencial" ? address.trim() : null,
       });
       if (aErr) throw aErr;
       setSuccess(true);
@@ -351,11 +359,13 @@ export function PublicBooking({ slug }: { slug: string }) {
   }
 
   if (success && selected) {
+    const isPresencial = meetingType === "presencial";
     const calendarEvent: CalendarEvent = {
       title: `Reunião com ${profile.full_name} — Seta Embalagens`,
-      description: `Reunião comercial com ${profile.full_name}.${
-        notes ? `\n\nObservações: ${notes}` : ""
-      }`,
+      description: `Reunião comercial ${isPresencial ? "presencial" : "online"} com ${profile.full_name}.${
+        isPresencial && address ? `\n\nEndereço: ${address}` : ""
+      }${notes ? `\n\nObservações: ${notes}` : ""}`,
+      location: isPresencial ? address : undefined,
       date: format(selected.date, "yyyy-MM-dd"),
       startTime: selected.start,
       endTime: selected.end,
@@ -420,6 +430,13 @@ export function PublicBooking({ slug }: { slug: string }) {
                   label="Horário"
                   value={`${selected.start.slice(0, 5)} – ${selected.end.slice(0, 5)} (${durationMin} min)`}
                 />
+                <SummaryRow
+                  label="Modalidade"
+                  value={isPresencial ? "Presencial" : "Online"}
+                />
+                {isPresencial && address && (
+                  <SummaryRow label="Endereço" value={address} />
+                )}
                 <SummaryRow label="Nome" value={name} />
                 {company && <SummaryRow label="Empresa" value={company} />}
                 <SummaryRow label="E-mail" value={email} />
@@ -723,6 +740,40 @@ export function PublicBooking({ slug }: { slug: string }) {
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Modalidade da reunião *</Label>
+                  <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-1">
+                    {(["online", "presencial"] as const).map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setMeetingType(opt)}
+                        className={cn(
+                          "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors",
+                          meetingType === opt
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {opt === "online" ? "Online" : "Presencial"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {meetingType === "presencial" && (
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>Endereço da reunião *</Label>
+                    <Textarea
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Rua, número, complemento, bairro, cidade — UF"
+                      rows={2}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Informe o endereço completo onde o representante deve comparecer.
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>
                   <Textarea

@@ -43,6 +43,8 @@ type Row = {
   end_time: string;
   status: Status;
   notes: string | null;
+  meeting_type: "online" | "presencial";
+  location: string | null;
   representative_id: string;
   client: { name: string; company: string | null; email: string; phone: string | null };
 };
@@ -108,7 +110,7 @@ export function AppointmentsList() {
     let q = supabase
       .from("appointments")
       .select(
-        "id, appointment_date, start_time, end_time, status, notes, client_id, representative_id"
+        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, client_id, representative_id"
       )
       .order("appointment_date", { ascending: false })
       .order("start_time")
@@ -519,6 +521,19 @@ export function AppointmentsList() {
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {r.client.email} {r.client.phone && `• ${r.client.phone}`}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant={r.meeting_type === "presencial" ? "default" : "secondary"}
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {r.meeting_type === "presencial" ? "Presencial" : "Online"}
+                      </Badge>
+                      {r.meeting_type === "presencial" && r.location && (
+                        <span className="text-xs text-muted-foreground">
+                          📍 {r.location}
+                        </span>
+                      )}
                     </div>
                     {r.notes && (
                       <p className="mt-1 text-xs text-muted-foreground">{r.notes}</p>
