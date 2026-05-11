@@ -566,13 +566,17 @@ export function AppointmentsList() {
         </CardContent>
       </Card>
 
-      <AppointmentDetailsDialog
-        appointment={selected}
-        representativeName={selected ? repName(selected.representative_id) : ""}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onChanged={load}
-      />
+      {dialogOpen && (
+        <Suspense fallback={null}>
+          <AppointmentDetailsDialog
+            appointment={selected}
+            representativeName={selected ? repName(selected.representative_id) : ""}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            onChanged={load}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
