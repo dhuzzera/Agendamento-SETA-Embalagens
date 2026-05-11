@@ -315,42 +315,7 @@ export function AppointmentsList() {
             Exportar CSV
           </Button>
         )}
-            <div>
-              <Label className="text-xs">Modalidade</Label>
-              <Select value={meetingTypeFilter} onValueChange={setMeetingTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>Todas</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="presencial">Presencial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Endereço contém</Label>
-              <Input
-                value={addressQuery}
-                onChange={(e) => setAddressQuery(e.target.value)}
-                placeholder="Ex.: Av. Paulista"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Ordenar por</Label>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date_desc">Data (mais recente)</SelectItem>
-                  <SelectItem value="date_asc">Data (mais antiga)</SelectItem>
-                  <SelectItem value="meeting_type">Modalidade</SelectItem>
-                  <SelectItem value="location">Endereço</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      </div>
 
       {/* Calendário do mês com dias que possuem reuniões destacados */}
       <Card>
