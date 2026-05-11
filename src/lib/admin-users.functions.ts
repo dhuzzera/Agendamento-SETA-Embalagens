@@ -49,6 +49,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         full_name: data.full_name,
         phone: data.phone ?? null,
         slug: data.slug ?? null,
+        must_change_password: true,
       })
       .eq("id", uid);
 
