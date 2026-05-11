@@ -482,56 +482,188 @@ function CalendarSubscriptionCard({ token }: { token: string | null }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <CalendarPlus className="h-4 w-4" />
-          Sincronizar com seu calendário
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Assine este link no Apple Calendar, Outlook ou qualquer app de calendário para ver
-          seus agendamentos automaticamente. A agenda atualiza sozinha (a cada ~30 min).
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input readOnly value={httpsUrl} onFocus={(e) => e.currentTarget.select()} />
-          <Button variant="outline" onClick={copy}>
-            <Copy className="mr-1.5 h-4 w-4" />
-            Copiar
-          </Button>
+    <Card className="overflow-hidden border-primary/20">
+      {/* Faixa de destaque */}
+      <div
+        className="flex items-start gap-3 px-6 py-4 text-primary-foreground"
+        style={{ background: "var(--gradient-hero)" }}
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 ring-1 ring-primary-foreground/30">
+          <Sparkles className="h-5 w-5" />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href={webcalUrl}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
-            <Apple className="h-4 w-4" />
-            Adicionar ao Apple Calendar
-          </a>
-          <a
-            href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-          >
-            <CalendarPlus className="h-4 w-4" />
-            Adicionar ao Google Calendar
-          </a>
-          <Button variant="outline" onClick={refreshNow} disabled={refreshing}>
-            <RefreshCw className={`mr-1.5 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Atualizando..." : "Atualizar agora"}
-          </Button>
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold leading-tight">
+            Tenha sua agenda no celular em 2 minutos
+          </h3>
+          <p className="mt-0.5 text-sm text-primary-foreground/85">
+            Receba os agendamentos automaticamente no seu app de calendário.
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {lastSync
-            ? `Última sincronização: ${lastSync.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
-            : "Ainda não sincronizado nesta sessão."}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Mantenha esta URL privada — quem tiver acesso a ela poderá ver seus horários e
-          contatos dos clientes.
-        </p>
+      </div>
+
+      <CardContent className="space-y-5 pt-5">
+        {/* Passo 1 — escolha o app */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+              1
+            </span>
+            Escolha onde você quer ver sua agenda
+          </div>
+
+          <Tabs defaultValue="iphone" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="iphone" className="gap-1.5">
+                <Apple className="h-3.5 w-3.5" />
+                iPhone
+              </TabsTrigger>
+              <TabsTrigger value="android" className="gap-1.5">
+                <Smartphone className="h-3.5 w-3.5" />
+                Android
+              </TabsTrigger>
+              <TabsTrigger value="outlook" className="gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                Outlook
+              </TabsTrigger>
+            </TabsList>
+
+            {/* iPhone / Apple */}
+            <TabsContent value="iphone" className="mt-4 space-y-3">
+              <a
+                href={webcalUrl}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow hover:bg-primary-hover sm:w-auto"
+              >
+                <Apple className="h-4 w-4" />
+                Adicionar ao Apple Calendar
+                <ExternalLink className="ml-0.5 h-3.5 w-3.5 opacity-70" />
+              </a>
+              <ol className="space-y-1.5 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                <li>
+                  <span className="font-medium text-foreground">1.</span> Toque
+                  no botão azul acima no seu iPhone.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">2.</span> O
+                  iPhone vai perguntar “Adicionar calendário?” — toque em{" "}
+                  <span className="font-medium text-foreground">
+                    Adicionar
+                  </span>
+                  .
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">3.</span> Pronto!
+                  Seus agendamentos aparecerão no app Calendário.
+                </li>
+              </ol>
+            </TabsContent>
+
+            {/* Android / Google */}
+            <TabsContent value="android" className="mt-4 space-y-3">
+              <a
+                href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow hover:bg-primary-hover sm:w-auto"
+              >
+                <CalendarPlus className="h-4 w-4" />
+                Adicionar ao Google Calendar
+                <ExternalLink className="ml-0.5 h-3.5 w-3.5 opacity-70" />
+              </a>
+              <ol className="space-y-1.5 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                <li>
+                  <span className="font-medium text-foreground">1.</span> Faça
+                  isso pelo computador (mais rápido) com sua conta Google
+                  logada.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">2.</span>{" "}
+                  Confirme em{" "}
+                  <span className="font-medium text-foreground">Adicionar</span>
+                  .
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">3.</span> No
+                  celular Android, abra o app Google Agenda — a agenda Seta
+                  aparece junto.
+                </li>
+              </ol>
+            </TabsContent>
+
+            {/* Outlook */}
+            <TabsContent value="outlook" className="mt-4 space-y-3">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  readOnly
+                  value={httpsUrl}
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button variant="outline" onClick={copy}>
+                  <Copy className="mr-1.5 h-4 w-4" />
+                  Copiar URL
+                </Button>
+              </div>
+              <ol className="space-y-1.5 rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                <li>
+                  <span className="font-medium text-foreground">1.</span> No
+                  Outlook, abra{" "}
+                  <span className="font-medium text-foreground">
+                    Calendário → Adicionar calendário → Inscrever-se na web
+                  </span>
+                  .
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">2.</span> Cole
+                  a URL acima e dê um nome (ex.: “Agenda Seta”).
+                </li>
+                <li>
+                  <span className="font-medium text-foreground">3.</span>{" "}
+                  Clique em{" "}
+                  <span className="font-medium text-foreground">
+                    Importar
+                  </span>{" "}
+                  e pronto.
+                </li>
+              </ol>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Passo 2 — atualizar agora */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+              2
+            </span>
+            Quando criar um novo horário, atualize a sincronização
+          </div>
+          <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              A agenda atualiza sozinha a cada ~30 minutos. Para ver na hora,
+              clique em “Atualizar agora”.
+            </p>
+            <Button onClick={refreshNow} disabled={refreshing}>
+              <RefreshCw
+                className={`mr-1.5 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              />
+              {refreshing ? "Atualizando…" : "Atualizar agora"}
+            </Button>
+          </div>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+            {lastSync
+              ? `Última sincronização: ${lastSync.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
+              : "Ainda não sincronizado nesta sessão."}
+          </p>
+        </div>
+
+        {/* Aviso de privacidade */}
+        <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-foreground/80">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <span>
+            Mantenha esta URL privada — quem tiver acesso a ela poderá ver
+            seus horários e contatos dos clientes.
+          </span>
+        </div>
       </CardContent>
     </Card>
   );
