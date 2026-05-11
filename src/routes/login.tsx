@@ -6,12 +6,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FullscreenSplashSkeleton } from "@/components/Skeletons";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
+
+/**
+ * Traduz erros do Supabase para mensagens claras e acionáveis.
+ */
+function translateAuthError(raw: string): string {
+  const msg = raw.toLowerCase();
+  if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+    return "E-mail ou senha incorretos. Verifique e tente novamente.";
+  }
+  if (msg.includes("email not confirmed")) {
+    return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
+  }
+  if (msg.includes("too many requests") || msg.includes("rate limit")) {
+    return "Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.";
+  }
+  if (msg.includes("user not found")) {
+    return "Não encontramos uma conta com esse e-mail.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Sem conexão com o servidor. Verifique sua internet e tente novamente.";
+  }
+  if (msg.includes("user is banned") || msg.includes("disabled")) {
+    return "Sua conta está desativada. Fale com o administrador da Seta.";
+  }
+  return "Não foi possível entrar. Tente novamente em instantes.";
+}
 
 function LoginPage() {
   const { signIn, user, loading } = useAuth();
@@ -19,6 +45,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard" });
@@ -29,11 +56,33 @@ function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+
+    // Validação local rápida — antes de bater na rede.
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setErrorMsg("Preencha e-mail e senha para continuar.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setErrorMsg("Digite um e-mail válido (ex.: nome@setaembalagens.com.br).");
+      return;
+    }
+
+    setErrorMsg(null);
     setBusy(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(trimmedEmail, password);
     setBusy(false);
-    if (error) toast.error("Falha no login: " + error);
-    else navigate({ to: "/dashboard" });
+
+    if (error) {
+      const friendly = translateAuthError(String(error));
+      setErrorMsg(friendly);
+      toast.error(friendly);
+      return;
+    }
+
+    toast.success("Login realizado com sucesso!");
+    navigate({ to: "/dashboard" });
   };
 
   return (
