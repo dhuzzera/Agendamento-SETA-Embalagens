@@ -84,3 +84,31 @@ function NavLink({
     </Link>
   );
 }
+
+function ViewSwitcher() {
+  const [mode, setMode] = useViewMode();
+  const opts: { value: "admin" | "representative"; label: string; icon: React.ReactNode }[] = [
+    { value: "admin", label: "Admin", icon: <Shield className="h-3.5 w-3.5" /> },
+    { value: "representative", label: "Representante", icon: <UserCircle2 className="h-3.5 w-3.5" /> },
+  ];
+  return (
+    <div className="hidden items-center gap-0.5 rounded-full bg-sidebar-accent/40 p-0.5 sm:flex">
+      {opts.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => setMode(o.value)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+            mode === o.value
+              ? "bg-background text-foreground shadow-sm"
+              : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
+          )}
+        >
+          {o.icon}
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
