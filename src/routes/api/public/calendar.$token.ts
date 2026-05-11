@@ -1,25 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+const SP_TZID = "America/Sao_Paulo";
+
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
-function toUtcStamp(date: string, time: string): string {
+/** Floating local stamp YYYYMMDDTHHmmss (used with TZID=America/Sao_Paulo). */
+function toLocalStamp(date: string, time: string): string {
   const [y, m, d] = date.split("-").map(Number);
   const [hh, mm, ss = 0] = time.split(":").map(Number);
-  // Treat the stored date/time as local Brazil time (no timezone column today).
-  // We emit UTC, so the receiving calendar will display the right wall time.
-  const local = new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, ss);
   return (
-    local.getUTCFullYear().toString() +
-    pad(local.getUTCMonth() + 1) +
-    pad(local.getUTCDate()) +
-    "T" +
-    pad(local.getUTCHours()) +
-    pad(local.getUTCMinutes()) +
-    pad(local.getUTCSeconds()) +
-    "Z"
+    `${y}${pad(m ?? 1)}${pad(d ?? 1)}` +
+    `T${pad(hh ?? 0)}${pad(mm ?? 0)}${pad(ss ?? 0)}`
   );
 }
 
@@ -31,16 +25,37 @@ function escapeIcs(value: string): string {
     .replace(/;/g, "\\;");
 }
 
-function nowStamp() {
-  const iso = new Date().toISOString();
-  return toUtcStamp(iso.slice(0, 10), iso.slice(11, 19));
+function nowStampUtc(): string {
+  const d = new Date();
+  return (
+    d.getUTCFullYear().toString() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) +
+    "T" +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes()) +
+    pad(d.getUTCSeconds()) +
+    "Z"
+  );
 }
+
+const SP_VTIMEZONE = [
+  "BEGIN:VTIMEZONE",
+  `TZID:${SP_TZID}`,
+  "X-LIC-LOCATION:America/Sao_Paulo",
+  "BEGIN:STANDARD",
+  "DTSTART:19700101T000000",
+  "TZOFFSETFROM:-0300",
+  "TZOFFSETTO:-0300",
+  "TZNAME:-03",
+  "END:STANDARD",
+  "END:VTIMEZONE",
+];
 
 export const Route = createFileRoute("/api/public/calendar/$token")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        // Allow ".ics" suffix for friendlier URLs.
         const raw = params.token ?? "";
         const token = raw.replace(/\.ics$/i, "");
 
@@ -82,11 +97,9 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
               email: string;
               phone: string | null;
             }> };
-        const clientMap = new Map(
-          (clients ?? []).map((c) => [c.id, c]),
-        );
+        const clientMap = new Map((clients ?? []).map((c) => [c.id, c]));
 
-        const stamp = nowStamp();
+        const stamp = nowStampUtc();
         const lines: string[] = [
           "BEGIN:VCALENDAR",
           "VERSION:2.0",
@@ -94,9 +107,10 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
           "CALSCALE:GREGORIAN",
           "METHOD:PUBLISH",
           `X-WR-CALNAME:${escapeIcs(`Agenda Seta — ${profile.full_name}`)}`,
-          "X-WR-TIMEZONE:America/Sao_Paulo",
+          `X-WR-TIMEZONE:${SP_TZID}`,
           "REFRESH-INTERVAL;VALUE=DURATION:PT30M",
           "X-PUBLISHED-TTL:PT30M",
+          ...SP_VTIMEZONE,
         ];
 
         for (const a of list) {
@@ -118,8 +132,8 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
             "BEGIN:VEVENT",
             `UID:appointment-${a.id}@seta-agende`,
             `DTSTAMP:${stamp}`,
-            `DTSTART:${toUtcStamp(a.appointment_date, a.start_time)}`,
-            `DTEND:${toUtcStamp(a.appointment_date, a.end_time)}`,
+            `DTSTART;TZID=${SP_TZID}:${toLocalStamp(a.appointment_date, a.start_time)}`,
+            `DTEND;TZID=${SP_TZID}:${toLocalStamp(a.appointment_date, a.end_time)}`,
             `SUMMARY:${escapeIcs(summary)}`,
             `DESCRIPTION:${escapeIcs(descParts.join("\n"))}`,
             a.status === "cancelled" ? "STATUS:CANCELLED" : "STATUS:CONFIRMED",
