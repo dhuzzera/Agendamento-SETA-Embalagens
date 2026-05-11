@@ -66,15 +66,76 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
+/**
+ * Aplica políticas de cache HTTP por tipo de recurso.
+ *
+ * - Assets com hash no nome (Vite emite `/assets/[name]-[hash].ext` e
+ *   `/_build/...`) são imutáveis: cache agressivo de 1 ano.
+ * - Fontes (woff2) e imagens estáticas (svg/png/jpg/webp/avif/ico): 30 dias
+ *   no browser e 1 ano no CDN, com `stale-while-revalidate` para evitar
+ *   esperas em revalidação.
+ * - HTML/respostas dinâmicas: `no-cache` (sempre revalida via ETag, que o
+ *   Cloudflare gera automaticamente) — evita servir HTML obsoleto após
+ *   redeploys.
+ *
+ * Compressão (brotli/gzip) e geração de ETag são aplicadas automaticamente
+ * pela camada de borda da Cloudflare; aqui apenas garantimos os cabeçalhos
+ * corretos para que ela faça o trabalho.
+ */
+function applyCachePolicy(request: Request, response: Response): Response {
+  // Não sobrescrever Cache-Control já definido pelo handler upstream.
+  if (response.headers.has("cache-control")) return response;
+
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  const accept = request.headers.get("accept") ?? "";
+  const isHtml =
+    accept.includes("text/html") ||
+    (response.headers.get("content-type") ?? "").includes("text/html");
+
+  // Não cachear chamadas server-fn / API
+  if (pathname.startsWith("/_serverFn") || pathname.startsWith("/api/")) {
+    response.headers.set("cache-control", "no-store");
+    return response;
+  }
+
+  // Bundles com hash imutável
+  if (
+    pathname.startsWith("/_build/") ||
+    pathname.startsWith("/assets/") ||
+    /\.[a-f0-9]{8,}\.(?:js|css|woff2?|map)$/i.test(pathname)
+  ) {
+    response.headers.set("cache-control", "public, max-age=31536000, immutable");
+    return response;
+  }
+
+  // Estáticos sem hash (favicon, fontes, imagens públicas)
+  if (/\.(?:woff2?|ttf|otf|svg|png|jpe?g|webp|avif|ico|gif)$/i.test(pathname)) {
+    response.headers.set(
+      "cache-control",
+      "public, max-age=2592000, s-maxage=31536000, stale-while-revalidate=86400",
+    );
+    return response;
+  }
+
+  // Documentos HTML / SSR — sempre revalidar (ETag faz o resto)
+  if (isHtml) {
+    response.headers.set("cache-control", "public, max-age=0, must-revalidate");
+  }
+
+  return response;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      return applyCachePolicy(request, normalized);
     } catch (error) {
       console.error(error);
-      return brandedErrorResponse();
+      return applyCachePolicy(request, brandedErrorResponse());
     }
   },
 };
