@@ -522,6 +522,19 @@ export function AppointmentsList() {
                     <div className="text-sm text-muted-foreground">
                       {r.client.email} {r.client.phone && `• ${r.client.phone}`}
                     </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant={r.meeting_type === "presencial" ? "default" : "secondary"}
+                        className="text-[10px] uppercase tracking-wide"
+                      >
+                        {r.meeting_type === "presencial" ? "Presencial" : "Online"}
+                      </Badge>
+                      {r.meeting_type === "presencial" && r.location && (
+                        <span className="text-xs text-muted-foreground">
+                          📍 {r.location}
+                        </span>
+                      )}
+                    </div>
                     {r.notes && (
                       <p className="mt-1 text-xs text-muted-foreground">{r.notes}</p>
                     )}
