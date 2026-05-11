@@ -161,55 +161,88 @@ export function AppointmentDetailsDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div>
-              <Label className="text-xs">Data</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Início</Label>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Fim</Label>
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-            </div>
-          </div>
+          {isAdmin ? (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <Label className="text-xs">Data</Label>
+                  <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Início</Label>
+                  <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Fim</Label>
+                  <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                </div>
+              </div>
 
-          <div>
-            <Label className="text-xs">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="scheduled">Agendado</SelectItem>
-                <SelectItem value="completed">Concluído</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-                <SelectItem value="rescheduled">Remarcado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as Status)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                    <SelectItem value="rescheduled">Remarcado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <Label className="text-xs">Observações do cliente</Label>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder="Sem observações"
-            />
-          </div>
+              <div>
+                <Label className="text-xs">Observações do cliente</Label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Sem observações"
+                />
+              </div>
 
-          <div>
-            <Label className="text-xs">Notas internas (não visíveis ao cliente)</Label>
-            <Textarea
-              value={internalNotes}
-              onChange={(e) => setInternalNotes(e.target.value)}
-              rows={2}
-              placeholder="Anotações internas do time"
-            />
-          </div>
+              <div>
+                <Label className="text-xs">Notas internas (não visíveis ao cliente)</Label>
+                <Textarea
+                  value={internalNotes}
+                  onChange={(e) => setInternalNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Anotações internas do time"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <div className="text-xs text-muted-foreground">Data</div>
+                  <div className="font-medium">
+                    {format(new Date(appointment.appointment_date + "T00:00"), "dd/MM/yyyy", { locale: ptBR })}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Início</div>
+                  <div className="font-medium">{appointment.start_time.slice(0, 5)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Fim</div>
+                  <div className="font-medium">{appointment.end_time.slice(0, 5)}</div>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Status</div>
+                <Badge variant="outline">{labelStatus(appointment.status)}</Badge>
+              </div>
+              {appointment.notes && (
+                <div>
+                  <div className="text-xs text-muted-foreground">Observações do cliente</div>
+                  <p className="whitespace-pre-wrap">{appointment.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
@@ -228,9 +261,11 @@ export function AppointmentDetailsDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Fechar
             </Button>
-            <Button onClick={save} disabled={saving}>
-              {saving ? "Salvando…" : "Salvar alterações"}
-            </Button>
+            {isAdmin && (
+              <Button onClick={save} disabled={saving}>
+                {saving ? "Salvando…" : "Salvar alterações"}
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
