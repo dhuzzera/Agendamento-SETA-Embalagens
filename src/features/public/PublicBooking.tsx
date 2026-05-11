@@ -6,19 +6,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
 import { SetaLogo } from "@/components/SetaLogo";
 import {
-  addDays,
   addMinutes,
+  endOfMonth,
   format,
   isBefore,
   parse,
   startOfDay,
+  startOfMonth,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, ChevronLeft, ChevronRight, Calendar as CalIcon, Download } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Calendar as CalIcon,
+  Download,
+  ArrowLeft,
+} from "lucide-react";
 import { toast } from "sonner";
-import { buildGoogleCalendarUrl, downloadIcsFile, type CalendarEvent } from "@/lib/calendar";
+import { cn } from "@/lib/utils";
+import {
+  buildGoogleCalendarUrl,
+  downloadIcsFile,
+  type CalendarEvent,
+} from "@/lib/calendar";
 
 type Profile = {
   id: string;
@@ -33,7 +46,11 @@ type Avail = {
   end_time: string;
   meeting_duration_min: number;
 };
-type Block = { block_date: string; start_time: string | null; end_time: string | null };
+type Block = {
+  block_date: string;
+  start_time: string | null;
+  end_time: string | null;
+};
 type Appt = { appointment_date: string; start_time: string; end_time: string };
 
 export function PublicBooking({ slug }: { slug: string }) {
@@ -41,11 +58,14 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [avails, setAvails] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [appts, setAppts] = useState<Appt[]>([]);
-  const [weekStart, setWeekStart] = useState(() => startOfDay(new Date()));
-  const [loadedWeek, setLoadedWeek] = useState<string | null>(null);
-  const [selected, setSelected] = useState<{ date: Date; start: string; end: string } | null>(
-    null
-  );
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [loadedMonth, setLoadedMonth] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selected, setSelected] = useState<{
+    date: Date;
+    start: string;
+    end: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
 
@@ -89,12 +109,12 @@ export function PublicBooking({ slug }: { slug: string }) {
     void load();
   }, [slug]);
 
-  // load appointments for the visible week
+  // load appointments for the visible month
   useEffect(() => {
     if (!profile) return;
-    const start = format(weekStart, "yyyy-MM-dd");
-    const end = format(addDays(weekStart, 6), "yyyy-MM-dd");
-    setLoadedWeek(null);
+    const start = format(startOfMonth(month), "yyyy-MM-dd");
+    const end = format(endOfMonth(month), "yyyy-MM-dd");
+    setLoadedMonth(null);
     supabase
       .from("appointments")
       .select("appointment_date, start_time, end_time")
@@ -104,14 +124,9 @@ export function PublicBooking({ slug }: { slug: string }) {
       .lte("appointment_date", end)
       .then(({ data }) => {
         setAppts((data as Appt[]) ?? []);
-        setLoadedWeek(start);
+        setLoadedMonth(start);
       });
-  }, [profile, weekStart]);
-
-  const days = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart]
-  );
+  }, [profile, month]);
 
   const slotsFor = (day: Date): { start: string; end: string }[] => {
     const wd = day.getDay();
@@ -154,6 +169,38 @@ export function PublicBooking({ slug }: { slug: string }) {
     return slots;
   };
 
+  // Weekdays the rep ever works on (0=Sun..6=Sat)
+  const workingWeekdays = useMemo(() => {
+    const set = new Set<number>();
+    for (const a of avails) set.add(a.weekday);
+    return set;
+  }, [avails]);
+
+  // Days fully blocked in the current month (for disable in calendar)
+  const fullyBlockedDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const b of blocks) {
+      if (!b.start_time && !b.end_time) set.add(b.block_date);
+    }
+    return set;
+  }, [blocks]);
+
+  const isDayDisabled = (day: Date) => {
+    if (isBefore(day, startOfDay(new Date()))) return true;
+    if (!workingWeekdays.has(day.getDay())) return true;
+    if (fullyBlockedDates.has(format(day, "yyyy-MM-dd"))) return true;
+    return false;
+  };
+
+  const slotsForSelected = useMemo(() => {
+    if (!selectedDate) return [];
+    return slotsFor(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, avails, blocks, appts]);
+
+  const slotsLoading =
+    !!selectedDate && loadedMonth !== format(startOfMonth(month), "yyyy-MM-dd");
+
   const submit = async () => {
     if (!profile || !selected) return;
     if (!name || !email) {
@@ -164,7 +211,12 @@ export function PublicBooking({ slug }: { slug: string }) {
     try {
       const { data: client, error: cErr } = await supabase
         .from("clients")
-        .insert({ name, company: company || null, email, phone: phone || null })
+        .insert({
+          name,
+          company: company || null,
+          email,
+          phone: phone || null,
+        })
         .select("id")
         .single();
       if (cErr) throw cErr;
@@ -183,9 +235,9 @@ export function PublicBooking({ slug }: { slug: string }) {
       if (msg.includes("já reservado") || msg.includes("uniq_appointment")) {
         toast.error("Esse horário acabou de ser reservado. Escolha outro.");
         setSelected(null);
-        // reload
-        const start = format(weekStart, "yyyy-MM-dd");
-        const end = format(addDays(weekStart, 6), "yyyy-MM-dd");
+        // reload appointments for the month
+        const start = format(startOfMonth(month), "yyyy-MM-dd");
+        const end = format(endOfMonth(month), "yyyy-MM-dd");
         const { data } = await supabase
           .from("appointments")
           .select("appointment_date, start_time, end_time")
@@ -288,133 +340,172 @@ export function PublicBooking({ slug }: { slug: string }) {
     <div className="min-h-screen bg-secondary">
       <PublicHeader />
 
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         {/* Rep card */}
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
+        <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
+          <div
+            className="h-20 sm:h-24"
+            style={{ background: "var(--gradient-hero)" }}
+          />
+          <CardContent className="-mt-12 flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-end">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt={profile.full_name}
-                className="h-16 w-16 rounded-full object-cover"
+                className="h-24 w-24 rounded-full border-4 border-card object-cover shadow-md"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-2xl font-bold text-primary">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-card bg-secondary text-3xl font-bold text-primary shadow-md">
                 {profile.full_name[0]}
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">Agendar reunião com</p>
-              <h1 className="text-2xl font-bold">{profile.full_name}</h1>
-              <p className="text-sm text-muted-foreground">Representante Seta Embalagens</p>
+            <div className="pb-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Agendar reunião com
+              </p>
+              <h1 className="mt-1 text-2xl font-bold leading-tight text-foreground sm:text-3xl">
+                {profile.full_name}
+              </h1>
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <CalIcon className="h-3.5 w-3.5" />
+                Representante Seta Embalagens
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {!selected ? (
-          <Card className="mt-6">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-lg font-semibold">
-                  <CalIcon className="h-5 w-5" />
-                  Horários disponíveis
-                </h2>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setWeekStart(addDays(weekStart, -7))}
-                    disabled={isBefore(weekStart, addDays(new Date(), 1))}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {format(weekStart, "dd/MM", { locale: ptBR })} –{" "}
-                    {format(addDays(weekStart, 6), "dd/MM", { locale: ptBR })}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setWeekStart(addDays(weekStart, 7))}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+          <Card className="mt-6 border-0 shadow-[var(--shadow-card)]">
+            <CardContent className="p-0">
+              <div className="grid lg:grid-cols-[1fr_320px]">
+                {/* Calendar */}
+                <div className="border-b p-6 lg:border-b-0 lg:border-r">
+                  <div className="mb-4">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold">
+                      <CalIcon className="h-5 w-5 text-primary" />
+                      Selecione uma data
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Os dias com horários disponíveis estão destacados.
+                    </p>
+                  </div>
 
-              <div className="grid gap-3 md:grid-cols-7">
-                {days.map((day) => {
-                  const weekKey = format(weekStart, "yyyy-MM-dd");
-                  const isLoadingSlots = loadedWeek !== weekKey;
-                  const slots = isLoadingSlots ? [] : slotsFor(day);
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className="rounded-lg border bg-background p-3"
-                    >
-                      <div className="mb-2 text-center">
-                        <div className="text-xs uppercase text-muted-foreground">
-                          {format(day, "EEE", { locale: ptBR })}
-                        </div>
-                        <div className="text-lg font-bold text-primary">
-                          {format(day, "dd")}
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        {isLoadingSlots ? (
-                          <>
-                            <Skeleton className="h-7 w-full" />
-                            <Skeleton className="h-7 w-full" />
-                            <Skeleton className="h-7 w-full" />
-                          </>
-                        ) : slots.length === 0 ? (
-                          <p className="text-center text-xs text-muted-foreground">—</p>
-                        ) : (
-                          slots.map((s) => (
-                            <button
-                              key={s.start}
-                              onClick={() =>
-                                setSelected({ date: day, start: s.start, end: s.end })
-                              }
-                              className="w-full rounded-md border border-primary/30 bg-secondary px-2 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
-                            >
-                              {s.start.slice(0, 5)}
-                            </button>
-                          ))
-                        )}
-                      </div>
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      locale={ptBR}
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      month={month}
+                      onMonthChange={setMonth}
+                      disabled={isDayDisabled}
+                      showOutsideDays={false}
+                      className={cn("pointer-events-auto p-0 [--cell-size:2.5rem]")}
+                    />
+                  </div>
+                </div>
+
+                {/* Slots */}
+                <div className="p-6">
+                  <div className="mb-4">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      Horários
+                    </h3>
+                    {selectedDate && (
+                      <p className="mt-1 text-sm font-medium text-foreground">
+                        {format(selectedDate, "EEEE, dd 'de' MMMM", {
+                          locale: ptBR,
+                        })}
+                      </p>
+                    )}
+                  </div>
+
+                  {!selectedDate ? (
+                    <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center">
+                      <CalIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Escolha uma data para ver os horários disponíveis.
+                      </p>
                     </div>
-                  );
-                })}
+                  ) : slotsLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : slotsForSelected.length === 0 ? (
+                    <div className="rounded-lg border border-dashed bg-muted/30 p-6 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum horário disponível neste dia.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Tente outra data no calendário.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid max-h-[420px] grid-cols-2 gap-2 overflow-y-auto pr-1 lg:grid-cols-1">
+                      {slotsForSelected.map((s) => (
+                        <button
+                          key={s.start}
+                          onClick={() =>
+                            setSelected({
+                              date: selectedDate,
+                              start: s.start,
+                              end: s.end,
+                            })
+                          }
+                          className="group flex w-full items-center justify-center rounded-md border-2 border-primary/20 bg-background px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-sm"
+                        >
+                          {s.start.slice(0, 5)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <Card className="mt-6">
+          <Card className="mt-6 border-0 shadow-[var(--shadow-card)]">
             <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-6 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold">Confirme seus dados</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {format(selected.date, "EEEE, dd 'de' MMMM", { locale: ptBR })} •{" "}
-                    {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <CalIcon className="h-3.5 w-3.5" />
+                    {format(selected.date, "EEEE, dd 'de' MMMM", {
+                      locale: ptBR,
+                    })}{" "}
+                    • {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => setSelected(null)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelected(null)}
+                >
+                  <ArrowLeft className="mr-1.5 h-4 w-4" />
                   Trocar horário
                 </Button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div>
+                <div className="space-y-1.5">
                   <Label>Nome *</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label>Empresa</Label>
-                  <Input value={company} onChange={(e) => setCompany(e.target.value)} />
+                  <Input
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                  />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label>E-mail *</Label>
                   <Input
                     type="email"
@@ -422,11 +513,14 @@ export function PublicBooking({ slug }: { slug: string }) {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label>Telefone</Label>
-                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>
                   <Textarea
                     value={notes}
@@ -477,40 +571,32 @@ function BookingSkeleton() {
   return (
     <div className="min-h-screen bg-secondary">
       <PublicHeader />
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        {/* Rep card */}
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <Skeleton className="h-16 w-16 rounded-full" />
-            <div className="flex-1 space-y-2">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
+          <Skeleton className="h-20 w-full sm:h-24" />
+          <CardContent className="-mt-12 flex items-end gap-4 p-6">
+            <Skeleton className="h-24 w-24 rounded-full" />
+            <div className="flex-1 space-y-2 pb-1">
               <Skeleton className="h-3 w-40" />
-              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-7 w-56" />
               <Skeleton className="h-3 w-48" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Week grid */}
-        <Card className="mt-6">
-          <CardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-8 w-44" />
-            </div>
-            <div className="grid gap-3 md:grid-cols-7">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="rounded-lg border bg-background p-3">
-                  <div className="mb-2 flex flex-col items-center gap-1">
-                    <Skeleton className="h-3 w-8" />
-                    <Skeleton className="h-5 w-6" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-7 w-full" />
-                    <Skeleton className="h-7 w-full" />
-                    <Skeleton className="h-7 w-full" />
-                  </div>
-                </div>
-              ))}
+        <Card className="mt-6 border-0 shadow-[var(--shadow-card)]">
+          <CardContent className="p-0">
+            <div className="grid lg:grid-cols-[1fr_320px]">
+              <div className="border-b p-6 lg:border-b-0 lg:border-r">
+                <Skeleton className="mb-4 h-6 w-48" />
+                <Skeleton className="h-72 w-full" />
+              </div>
+              <div className="space-y-2 p-6">
+                <Skeleton className="mb-4 h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
             </div>
           </CardContent>
         </Card>
