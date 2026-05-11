@@ -708,15 +708,41 @@ function PublicHeader() {
   );
 }
 
+function PublicFooter() {
+  return (
+    <footer className="mt-12 border-t border-border/60 bg-background">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
+        <div className="flex items-center gap-3">
+          <SetaLogo variant="dark" className="h-9 w-auto" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Embalagens
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Seta Embalagens — Produzimos embalagens, entregamos confiança.
+        </p>
+        <a
+          href="https://setaembalagens.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary hover:text-primary-hover"
+        >
+          setaembalagens.com.br
+        </a>
+      </div>
+    </footer>
+  );
+}
+
 function BookingSkeleton() {
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="flex min-h-screen flex-col bg-secondary">
       <PublicHeader />
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         <Card className="overflow-hidden border-0 shadow-[var(--shadow-card)]">
-          <Skeleton className="h-20 w-full sm:h-24" />
-          <CardContent className="-mt-12 flex items-end gap-4 p-6">
-            <Skeleton className="h-24 w-24 rounded-full" />
+          <Skeleton className="h-24 w-full sm:h-32" />
+          <CardContent className="-mt-14 flex items-end gap-4 p-6 sm:p-8">
+            <Skeleton className="h-28 w-28 rounded-full" />
             <div className="flex-1 space-y-2 pb-1">
               <Skeleton className="h-3 w-40" />
               <Skeleton className="h-7 w-56" />
@@ -742,6 +768,7 @@ function BookingSkeleton() {
           </CardContent>
         </Card>
       </div>
+      <PublicFooter />
     </div>
   );
 }
