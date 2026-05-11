@@ -53,17 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
+        // dispara o load do profile sem bloquear o render
         setTimeout(() => void loadProfile(s.user.id), 0);
       } else {
         setProfile(null);
         setRole(null);
       }
     });
-    supabase.auth.getSession().then(async ({ data }) => {
+    void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
-      if (data.session?.user) await loadProfile(data.session.user.id);
+      // libera o app para renderizar imediatamente; profile/role carregam em paralelo
       setLoading(false);
+      if (data.session?.user) void loadProfile(data.session.user.id);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
