@@ -99,6 +99,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Preconnect ao backend Supabase (auth/session é uma das primeiras
+      // requisições; antecipar DNS+TLS reduz tempo até o primeiro dado e
+      // melhora o LCP em telas com dados acima da dobra)
+      { rel: "dns-prefetch", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co" },
+      { rel: "preconnect", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co", crossOrigin: "anonymous" },
       // Preconnect ao CDN das fontes para encurtar handshake TLS/DNS
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -112,6 +117,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      },
+      // Preload do peso 600 do Inter (usado em headings/botões acima da
+      // dobra) — evita o "swap" tardio do webfont no LCP
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
+        crossOrigin: "anonymous",
       },
     ],
   }),
