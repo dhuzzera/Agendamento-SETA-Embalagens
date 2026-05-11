@@ -96,6 +96,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c8e02594-2966-46f6-b349-c326f2590946/id-preview-cf131715--594eb6fb-102e-4b64-9d24-daa8117ba59c.lovable.app-1778517277487.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { name: "theme-color", content: "#1a3264" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Seta Agende" },
+      { name: "application-name", content: "Seta Agende" },
     ],
     links: [
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
