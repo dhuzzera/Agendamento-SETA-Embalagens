@@ -466,24 +466,51 @@ export function PublicBooking({ slug }: { slug: string }) {
                       onMonthChange={setMonth}
                       disabled={isDayDisabled}
                       showOutsideDays={false}
-                      className={cn("pointer-events-auto p-0 [--cell-size:2.5rem]")}
+                      modifiers={{ available: availableDates }}
+                      modifiersClassNames={{
+                        available:
+                          "relative font-semibold text-primary after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+                      }}
+                      className={cn(
+                        "pointer-events-auto p-0 [--cell-size:2.75rem] sm:[--cell-size:2.5rem]",
+                      )}
                     />
+                  </div>
+
+                  {/* Legend */}
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                      Com horários disponíveis
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                      Indisponível
+                    </span>
                   </div>
                 </div>
 
                 {/* Slots */}
                 <div className="p-6">
-                  <div className="mb-4">
-                    <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      Horários
-                    </h3>
-                    {selectedDate && (
-                      <p className="mt-1 text-sm font-medium text-foreground">
-                        {format(selectedDate, "EEEE, dd 'de' MMMM", {
-                          locale: ptBR,
-                        })}
-                      </p>
+                  <div className="mb-4 flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        Horários
+                      </h3>
+                      {selectedDate && (
+                        <p className="mt-1 text-sm font-medium capitalize text-foreground">
+                          {format(selectedDate, "EEEE, dd 'de' MMMM", {
+                            locale: ptBR,
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    {selectedDate && !slotsLoading && slotsForSelected.length > 0 && (
+                      <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                        {slotsForSelected.length}{" "}
+                        {slotsForSelected.length === 1 ? "horário" : "horários"}
+                      </span>
                     )}
                   </div>
 
@@ -505,27 +532,51 @@ export function PublicBooking({ slug }: { slug: string }) {
                       <p className="text-sm text-muted-foreground">
                         Nenhum horário disponível neste dia.
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Tente outra data no calendário.
-                      </p>
+                      {availableDates.length > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-3"
+                          onClick={() => setSelectedDate(availableDates[0])}
+                        >
+                          Ver próxima data disponível
+                        </Button>
+                      )}
                     </div>
                   ) : (
-                    <div className="grid max-h-[420px] grid-cols-2 gap-2 overflow-y-auto pr-1 lg:grid-cols-1">
-                      {slotsForSelected.map((s) => (
-                        <button
-                          key={s.start}
-                          onClick={() =>
-                            setSelected({
-                              date: selectedDate,
-                              start: s.start,
-                              end: s.end,
-                            })
-                          }
-                          className="group flex w-full items-center justify-center rounded-md border-2 border-primary/20 bg-background px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-sm"
-                        >
-                          {s.start.slice(0, 5)}
-                        </button>
-                      ))}
+                    <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1 lg:max-h-[460px]">
+                      {(
+                        [
+                          ["morning", "Manhã"],
+                          ["afternoon", "Tarde"],
+                          ["evening", "Noite"],
+                        ] as const
+                      ).map(([key, label]) =>
+                        groupedSlots[key].length === 0 ? null : (
+                          <div key={key}>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {label}
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+                              {groupedSlots[key].map((s) => (
+                                <button
+                                  key={s.start}
+                                  onClick={() =>
+                                    setSelected({
+                                      date: selectedDate,
+                                      start: s.start,
+                                      end: s.end,
+                                    })
+                                  }
+                                  className="flex min-h-11 w-full items-center justify-center rounded-md border-2 border-primary/20 bg-background px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-sm active:scale-[0.98]"
+                                >
+                                  {s.start.slice(0, 5)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ),
+                      )}
                     </div>
                   )}
                 </div>
