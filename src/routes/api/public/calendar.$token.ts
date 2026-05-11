@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
         const { data: appts } = await supabaseAdmin
           .from("appointments")
           .select(
-            "id, appointment_date, start_time, end_time, status, notes, client_id, updated_at"
+            "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, client_id, updated_at"
           )
           .eq("representative_id", profile.id)
           .in("status", ["scheduled", "rescheduled", "completed"])
@@ -118,17 +118,21 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
           const clientLabel = c
             ? `${c.name}${c.company ? ` (${c.company})` : ""}`
             : "Cliente";
+          const isPresencial = a.meeting_type === "presencial";
+          const modalidade = isPresencial ? "Presencial" : "Online";
           const summary =
             a.status === "cancelled"
-              ? `[CANCELADA] Reunião — ${clientLabel}`
-              : `Reunião — ${clientLabel}`;
+              ? `[CANCELADA] Reunião ${modalidade} — ${clientLabel}`
+              : `Reunião ${modalidade} — ${clientLabel}`;
           const descParts = [];
+          descParts.push(`Modalidade: ${modalidade}`);
+          if (isPresencial && a.location) descParts.push(`Endereço: ${a.location}`);
           if (c?.email) descParts.push(`E-mail: ${c.email}`);
           if (c?.phone) descParts.push(`Telefone: ${c.phone}`);
           if (a.notes) descParts.push(`Observações: ${a.notes}`);
           descParts.push(`Status: ${a.status}`);
 
-          lines.push(
+          const eventLines = [
             "BEGIN:VEVENT",
             `UID:appointment-${a.id}@seta-agende`,
             `DTSTAMP:${stamp}`,
@@ -136,9 +140,15 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
             `DTEND;TZID=${SP_TZID}:${toLocalStamp(a.appointment_date, a.end_time)}`,
             `SUMMARY:${escapeIcs(summary)}`,
             `DESCRIPTION:${escapeIcs(descParts.join("\n"))}`,
+          ];
+          if (isPresencial && a.location) {
+            eventLines.push(`LOCATION:${escapeIcs(a.location)}`);
+          }
+          eventLines.push(
             a.status === "cancelled" ? "STATUS:CANCELLED" : "STATUS:CONFIRMED",
             "END:VEVENT",
           );
+          lines.push(...eventLines);
         }
         lines.push("END:VCALENDAR");
 
