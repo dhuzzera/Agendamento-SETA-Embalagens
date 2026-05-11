@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -7,7 +7,8 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
+  const location = useLocation();
   if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
@@ -15,6 +16,13 @@ function AppLayout() {
       </div>
     );
   if (!user) return <Navigate to="/login" />;
+
+  if (
+    profile?.must_change_password &&
+    location.pathname !== "/alterar-senha"
+  ) {
+    return <Navigate to="/alterar-senha" />;
+  }
 
   return (
     <div className="min-h-screen bg-secondary/40">
@@ -25,3 +33,4 @@ function AppLayout() {
     </div>
   );
 }
+
