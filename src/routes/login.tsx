@@ -38,74 +38,124 @@ function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Painel institucional (desktop) */}
       <div
-        className="hidden flex-col justify-between p-10 text-primary-foreground lg:flex"
+        className="relative hidden flex-col justify-between overflow-hidden p-12 text-primary-foreground lg:flex"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <SetaLogo variant="light" className="h-14" />
-        <div>
-          <h2 className="text-3xl font-bold !text-primary-foreground">
+        {/* Decoração sutil */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full opacity-20 blur-3xl"
+          style={{ background: "var(--primary-foreground)" }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-40 -left-20 h-96 w-96 rounded-full opacity-10 blur-3xl"
+          style={{ background: "var(--primary-foreground)" }}
+        />
+
+        <div className="relative">
+          <SetaLogo variant="light" className="h-14" />
+        </div>
+
+        <div className="relative max-w-md">
+          <h2 className="text-4xl font-bold leading-tight !text-primary-foreground">
             Bem-vindo ao painel comercial.
           </h2>
-          <p className="mt-3 max-w-md text-primary-foreground/85">
-            Gerencie sua agenda, compartilhe seu link de reuniões e acompanhe seus
-            clientes — tudo em um único lugar.
+          <p className="mt-4 text-base leading-relaxed text-primary-foreground/85">
+            Gerencie sua agenda, compartilhe seu link de reuniões e acompanhe
+            seus clientes — tudo em um único lugar.
           </p>
+
+          <ul className="mt-8 space-y-3 text-sm text-primary-foreground/90">
+            <li className="flex items-start gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-foreground/80" />
+              Agenda integrada com disponibilidade em tempo real
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-foreground/80" />
+              Link público de agendamento para seus clientes
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-foreground/80" />
+              Histórico e perfil do representante centralizados
+            </li>
+          </ul>
         </div>
-        <p className="text-xs text-primary-foreground/70">
-          © {new Date().getFullYear()} Seta Embalagens
+
+        <p className="relative text-xs text-primary-foreground/70">
+          © {new Date().getFullYear()} Seta Embalagens — Todos os direitos reservados.
         </p>
       </div>
 
-      <div className="flex items-center justify-center bg-background p-6">
+      {/* Formulário */}
+      <div className="flex items-center justify-center bg-background p-6 sm:p-10">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
+          {/* Logo mobile */}
+          <div className="mb-8 flex justify-center lg:hidden">
             <div
-              className="rounded-lg p-4"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-4 shadow-[var(--shadow-elegant)]"
               style={{ background: "var(--gradient-hero)" }}
             >
-              <SetaLogo variant="light" className="h-12" />
+              <SetaLogo variant="light" className="h-10" />
             </div>
           </div>
-          <h1 className="text-2xl font-semibold">Entrar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Acesse sua conta de administrador ou representante.
-          </p>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <div className="space-y-1.5">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Entrar na sua conta
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Acesse o painel de administrador ou representante.
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit} className="mt-8 space-y-5">
+            <div className="space-y-2">
               <Label htmlFor="email">E-mail corporativo</Label>
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.nome@setaembalagens.com.br"
+                className="h-11"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="h-11"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={busy}>
+            <Button
+              type="submit"
+              className="h-11 w-full text-base font-medium shadow-[var(--shadow-elegant)]"
+              disabled={busy}
+            >
               {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {busy ? "Entrando…" : "Entrar"}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Sem conta? Solicite acesso ao administrador da Seta.{" "}
-            <Link to="/" className="text-primary hover:underline">
-              Voltar
-            </Link>
-          </p>
+          <div className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground">
+            Sem conta? Solicite acesso ao administrador da Seta.
+            <div className="mt-2">
+              <Link to="/" className="font-medium text-primary hover:underline">
+                ← Voltar para a página inicial
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
