@@ -26,16 +26,12 @@ export function AppHeader() {
           <NavLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>
             Painel
           </NavLink>
-          {!isAdmin && (
-            <>
-              <NavLink to="/agenda" icon={<Calendar className="h-4 w-4" />}>
-                Agenda
-              </NavLink>
-              <NavLink to="/disponibilidade" icon={<Settings className="h-4 w-4" />}>
-                Disponibilidade
-              </NavLink>
-            </>
-          )}
+          <NavLink to="/agenda" icon={<Calendar className="h-4 w-4" />}>
+            Agenda
+          </NavLink>
+          <NavLink to="/disponibilidade" icon={<Settings className="h-4 w-4" />}>
+            Disponibilidade
+          </NavLink>
           {isAdmin && (
             <NavLink to="/admin/usuarios" icon={<Users className="h-4 w-4" />}>
               Usuários
