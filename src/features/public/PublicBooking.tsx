@@ -288,6 +288,10 @@ export function PublicBooking({ slug }: { slug: string }) {
       toast.error("Preencha nome e e-mail");
       return;
     }
+    if (meetingType === "presencial" && !address.trim()) {
+      toast.error("Informe o endereço da reunião presencial");
+      return;
+    }
     setBusy(true);
     try {
       const { data: client, error: cErr } = await supabase
@@ -308,6 +312,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         start_time: selected.start,
         end_time: selected.end,
         notes: notes || null,
+        meeting_type: meetingType,
+        location: meetingType === "presencial" ? address.trim() : null,
       });
       if (aErr) throw aErr;
       setSuccess(true);
