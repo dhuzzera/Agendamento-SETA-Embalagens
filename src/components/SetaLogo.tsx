@@ -1,5 +1,5 @@
-import logoLight from "@/assets/seta-logo-white.png";
-import logoDark from "@/assets/seta-logo-dark.png";
+import logoLight from "@/assets/seta-logo-white.webp";
+import logoDark from "@/assets/seta-logo-dark.webp";
 
 type Props = { variant?: "light" | "dark"; className?: string };
 
@@ -14,11 +14,13 @@ export function SetaLogo({ variant = "dark", className = "" }: Props) {
     <img
       src={src}
       alt="Seta Embalagens"
-      width={1266}
-      height={633}
+      width={320}
+      height={160}
       className={`block h-10 w-auto max-w-max shrink-0 self-start select-none ${className}`}
       decoding="async"
       loading="eager"
+      // Sinaliza ao browser que é o LCP candidate na home
+      fetchPriority="high"
       draggable={false}
     />
   );
