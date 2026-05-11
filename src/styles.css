@@ -2,6 +2,18 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Fallback metricamente ajustado ao Inter — evita CLS quando a webfont
+ * termina de baixar e substitui o system font. Valores derivados das
+ * métricas oficiais do Inter vs. Arial. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* Seta Embalagens — design system institucional
