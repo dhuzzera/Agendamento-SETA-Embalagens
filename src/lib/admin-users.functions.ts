@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { holidaysBetween } from "@/lib/holidays";
 
 const createSchema = z.object({
   email: z.string().trim().email().max(255),
@@ -58,6 +59,34 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("user_roles")
         .insert({ user_id: uid, role: "admin" });
+    } else {
+      // Representante novo: padroniza horários (Seg–Sex 07:00–18:00, 60 min)
+      // e bloqueia feriados nacionais dos próximos 12 meses.
+      const standardAvails = [1, 2, 3, 4, 5].map((weekday) => ({
+        representative_id: uid,
+        weekday,
+        start_time: "07:00:00",
+        end_time: "18:00:00",
+        meeting_duration_min: 60,
+        active: true,
+      }));
+      await supabaseAdmin.from("availabilities").insert(standardAvails);
+
+      const today = new Date();
+      const yearAhead = new Date(today);
+      yearAhead.setFullYear(today.getFullYear() + 1);
+      const holidays = holidaysBetween(today, yearAhead);
+      if (holidays.length > 0) {
+        await supabaseAdmin.from("blocks").insert(
+          holidays.map((h) => ({
+            representative_id: uid,
+            block_date: h.date,
+            start_time: null,
+            end_time: null,
+            reason: `Feriado nacional: ${h.name}`,
+          })),
+        );
+      }
     }
 
     return { id: uid };
