@@ -71,6 +71,14 @@ export function AvailabilityManager() {
 
   useEffect(() => {
     void load();
+    if (profile) {
+      void supabase
+        .from("profiles")
+        .select("calendar_token")
+        .eq("id", profile.id)
+        .maybeSingle()
+        .then(({ data }) => setCalendarToken((data?.calendar_token as string) ?? null));
+    }
   }, [profile]);
 
   const addAvail = async () => {
