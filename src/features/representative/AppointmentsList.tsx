@@ -561,7 +561,7 @@ export function AppointmentsList() {
             </p>
           ) : (
             <div className="divide-y">
-              {rows.map((r) => (
+              {sortedRows.map((r) => (
                 <div
                   key={r.id}
                   role="button"
