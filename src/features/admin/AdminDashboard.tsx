@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Shield, TrendingUp } from "lucide-react";
@@ -8,7 +8,6 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { lazy, Suspense } from "react";
 import {
-  PageHeaderSkeleton,
   StatCardsRowSkeleton,
   ListCardSkeleton,
   ChartSkeleton,
@@ -17,30 +16,11 @@ const MonthlyMetrics = lazy(() =>
   import("./MonthlyMetrics").then((m) => ({ default: m.MonthlyMetrics })),
 );
 
-type Counts = {
-  reps: number;
-  admins: number;
-  today: number;
-  week: number;
-  month: number;
-};
-
-type Upcoming = {
-  id: string;
-  appointment_date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  rep_name: string;
-  client_name: string;
-};
-
 export function AdminDashboard() {
-  const [counts, setCounts] = useState<Counts | null>(null);
-  const [upcoming, setUpcoming] = useState<Upcoming[] | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
+  const { data: counts } = useQuery({
+    queryKey: ["admin-dashboard", "counts"],
+    staleTime: 60_000,
+    queryFn: async () => {
       const today = format(new Date(), "yyyy-MM-dd");
       const wkStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
       const wkEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
@@ -66,50 +46,51 @@ export function AdminDashboard() {
             .lte("appointment_date", mEnd),
         ]);
 
-      setCounts({
+      return {
         reps: roles?.filter((r) => r.role === "representative").length ?? 0,
         admins: roles?.filter((r) => r.role === "admin").length ?? 0,
         today: tdC ?? 0,
         week: wkC ?? 0,
         month: mC ?? 0,
-      });
+      };
+    },
+  });
 
+  const { data: upcoming } = useQuery({
+    queryKey: ["admin-dashboard", "upcoming"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
       const { data: appts } = await supabase
         .from("appointments")
         .select(
-          "id, appointment_date, start_time, end_time, status, representative_id, client_id"
+          "id, appointment_date, start_time, end_time, status, representative_id, client_id",
         )
         .gte("appointment_date", today)
         .order("appointment_date", { ascending: true })
         .order("start_time", { ascending: true })
         .limit(10);
 
-      if (appts && appts.length) {
-        const repIds = [...new Set(appts.map((a) => a.representative_id))];
-        const cliIds = [...new Set(appts.map((a) => a.client_id))];
-        const [{ data: reps }, { data: clis }] = await Promise.all([
-          supabase.from("profiles").select("id, full_name").in("id", repIds),
-          supabase.from("clients").select("id, name").in("id", cliIds),
-        ]);
-        const repMap = new Map(reps?.map((r) => [r.id, r.full_name]));
-        const cliMap = new Map(clis?.map((c) => [c.id, c.name]));
-        setUpcoming(
-          appts.map((a) => ({
-            id: a.id,
-            appointment_date: a.appointment_date,
-            start_time: a.start_time,
-            end_time: a.end_time,
-            status: a.status,
-            rep_name: repMap.get(a.representative_id) ?? "—",
-            client_name: cliMap.get(a.client_id) ?? "—",
-          }))
-        );
-      } else {
-        setUpcoming([]);
-      }
-    };
-    void load();
-  }, []);
+      if (!appts?.length) return [];
+      const repIds = [...new Set(appts.map((a) => a.representative_id))];
+      const cliIds = [...new Set(appts.map((a) => a.client_id))];
+      const [{ data: reps }, { data: clis }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").in("id", repIds),
+        supabase.from("clients").select("id, name").in("id", cliIds),
+      ]);
+      const repMap = new Map(reps?.map((r) => [r.id, r.full_name]));
+      const cliMap = new Map(clis?.map((c) => [c.id, c.name]));
+      return appts.map((a) => ({
+        id: a.id,
+        appointment_date: a.appointment_date,
+        start_time: a.start_time,
+        end_time: a.end_time,
+        status: a.status,
+        rep_name: repMap.get(a.representative_id) ?? "—",
+        client_name: cliMap.get(a.client_id) ?? "—",
+      }));
+    },
+  });
 
   return (
     <div className="space-y-8">
@@ -138,7 +119,7 @@ export function AdminDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {upcoming === null ? (
+          {upcoming === undefined ? (
             <ListCardSkeleton title={false} rows={4} />
           ) : upcoming.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nenhum agendamento futuro.</p>
