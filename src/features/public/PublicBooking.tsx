@@ -129,7 +129,6 @@ export function PublicBooking({ slug }: { slug: string }) {
       });
   }, [profile, month]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const slotsFor = (day: Date): { start: string; end: string }[] => {
     const wd = day.getDay();
     const dayAvails = avails.filter((a) => a.weekday === wd);
