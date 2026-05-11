@@ -24,7 +24,12 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MapPin, Copy, ExternalLink } from "lucide-react";
+import { MapPin, Copy, ExternalLink, CalendarPlus, Download } from "lucide-react";
+import {
+  buildGoogleCalendarUrl,
+  downloadIcsFile,
+  type CalendarEvent,
+} from "@/lib/calendar";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
