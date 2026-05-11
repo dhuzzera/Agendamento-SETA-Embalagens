@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Calendar, Users, Settings, LayoutDashboard } from "lucide-react";
+import { LogOut, Calendar, Users, Settings, LayoutDashboard, Shield, UserCircle2 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
+import { useViewMode } from "@/lib/view-mode";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function AppHeader() {
   const { profile, role, signOut } = useAuth();
@@ -40,6 +42,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {isAdmin && <ViewSwitcher />}
           <div className="hidden text-right text-sm sm:block">
             <div className="font-medium leading-tight">{profile?.full_name}</div>
             <div className="text-xs text-sidebar-foreground/70">
