@@ -71,10 +71,10 @@ export function RepDashboard() {
     void load();
   }, [profile]);
 
-  const link =
-    profile?.slug && typeof window !== "undefined"
-      ? `${window.location.origin}/${profile.slug}`
-      : "";
+  // Domínio público curto e estável (independente de preview/sandbox)
+  const PUBLIC_HOST = "seta-agendamento.lovable.app";
+  const link = profile?.slug ? `https://${PUBLIC_HOST}/${profile.slug}` : "";
+  const linkDisplay = profile?.slug ? `${PUBLIC_HOST}/${profile.slug}` : "";
 
   const copyLink = () => {
     if (!link) return;
