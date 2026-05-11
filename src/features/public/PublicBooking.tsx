@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SetaLogo } from "@/components/SetaLogo";
 import {
   addDays,
@@ -41,6 +42,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [weekStart, setWeekStart] = useState(() => startOfDay(new Date()));
+  const [loadedWeek, setLoadedWeek] = useState<string | null>(null);
   const [selected, setSelected] = useState<{ date: Date; start: string; end: string } | null>(
     null
   );
@@ -92,6 +94,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (!profile) return;
     const start = format(weekStart, "yyyy-MM-dd");
     const end = format(addDays(weekStart, 6), "yyyy-MM-dd");
+    setLoadedWeek(null);
     supabase
       .from("appointments")
       .select("appointment_date, start_time, end_time")
@@ -99,7 +102,10 @@ export function PublicBooking({ slug }: { slug: string }) {
       .eq("status", "scheduled")
       .gte("appointment_date", start)
       .lte("appointment_date", end)
-      .then(({ data }) => setAppts((data as Appt[]) ?? []));
+      .then(({ data }) => {
+        setAppts((data as Appt[]) ?? []);
+        setLoadedWeek(start);
+      });
   }, [profile, weekStart]);
 
   const days = useMemo(
