@@ -12,4 +12,29 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  vite: {
+    css: {
+      // Use Lightning CSS for transformation + minification: faster and more
+      // aggressive than esbuild (drops unused @keyframes, merges rules,
+      // shortens colors, removes whitespace + comments).
+      transformer: "lightningcss",
+      lightningcss: {
+        targets: {
+          // Modern evergreen browsers — allows shorter output (no legacy prefixes).
+          chrome: 110 << 16,
+          firefox: 110 << 16,
+          safari: 16 << 16,
+          edge: 110 << 16,
+        },
+        drafts: { customMedia: true },
+      },
+    },
+    build: {
+      cssMinify: "lightningcss",
+      cssCodeSplit: true,
+      // Inline tiny CSS-referenced assets to avoid extra requests.
+      assetsInlineLimit: 4096,
+      reportCompressedSize: false,
+    },
+  },
 });
