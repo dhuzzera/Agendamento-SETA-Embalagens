@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
 import { Route as AppDisponibilidadeRouteImport } from './routes/_app/disponibilidade'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppAlterarSenhaRouteImport } from './routes/_app/alterar-senha'
 import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app/admin.usuarios'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
@@ -48,6 +49,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppAlterarSenhaRoute = AppAlterarSenhaRouteImport.update({
+  id: '/alterar-senha',
+  path: '/alterar-senha',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppAgendaRoute = AppAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
+  '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/agenda': typeof AppAgendaRoute
+  '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/agenda': typeof AppAgendaRoute
+  '/_app/alterar-senha': typeof AppAlterarSenhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/agenda'
+    | '/alterar-senha'
     | '/dashboard'
     | '/disponibilidade'
     | '/agendar/$slug'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/agenda'
+    | '/alterar-senha'
     | '/dashboard'
     | '/disponibilidade'
     | '/agendar/$slug'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/_app/agenda'
+    | '/_app/alterar-senha'
     | '/_app/dashboard'
     | '/_app/disponibilidade'
     | '/agendar/$slug'
@@ -182,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/alterar-senha': {
+      id: '/_app/alterar-senha'
+      path: '/alterar-senha'
+      fullPath: '/alterar-senha'
+      preLoaderRoute: typeof AppAlterarSenhaRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/agenda': {
       id: '/_app/agenda'
       path: '/agenda'
@@ -208,6 +227,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppAgendaRoute: typeof AppAgendaRoute
+  AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadeRoute: typeof AppDisponibilidadeRoute
   AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
@@ -215,6 +235,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAgendaRoute: AppAgendaRoute,
+  AppAlterarSenhaRoute: AppAlterarSenhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadeRoute: AppDisponibilidadeRoute,
   AppAdminUsuariosRoute: AppAdminUsuariosRoute,
@@ -234,3 +255,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
