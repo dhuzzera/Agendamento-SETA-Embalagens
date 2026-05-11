@@ -16,7 +16,7 @@ export function SetaLogo({ variant = "dark", className = "" }: Props) {
       alt="Seta Embalagens"
       width={1266}
       height={633}
-      className={`h-10 w-auto select-none ${className}`}
+      className={`block h-10 w-auto max-w-max shrink-0 self-start select-none ${className}`}
       decoding="async"
       loading="eager"
       draggable={false}
