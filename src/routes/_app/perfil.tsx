@@ -172,6 +172,10 @@ function ProfilePage() {
       toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos");
       return;
     }
+    if (!allowOnline && !allowPresencial) {
+      toast.error("Mantenha pelo menos uma modalidade ativa (online ou presencial).");
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase
@@ -180,6 +184,8 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
+          allow_online: allowOnline,
+          allow_presencial: allowPresencial,
         })
         .eq("id", profile.id);
       if (error) throw error;
