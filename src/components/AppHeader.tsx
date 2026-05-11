@@ -2,9 +2,10 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOut, Calendar, Users, Settings, LayoutDashboard, Shield, UserCircle2 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
-import { useViewMode } from "@/lib/view-mode";
+import { useViewMode, ViewModePermissionError } from "@/lib/view-mode";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function AppHeader() {
   const { profile, role, signOut } = useAuth();
@@ -86,18 +87,32 @@ function NavLink({
 }
 
 function ViewSwitcher() {
+  const { role } = useAuth();
   const [mode, setMode] = useViewMode();
+  const isAdmin = role === "admin";
+  if (!isAdmin) return null;
   const opts: { value: "admin" | "representative"; label: string; icon: React.ReactNode }[] = [
     { value: "admin", label: "Admin", icon: <Shield className="h-3.5 w-3.5" /> },
     { value: "representative", label: "Representante", icon: <UserCircle2 className="h-3.5 w-3.5" /> },
   ];
+  const handleClick = (value: "admin" | "representative") => {
+    try {
+      setMode(value);
+    } catch (err) {
+      if (err instanceof ViewModePermissionError) {
+        toast.error(err.message);
+      } else {
+        throw err;
+      }
+    }
+  };
   return (
     <div className="hidden items-center gap-0.5 rounded-full bg-sidebar-accent/40 p-0.5 sm:flex">
       {opts.map((o) => (
         <button
           key={o.value}
           type="button"
-          onClick={() => setMode(o.value)}
+          onClick={() => handleClick(o.value)}
           className={cn(
             "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
             mode === o.value
