@@ -11,7 +11,6 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
-import { PerformanceReporter } from "@/lib/perf-reporter";
 
 function NotFoundComponent() {
   return (
@@ -89,59 +88,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:title", content: "Seta Embalagens — Agendamento Comercial" },
       { name: "twitter:title", content: "Seta Embalagens — Agendamento Comercial" },
-      { name: "description", content: "Seta Agende is a web-based scheduling system for Seta Embalagens representatives." },
-      { property: "og:description", content: "Seta Agende is a web-based scheduling system for Seta Embalagens representatives." },
-      { name: "twitter:description", content: "Seta Agende is a web-based scheduling system for Seta Embalagens representatives." },
+      { name: "description", content: "Site para agendamento de reuniões." },
+      { property: "og:description", content: "Site para agendamento de reuniões." },
+      { name: "twitter:description", content: "Site para agendamento de reuniões." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c8e02594-2966-46f6-b349-c326f2590946/id-preview-cf131715--594eb6fb-102e-4b64-9d24-daa8117ba59c.lovable.app-1778517277487.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c8e02594-2966-46f6-b349-c326f2590946/id-preview-cf131715--594eb6fb-102e-4b64-9d24-daa8117ba59c.lovable.app-1778517277487.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
-      { name: "theme-color", content: "#1a3264" },
-      { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      { name: "apple-mobile-web-app-title", content: "Seta Agende" },
-      { name: "application-name", content: "Seta Agende" },
     ],
-    links: [
-      { rel: "icon", href: "/favicon.ico", sizes: "any" },
-      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
-      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
-      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
-      { rel: "icon", type: "image/png", sizes: "192x192", href: "/maskable-icon-192.png", purpose: "maskable" } as any,
-      { rel: "icon", type: "image/png", sizes: "512x512", href: "/maskable-icon-512.png", purpose: "maskable" } as any,
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "stylesheet", href: appCss },
-      // Preconnect ao backend Supabase (auth/session é uma das primeiras
-      // requisições; antecipar DNS+TLS reduz tempo até o primeiro dado e
-      // melhora o LCP em telas com dados acima da dobra)
-      { rel: "dns-prefetch", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co" },
-      { rel: "preconnect", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co", crossOrigin: "anonymous" },
-      // Preconnect ao CDN das fontes para encurtar handshake TLS/DNS
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      // Preload do CSS do Inter (display=swap evita FOIT/CLS, já que o
-      // fallback no styles.css usa size-adjust para casar as métricas)
-      {
-        rel: "preload",
-        as: "style",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
-      },
-      // Preload do peso 600 do Inter (usado em headings/botões acima da
-      // dobra) — evita o "swap" tardio do webfont no LCP
-      {
-        rel: "preload",
-        as: "font",
-        type: "font/woff2",
-        href: "https://fonts.gstatic.com/s/inter/v19/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2",
-        crossOrigin: "anonymous",
-      },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -169,7 +124,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
-        <PerformanceReporter />
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </QueryClientProvider>
