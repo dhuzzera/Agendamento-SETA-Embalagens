@@ -344,59 +344,133 @@ export function PublicBooking({ slug }: { slug: string }) {
       attendeeName: name,
     };
     const googleUrl = buildGoogleCalendarUrl(calendarEvent);
+    const durationMin = Math.round(
+      (parse(selected.end, "HH:mm:ss", selected.date).getTime() -
+        parse(selected.start, "HH:mm:ss", selected.date).getTime()) /
+        60000,
+    );
     return (
       <div className="flex min-h-screen flex-col bg-secondary">
         <PublicHeader />
-        <div className="mx-auto w-full max-w-xl flex-1 px-4 py-12 text-center sm:py-16">
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-card)] sm:p-10">
-            <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-              Agendamento confirmado
-            </p>
-            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
-              Reunião confirmada!
-            </h1>
-            <p className="mt-3 text-muted-foreground">
-              Sua reunião com <strong>{profile.full_name}</strong> foi agendada para
-            </p>
-            <p className="mt-4 text-lg font-semibold text-primary">
-              {format(selected.date, "EEEE, dd 'de' MMMM", { locale: ptBR })}{" "}
-              às {selected.start.slice(0, 5)}
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Em breve você receberá uma confirmação no e-mail informado ({email}).
-            </p>
-
-            <div className="mt-8 space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Adicionar ao calendário
+        <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 sm:py-14">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)]">
+            {/* Cabeçalho de sucesso com gradiente da marca */}
+            <div
+              className="px-6 py-8 text-center sm:px-10 sm:py-10"
+              style={{ background: "var(--gradient-hero)" }}
+            >
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-background/15 ring-4 ring-background/25 backdrop-blur">
+                <CheckCircle2 className="h-9 w-9 text-primary-foreground" />
+              </div>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/85">
+                Agendamento confirmado
               </p>
-              <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row">
-                <a
-                  href={googleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm"
-                >
-                  <CalIcon className="h-4 w-4" />
-                  Google Calendar
-                </a>
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadIcsFile(
-                      calendarEvent,
-                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
-                    )
+              <h1 className="mt-2 text-2xl font-bold text-primary-foreground sm:text-3xl">
+                Tudo certo, {name.split(" ")[0]}!
+              </h1>
+              <p className="mt-2 text-sm text-primary-foreground/85">
+                Sua reunião comercial com a Seta Embalagens está agendada.
+              </p>
+            </div>
+
+            {/* Resumo do agendamento */}
+            <div className="px-6 py-6 sm:px-10 sm:py-8">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Resumo
+              </p>
+
+              <dl className="mt-4 divide-y divide-border rounded-xl border border-border bg-muted/20">
+                <SummaryRow
+                  label="Representante"
+                  value={profile.full_name}
+                />
+                <SummaryRow
+                  label="Data"
+                  value={
+                    <span className="capitalize">
+                      {format(
+                        selected.date,
+                        "EEEE, dd 'de' MMMM 'de' yyyy",
+                        { locale: ptBR },
+                      )}
+                    </span>
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground sm:text-sm"
-                >
-                  <Download className="h-4 w-4" />
-                  Baixar .ics
-                </button>
+                />
+                <SummaryRow
+                  label="Horário"
+                  value={`${selected.start.slice(0, 5)} – ${selected.end.slice(0, 5)} (${durationMin} min)`}
+                />
+                <SummaryRow label="Nome" value={name} />
+                {company && <SummaryRow label="Empresa" value={company} />}
+                <SummaryRow label="E-mail" value={email} />
+                {phone && <SummaryRow label="Telefone" value={phone} />}
+              </dl>
+
+              {/* Mensagem para o cliente */}
+              <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-foreground">
+                <p className="font-semibold text-primary">
+                  O que acontece agora?
+                </p>
+                <ul className="mt-2 space-y-1.5 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-primary">•</span>
+                    Enviamos uma confirmação para <strong className="text-foreground">{email}</strong>.
+                  </li>
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-primary">•</span>
+                    Adicione o compromisso à sua agenda usando os botões abaixo.
+                  </li>
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-primary">•</span>
+                    Em caso de imprevisto, responda o e-mail para reagendar com antecedência.
+                  </li>
+                </ul>
+              </div>
+
+              {/* CTAs adicionar ao calendário */}
+              <div className="mt-6 space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Adicionar ao calendário
+                </p>
+                <div className="flex flex-col items-stretch gap-2 sm:flex-row">
+                  <a
+                    href={googleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm"
+                  >
+                    <CalIcon className="h-4 w-4" />
+                    Google Calendar
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadIcsFile(
+                        calendarEvent,
+                        `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
+                      )
+                    }
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground sm:text-sm"
+                  >
+                    <Download className="h-4 w-4" />
+                    Baixar .ics (Apple/Outlook)
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Conheça mais a Seta em{" "}
+            <a
+              href="https://setaembalagens.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-primary hover:underline"
+            >
+              setaembalagens.com.br
+            </a>
+          </p>
         </div>
         <PublicFooter />
       </div>
