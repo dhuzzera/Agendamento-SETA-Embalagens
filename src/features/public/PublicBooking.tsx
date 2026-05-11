@@ -23,6 +23,9 @@ import {
   Clock,
   Calendar as CalIcon,
   ArrowLeft,
+  MapPin,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -443,6 +446,74 @@ export function PublicBooking({ slug }: { slug: string }) {
                 {phone && <SummaryRow label="Telefone" value={phone} />}
               </dl>
 
+              {/* Detalhes e instruções para reunião presencial */}
+              {isPresencial && address && (
+                <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-primary">
+                        Reunião presencial
+                      </p>
+                      <p className="mt-1 text-sm text-foreground break-words">
+                        {address}
+                      </p>
+                      <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                        <li className="flex gap-2">
+                          <span aria-hidden className="text-primary">•</span>
+                          Chegue com <strong className="text-foreground">10 minutos de antecedência</strong>.
+                        </li>
+                        <li className="flex gap-2">
+                          <span aria-hidden className="text-primary">•</span>
+                          Traga um <strong className="text-foreground">documento com foto</strong> caso o local exija identificação na portaria.
+                        </li>
+                        <li className="flex gap-2">
+                          <span aria-hidden className="text-primary">•</span>
+                          Considere o tempo de deslocamento e trânsito até o endereço.
+                        </li>
+                        <li className="flex gap-2">
+                          <span aria-hidden className="text-primary">•</span>
+                          Em caso de imprevisto, avise com antecedência respondendo o e-mail de confirmação.
+                        </li>
+                      </ul>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="default"
+                        >
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                            Abrir no Google Maps
+                          </a>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(address);
+                              toast.success("Endereço copiado");
+                            } catch {
+                              toast.error("Não foi possível copiar");
+                            }
+                          }}
+                        >
+                          <Copy className="mr-2 h-3.5 w-3.5" />
+                          Copiar endereço
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Mensagem para o cliente */}
               <div className="mt-6 rounded-xl border border-primary/15 bg-primary/5 p-4 text-sm text-foreground">
                 <p className="font-semibold text-primary">
@@ -457,6 +528,12 @@ export function PublicBooking({ slug }: { slug: string }) {
                     <span aria-hidden className="text-primary">•</span>
                     Adicione o compromisso à sua agenda usando os botões abaixo.
                   </li>
+                  {isPresencial && address && (
+                    <li className="flex gap-2">
+                      <span aria-hidden className="text-primary">•</span>
+                      O endereço completo está logo acima — abra no Google Maps para se planejar.
+                    </li>
+                  )}
                   <li className="flex gap-2">
                     <span aria-hidden className="text-primary">•</span>
                     Em caso de imprevisto, responda o e-mail para reagendar com antecedência.
