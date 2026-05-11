@@ -83,6 +83,8 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [meetingType, setMeetingType] = useState<"online" | "presencial">("online");
+  const [address, setAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
 
