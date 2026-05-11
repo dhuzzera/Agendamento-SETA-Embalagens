@@ -103,10 +103,10 @@ export const Route = createFileRoute("/api/public/calendar/$token")({
         const lines: string[] = [
           "BEGIN:VCALENDAR",
           "VERSION:2.0",
-          "PRODID:-//Seta Embalagens//Agendamento//PT-BR",
+          "PRODID:-//SETA Embalagens//Agendamento//PT-BR",
           "CALSCALE:GREGORIAN",
           "METHOD:PUBLISH",
-          `X-WR-CALNAME:${escapeIcs(`Agenda Seta — ${profile.full_name}`)}`,
+          `X-WR-CALNAME:${escapeIcs(`Agenda SETA — ${profile.full_name}`)}`,
           `X-WR-TIMEZONE:${SP_TZID}`,
           "REFRESH-INTERVAL;VALUE=DURATION:PT30M",
           "X-PUBLISHED-TTL:PT30M",
