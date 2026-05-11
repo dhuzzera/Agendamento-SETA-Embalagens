@@ -73,7 +73,7 @@ export function RepDashboard() {
 
   const link =
     profile?.slug && typeof window !== "undefined"
-      ? `${window.location.origin}/agendar/${profile.slug}`
+      ? `${window.location.origin}/${profile.slug}`
       : "";
 
   const copyLink = () => {
