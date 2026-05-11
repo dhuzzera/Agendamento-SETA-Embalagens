@@ -90,8 +90,8 @@ function LoginPage() {
       </div>
 
       {/* Formulário */}
-      <div className="flex items-center justify-center bg-background p-6 sm:p-10">
-        <div className="w-full max-w-sm">
+      <div className="flex items-center justify-center bg-background px-6 py-10 sm:px-10">
+        <div className="w-full max-w-[400px]">
           {/* Logo mobile */}
           <div className="mb-8 flex justify-center lg:hidden">
             <div
@@ -102,7 +102,7 @@ function LoginPage() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight">
               Entrar na sua conta
             </h1>
@@ -111,9 +111,11 @@ function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail corporativo</Label>
+          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email" className="px-0.5">
+                E-mail corporativo
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -122,11 +124,13 @@ function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.nome@setaembalagens.com.br"
-                className="h-11"
+                className="h-11 w-full px-3.5 text-sm"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password" className="px-0.5">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -135,12 +139,12 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-11"
+                className="h-11 w-full px-3.5 text-sm"
               />
             </div>
             <Button
               type="submit"
-              className="h-11 w-full text-base font-medium shadow-[var(--shadow-elegant)]"
+              className="mt-2 h-11 w-full px-3.5 text-sm font-medium shadow-[var(--shadow-elegant)]"
               disabled={busy}
             >
               {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
