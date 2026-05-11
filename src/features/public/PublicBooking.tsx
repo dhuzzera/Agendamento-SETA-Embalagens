@@ -344,7 +344,9 @@ export function PublicBooking({ slug }: { slug: string }) {
 
               <div className="grid gap-3 md:grid-cols-7">
                 {days.map((day) => {
-                  const slots = slotsFor(day);
+                  const weekKey = format(weekStart, "yyyy-MM-dd");
+                  const isLoadingSlots = loadedWeek !== weekKey;
+                  const slots = isLoadingSlots ? [] : slotsFor(day);
                   return (
                     <div
                       key={day.toISOString()}
@@ -359,7 +361,13 @@ export function PublicBooking({ slug }: { slug: string }) {
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        {slots.length === 0 ? (
+                        {isLoadingSlots ? (
+                          <>
+                            <Skeleton className="h-7 w-full" />
+                            <Skeleton className="h-7 w-full" />
+                            <Skeleton className="h-7 w-full" />
+                          </>
+                        ) : slots.length === 0 ? (
                           <p className="text-center text-xs text-muted-foreground">—</p>
                         ) : (
                           slots.map((s) => (
