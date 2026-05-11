@@ -267,6 +267,111 @@ function formatDate(d: string) {
   return `${day}/${m}/${y}`;
 }
 
+function AvailRow({
+  avail,
+  onRemove,
+  onSave,
+  onToggle,
+}: {
+  avail: Avail;
+  onRemove: () => void;
+  onSave: (patch: Partial<Avail>) => Promise<boolean>;
+  onToggle: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [wd, setWd] = useState(avail.weekday);
+  const [start, setStart] = useState(avail.start_time.slice(0, 5));
+  const [end, setEnd] = useState(avail.end_time.slice(0, 5));
+  const [dur, setDur] = useState(avail.meeting_duration_min);
+
+  const reset = () => {
+    setWd(avail.weekday);
+    setStart(avail.start_time.slice(0, 5));
+    setEnd(avail.end_time.slice(0, 5));
+    setDur(avail.meeting_duration_min);
+  };
+
+  const save = async () => {
+    const ok = await onSave({
+      weekday: wd,
+      start_time: start,
+      end_time: end,
+      meeting_duration_min: dur,
+    });
+    if (ok) setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="space-y-2 p-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={wd}
+            onChange={(e) => setWd(parseInt(e.target.value))}
+          >
+            {WEEKDAYS.map((w, i) => (
+              <option key={i} value={i}>
+                {w}
+              </option>
+            ))}
+          </select>
+          <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+          <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+          <Input
+            type="number"
+            value={dur}
+            onChange={(e) => setDur(parseInt(e.target.value) || 30)}
+          />
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              reset();
+              setEditing(false);
+            }}
+          >
+            <X className="mr-1 h-4 w-4" /> Cancelar
+          </Button>
+          <Button size="sm" onClick={save}>
+            <Check className="mr-1 h-4 w-4" /> Salvar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3">
+      <div className="text-sm">
+        <span className="font-medium">{WEEKDAYS[avail.weekday]}</span>{" "}
+        <span className="text-muted-foreground">
+          {avail.start_time.slice(0, 5)} – {avail.end_time.slice(0, 5)} •{" "}
+          {avail.meeting_duration_min} min
+        </span>
+        {!avail.active && (
+          <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+            inativo
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="ghost" onClick={onToggle} title={avail.active ? "Desativar" : "Ativar"}>
+          {avail.active ? "Desativar" : "Ativar"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onRemove}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CalendarSubscriptionCard({ token }: { token: string | null }) {
   if (!token) return null;
   const httpsUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/calendar/${token}.ics`;
