@@ -285,8 +285,7 @@ function UserDialog({
         {!edit && (
           <div>
             <Label>Senha provisória</Label>
-            <Input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
