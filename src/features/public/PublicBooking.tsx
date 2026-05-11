@@ -186,10 +186,39 @@ export function PublicBooking({ slug }: { slug: string }) {
     return set;
   }, [blocks]);
 
+  // Days in the visible month that actually have at least one bookable slot
+  const availableDates = useMemo(() => {
+    if (!profile) return [] as Date[];
+    const start = startOfMonth(month);
+    const end = endOfMonth(month);
+    const result: Date[] = [];
+    const today = startOfDay(new Date());
+    for (let d = new Date(start); d <= end; d = addMinutes(d, 60 * 24)) {
+      if (isBefore(d, today)) continue;
+      if (!workingWeekdays.has(d.getDay())) continue;
+      if (fullyBlockedDates.has(format(d, "yyyy-MM-dd"))) continue;
+      if (slotsFor(d).length > 0) result.push(new Date(d));
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates]);
+
+  const availableDateKeys = useMemo(
+    () => new Set(availableDates.map((d) => format(d, "yyyy-MM-dd"))),
+    [availableDates],
+  );
+
   const isDayDisabled = (day: Date) => {
     if (isBefore(day, startOfDay(new Date()))) return true;
     if (!workingWeekdays.has(day.getDay())) return true;
     if (fullyBlockedDates.has(format(day, "yyyy-MM-dd"))) return true;
+    // If we already loaded the month's appointments, hide days with no slots
+    if (
+      loadedMonth === format(startOfMonth(month), "yyyy-MM-dd") &&
+      !availableDateKeys.has(format(day, "yyyy-MM-dd"))
+    ) {
+      return true;
+    }
     return false;
   };
 
@@ -199,8 +228,33 @@ export function PublicBooking({ slug }: { slug: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, avails, blocks, appts]);
 
+  // Group slots by period of day for easier scanning on mobile
+  const groupedSlots = useMemo(() => {
+    const groups: Record<"morning" | "afternoon" | "evening", typeof slotsForSelected> = {
+      morning: [],
+      afternoon: [],
+      evening: [],
+    };
+    for (const s of slotsForSelected) {
+      const h = parseInt(s.start.slice(0, 2), 10);
+      if (h < 12) groups.morning.push(s);
+      else if (h < 18) groups.afternoon.push(s);
+      else groups.evening.push(s);
+    }
+    return groups;
+  }, [slotsForSelected]);
+
   const slotsLoading =
     !!selectedDate && loadedMonth !== format(startOfMonth(month), "yyyy-MM-dd");
+
+  // Auto-select the first available day of the month once data is loaded,
+  // so the user immediately sees time slots without an extra tap.
+  useEffect(() => {
+    if (selectedDate) return;
+    if (loadedMonth !== format(startOfMonth(month), "yyyy-MM-dd")) return;
+    if (availableDates.length === 0) return;
+    setSelectedDate(availableDates[0]);
+  }, [loadedMonth, month, availableDates, selectedDate]);
 
   const submit = async () => {
     if (!profile || !selected) return;
