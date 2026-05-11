@@ -10,8 +10,9 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const { user, loading } = useAuth();
-  if (loading) return null;
-  if (user) return <Navigate to="/dashboard" />;
+  // Renderiza a landing imediatamente (FCP/LCP rápido). Só redireciona depois
+  // que a sessão for confirmada; caso contrário mostra a página pública.
+  if (!loading && user) return <Navigate to="/dashboard" />;
 
   return (
     <div className="min-h-screen bg-background">
