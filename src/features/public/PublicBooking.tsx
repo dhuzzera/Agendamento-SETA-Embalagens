@@ -345,13 +345,18 @@ export function PublicBooking({ slug }: { slug: string }) {
     };
     const googleUrl = buildGoogleCalendarUrl(calendarEvent);
     return (
-      <div className="min-h-screen bg-secondary">
+      <div className="flex min-h-screen flex-col bg-secondary">
         <PublicHeader />
-        <div className="mx-auto max-w-xl px-4 py-16 text-center">
-          <div className="rounded-2xl border bg-card p-10 shadow-[var(--shadow-card)]">
+        <div className="mx-auto w-full max-w-xl flex-1 px-4 py-12 text-center sm:py-16">
+          <div className="rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-card)] sm:p-10">
             <CheckCircle2 className="mx-auto h-14 w-14 text-success" />
-            <h1 className="mt-4 text-2xl font-bold">Reunião confirmada!</h1>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+              Agendamento confirmado
+            </p>
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+              Reunião confirmada!
+            </h1>
+            <p className="mt-3 text-muted-foreground">
               Sua reunião com <strong>{profile.full_name}</strong> foi agendada para
             </p>
             <p className="mt-4 text-lg font-semibold text-primary">
@@ -362,14 +367,16 @@ export function PublicBooking({ slug }: { slug: string }) {
               Em breve você receberá uma confirmação no e-mail informado ({email}).
             </p>
 
-            <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium">Adicionar ao calendário</p>
+            <div className="mt-8 space-y-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Adicionar ao calendário
+              </p>
               <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row">
                 <a
                   href={googleUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm"
                 >
                   <CalIcon className="h-4 w-4" />
                   Google Calendar
@@ -379,18 +386,19 @@ export function PublicBooking({ slug }: { slug: string }) {
                   onClick={() =>
                     downloadIcsFile(
                       calendarEvent,
-                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`
+                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
                     )
                   }
-                  className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground sm:text-sm"
                 >
                   <Download className="h-4 w-4" />
-                  Baixar .ics (Apple/Outlook)
+                  Baixar .ics
                 </button>
               </div>
             </div>
           </div>
         </div>
+        <PublicFooter />
       </div>
     );
   }
