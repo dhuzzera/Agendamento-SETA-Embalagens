@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,64 +14,65 @@ import { StatCardSkeleton, ListRowSkeleton } from "@/components/Skeletons";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
-  const [stats, setStats] = useState<{ today: number; week: number } | null>(null);
-  const [upcoming, setUpcoming] = useState<
-    { id: string; appointment_date: string; start_time: string; client_name: string }[] | null
-  >(null);
   const [slugInput, setSlugInput] = useState(profile?.slug ?? "");
 
   useEffect(() => setSlugInput(profile?.slug ?? ""), [profile?.slug]);
 
-  useEffect(() => {
-    if (!profile) return;
-    const load = async () => {
-      const todayStr = format(new Date(), "yyyy-MM-dd");
-      const weekEnd = format(
-        new Date(Date.now() + 7 * 86400000),
-        "yyyy-MM-dd"
-      );
-      const { count: tdC } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .eq("representative_id", profile.id)
-        .eq("appointment_date", todayStr);
-      const { count: wkC } = await supabase
-        .from("appointments")
-        .select("*", { count: "exact", head: true })
-        .eq("representative_id", profile.id)
-        .gte("appointment_date", todayStr)
-        .lte("appointment_date", weekEnd);
-      setStats({ today: tdC ?? 0, week: wkC ?? 0 });
+  const repId = profile?.id;
 
+  const { data: stats } = useQuery({
+    queryKey: ["rep-dashboard", "stats", repId],
+    enabled: !!repId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      const weekEnd = format(new Date(Date.now() + 7 * 86400000), "yyyy-MM-dd");
+      const [{ count: tdC }, { count: wkC }] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("*", { count: "exact", head: true })
+          .eq("representative_id", repId!)
+          .eq("appointment_date", todayStr),
+        supabase
+          .from("appointments")
+          .select("*", { count: "exact", head: true })
+          .eq("representative_id", repId!)
+          .gte("appointment_date", todayStr)
+          .lte("appointment_date", weekEnd),
+      ]);
+      return { today: tdC ?? 0, week: wkC ?? 0 };
+    },
+  });
+
+  const { data: upcoming } = useQuery({
+    queryKey: ["rep-dashboard", "upcoming", repId],
+    enabled: !!repId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const todayStr = format(new Date(), "yyyy-MM-dd");
       const { data } = await supabase
         .from("appointments")
         .select("id, appointment_date, start_time, client_id")
-        .eq("representative_id", profile.id)
+        .eq("representative_id", repId!)
         .gte("appointment_date", todayStr)
         .order("appointment_date")
         .order("start_time")
         .limit(8);
-      if (data?.length) {
-        const cliIds = [...new Set(data.map((d) => d.client_id))];
-        const { data: clis } = await supabase
-          .from("clients")
-          .select("id, name")
-          .in("id", cliIds);
-        const cMap = new Map(clis?.map((c) => [c.id, c.name]));
-        setUpcoming(
-          data.map((d) => ({
-            id: d.id,
-            appointment_date: d.appointment_date,
-            start_time: d.start_time,
-            client_name: cMap.get(d.client_id) ?? "—",
-          }))
-        );
-      } else {
-        setUpcoming([]);
-      }
-    };
-    void load();
-  }, [profile]);
+      if (!data?.length) return [];
+      const cliIds = [...new Set(data.map((d) => d.client_id))];
+      const { data: clis } = await supabase
+        .from("clients")
+        .select("id, name")
+        .in("id", cliIds);
+      const cMap = new Map(clis?.map((c) => [c.id, c.name]));
+      return data.map((d) => ({
+        id: d.id,
+        appointment_date: d.appointment_date,
+        start_time: d.start_time,
+        client_name: cMap.get(d.client_id) ?? "—",
+      }));
+    },
+  });
 
   // Domínio público curto e estável (independente de preview/sandbox)
   const PUBLIC_HOST = "seta-agendamento.lovable.app";
@@ -154,7 +156,7 @@ export function RepDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {upcoming === null ? (
+          {upcoming === undefined ? (
             <div className="divide-y">
               <ListRowSkeleton />
               <ListRowSkeleton />
