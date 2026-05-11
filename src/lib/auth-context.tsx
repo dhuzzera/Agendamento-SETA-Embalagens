@@ -10,6 +10,7 @@ export type Profile = {
   email: string;
   phone: string | null;
   avatar_url: string | null;
+  bio: string | null;
   slug: string | null;
   active: boolean;
   must_change_password: boolean;
