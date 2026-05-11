@@ -143,7 +143,7 @@ export function UserManagement() {
                   </div>
                   {u.slug && (
                     <div className="mt-0.5 text-xs text-muted-foreground">
-                      /agendar/{u.slug}
+                      /{u.slug}
                     </div>
                   )}
                 </div>

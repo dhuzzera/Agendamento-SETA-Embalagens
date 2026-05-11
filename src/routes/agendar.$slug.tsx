@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PublicBooking } from "@/features/public/PublicBooking";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/agendar/$slug")({
-  component: PublicBookingPage,
+  component: RedirectToShortLink,
 });
 
-function PublicBookingPage() {
+function RedirectToShortLink() {
   const { slug } = Route.useParams();
-  return <PublicBooking slug={slug} />;
+  return <Navigate to="/$slug" params={{ slug }} replace />;
 }
