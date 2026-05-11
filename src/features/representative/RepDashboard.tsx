@@ -71,10 +71,10 @@ export function RepDashboard() {
     void load();
   }, [profile]);
 
-  const link =
-    profile?.slug && typeof window !== "undefined"
-      ? `${window.location.origin}/${profile.slug}`
-      : "";
+  // Domínio público curto e estável (independente de preview/sandbox)
+  const PUBLIC_HOST = "seta-agendamento.lovable.app";
+  const link = profile?.slug ? `https://${PUBLIC_HOST}/${profile.slug}` : "";
+  const linkDisplay = profile?.slug ? `${PUBLIC_HOST}/${profile.slug}` : "";
 
   const copyLink = () => {
     if (!link) return;
@@ -116,7 +116,7 @@ export function RepDashboard() {
         <CardContent className="space-y-3">
           {profile?.slug ? (
             <div className="flex items-center gap-2">
-              <Input readOnly value={link} />
+              <Input readOnly value={linkDisplay} />
               <Button variant="outline" onClick={copyLink}>
                 <Copy className="mr-1.5 h-4 w-4" /> Copiar
               </Button>
