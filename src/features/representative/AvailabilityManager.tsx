@@ -49,6 +49,8 @@ export function AvailabilityManager() {
 
   // block form
   const [blockDate, setBlockDate] = useState("");
+  const [blockStart, setBlockStart] = useState("");
+  const [blockEnd, setBlockEnd] = useState("");
   const [blockReason, setBlockReason] = useState("");
 
   const load = async () => {
@@ -119,15 +121,28 @@ export function AvailabilityManager() {
 
   const addBlock = async () => {
     if (!profile || !blockDate) return;
+    const partial = blockStart && blockEnd;
+    if ((blockStart && !blockEnd) || (!blockStart && blockEnd)) {
+      toast.error("Informe início e fim do horário, ou deixe ambos vazios para bloquear o dia todo.");
+      return;
+    }
+    if (partial && blockStart >= blockEnd) {
+      toast.error("Horário final deve ser maior que o inicial.");
+      return;
+    }
     const { error } = await supabase.from("blocks").insert({
       representative_id: profile.id,
       block_date: blockDate,
+      start_time: partial ? blockStart : null,
+      end_time: partial ? blockEnd : null,
       reason: blockReason || null,
     });
     if (error) toast.error(error.message);
     else {
       toast.success("Bloqueio criado");
       setBlockDate("");
+      setBlockStart("");
+      setBlockEnd("");
       setBlockReason("");
       void load();
     }
@@ -213,10 +228,15 @@ export function AvailabilityManager() {
         <Card>
           <CardHeader>
             <CardTitle>Bloqueios e feriados</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Desative uma data específica sem alterar seu horário recorrente. Deixe os
+              horários vazios para bloquear o dia inteiro, ou preencha para bloquear só
+              uma faixa.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex-1">
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_1fr_auto] sm:items-end">
+              <div>
                 <Label className="text-xs">Data</Label>
                 <Input
                   type="date"
@@ -224,12 +244,28 @@ export function AvailabilityManager() {
                   onChange={(e) => setBlockDate(e.target.value)}
                 />
               </div>
-              <div className="flex-1">
+              <div>
+                <Label className="text-xs">De (opcional)</Label>
+                <Input
+                  type="time"
+                  value={blockStart}
+                  onChange={(e) => setBlockStart(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Até (opcional)</Label>
+                <Input
+                  type="time"
+                  value={blockEnd}
+                  onChange={(e) => setBlockEnd(e.target.value)}
+                />
+              </div>
+              <div>
                 <Label className="text-xs">Motivo</Label>
                 <Input
                   value={blockReason}
                   onChange={(e) => setBlockReason(e.target.value)}
-                  placeholder="Férias, feriado…"
+                  placeholder="Férias, feriado, compromisso…"
                 />
               </div>
               <Button onClick={addBlock}>
@@ -245,6 +281,12 @@ export function AvailabilityManager() {
                 <div key={b.id} className="flex items-center justify-between p-3">
                   <div className="text-sm">
                     <span className="font-medium">{formatDate(b.block_date)}</span>
+                    <span className="text-muted-foreground">
+                      {" "}•{" "}
+                      {b.start_time && b.end_time
+                        ? `${b.start_time.slice(0, 5)}–${b.end_time.slice(0, 5)}`
+                        : "dia todo"}
+                    </span>
                     {b.reason && (
                       <span className="text-muted-foreground"> • {b.reason}</span>
                     )}
