@@ -442,10 +442,20 @@ export function PublicBooking({ slug }: { slug: string }) {
 
 function PublicHeader() {
   return (
-    <header className="bg-sidebar text-sidebar-foreground">
+    <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <SetaLogo variant="light" />
-        <span className="text-xs text-sidebar-foreground/80">Agendamento Comercial</span>
+        <a
+          href="https://setaembalagens.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center"
+          aria-label="Seta Embalagens — site institucional"
+        >
+          <SetaLogo variant="dark" />
+        </a>
+        <span className="hidden text-xs font-semibold uppercase tracking-[0.22em] text-primary sm:inline">
+          Agendamento Comercial
+        </span>
       </div>
     </header>
   );
