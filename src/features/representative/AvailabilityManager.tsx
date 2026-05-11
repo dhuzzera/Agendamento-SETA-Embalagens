@@ -5,7 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, Plus, Apple, Copy, CalendarPlus, Pencil, Check, X, RefreshCw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Trash2,
+  Plus,
+  Apple,
+  Copy,
+  CalendarPlus,
+  Pencil,
+  Check,
+  X,
+  RefreshCw,
+  Sparkles,
+  Smartphone,
+  Mail,
+  ExternalLink,
+  Info,
+  CheckCircle2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ChangeLogCard } from "./ChangeLogCard";
 
