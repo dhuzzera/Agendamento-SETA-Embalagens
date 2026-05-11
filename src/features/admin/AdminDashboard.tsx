@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Shield, TrendingUp } from "lucide-react";
@@ -105,17 +106,20 @@ export function AdminDashboard() {
         <p className="text-muted-foreground">Visão geral da operação comercial Seta.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard icon={<Users />} label="Representantes" value={counts?.reps ?? 0} />
-        <StatCard icon={<Shield />} label="Administradores" value={counts?.admins ?? 0} />
-        <StatCard icon={<Calendar />} label="Hoje" value={counts?.today ?? 0} />
-        <StatCard icon={<TrendingUp />} label="Esta semana" value={counts?.week ?? 0} />
-        <StatCard icon={<TrendingUp />} label="Este mês" value={counts?.month ?? 0} />
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard to="/admin/usuarios" icon={<Users />} label="Representantes" value={counts?.reps ?? 0} />
+        <StatCard to="/admin/usuarios" icon={<Shield />} label="Administradores" value={counts?.admins ?? 0} />
+        <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={counts?.today ?? 0} />
+        <StatCard to="/agenda" icon={<TrendingUp />} label="Esta semana" value={counts?.week ?? 0} />
+        <StatCard to="/agenda" icon={<TrendingUp />} label="Este mês" value={counts?.month ?? 0} />
       </div>
 
-      <Card>
-        <CardHeader>
+    <Card>
+        <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Próximos agendamentos</CardTitle>
+          <Link to="/agenda" className="text-sm font-medium text-primary hover:underline">
+            Ver todos →
+          </Link>
         </CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
@@ -123,12 +127,14 @@ export function AdminDashboard() {
           ) : (
             <div className="divide-y">
               {upcoming.map((a) => (
-                <div key={a.id} className="flex items-center justify-between py-3">
+                <Link
+                  key={a.id}
+                  to="/agenda"
+                  className="-mx-6 flex items-center justify-between px-6 py-3 transition-colors hover:bg-muted/40"
+                >
                   <div>
                     <div className="font-medium">{a.client_name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      com {a.rep_name}
-                    </div>
+                    <div className="text-sm text-muted-foreground">com {a.rep_name}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium">
@@ -141,7 +147,7 @@ export function AdminDashboard() {
                       {labelStatus(a.status)}
                     </Badge>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -155,23 +161,27 @@ function StatCard({
   icon,
   label,
   value,
+  to,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: number;
+  value: number | string;
+  to: "/admin/usuarios" | "/agenda" | "/disponibilidade" | "/dashboard";
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
-          {icon}
-        </div>
-        <div>
-          <div className="text-2xl font-bold">{value}</div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
+    <Link to={to} className="block">
+      <Card className="transition-all hover:border-primary/40 hover:shadow-md">
+        <CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
+            {icon}
+          </div>
+          <div>
+            <div className="text-2xl font-bold">{value}</div>
+            <div className="text-xs text-muted-foreground">{label}</div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
