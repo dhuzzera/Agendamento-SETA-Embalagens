@@ -822,26 +822,46 @@ export function PublicBooking({ slug }: { slug: string }) {
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label>Modalidade da reunião *</Label>
-                  <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-1">
-                    {(["online", "presencial"] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setMeetingType(opt)}
-                        className={cn(
-                          "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors",
-                          meetingType === opt
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {opt === "online" ? "Online" : "Presencial"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const options = (["online", "presencial"] as const).filter(
+                    (o) =>
+                      (o === "online" && profile.allow_online) ||
+                      (o === "presencial" && profile.allow_presencial),
+                  );
+                  if (options.length <= 1) {
+                    const only = options[0] ?? "online";
+                    return (
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label>Modalidade da reunião</Label>
+                        <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm font-medium uppercase tracking-wide">
+                          {only === "online" ? "Online" : "Presencial"}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>Modalidade da reunião *</Label>
+                      <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-1">
+                        {options.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setMeetingType(opt)}
+                            className={cn(
+                              "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors",
+                              meetingType === opt
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            {opt === "online" ? "Online" : "Presencial"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {meetingType === "presencial" && (
                   <div className="space-y-1.5 sm:col-span-2">
                     <Label>Endereço da reunião *</Label>
