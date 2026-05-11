@@ -193,11 +193,14 @@ export function PublicBooking({ slug }: { slug: string }) {
     const end = endOfMonth(month);
     const result: Date[] = [];
     const today = startOfDay(new Date());
-    for (let d = new Date(start); d <= end; d = addMinutes(d, 60 * 24)) {
+    const cursor = new Date(start);
+    while (cursor <= end) {
+      const d = new Date(cursor);
+      cursor.setDate(cursor.getDate() + 1);
       if (isBefore(d, today)) continue;
       if (!workingWeekdays.has(d.getDay())) continue;
       if (fullyBlockedDates.has(format(d, "yyyy-MM-dd"))) continue;
-      if (slotsFor(d).length > 0) result.push(new Date(d));
+      if (slotsFor(d).length > 0) result.push(d);
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
