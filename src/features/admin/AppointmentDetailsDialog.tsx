@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MapPin, Copy, ExternalLink } from "lucide-react";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
@@ -35,6 +36,8 @@ export type AppointmentDetails = {
   status: Status;
   notes: string | null;
   representative_id: string;
+  meeting_type?: "online" | "presencial" | string;
+  location?: string | null;
   client: {
     name: string;
     company: string | null;
@@ -160,6 +163,42 @@ export function AppointmentDetailsDialog({
               </Badge>
             </div>
           </div>
+
+          {appointment.meeting_type === "presencial" && appointment.location && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" /> Endereço da reunião presencial
+              </div>
+              <p className="whitespace-pre-wrap text-sm">{appointment.location}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" asChild>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(appointment.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                    Abrir no Google Maps
+                  </a>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(appointment.location ?? "");
+                      toast.success("Endereço copiado");
+                    } catch {
+                      toast.error("Não foi possível copiar");
+                    }
+                  }}
+                >
+                  <Copy className="mr-1.5 h-3.5 w-3.5" />
+                  Copiar endereço
+                </Button>
+              </div>
+            </div>
+          )}
 
           {isAdmin ? (
             <>
