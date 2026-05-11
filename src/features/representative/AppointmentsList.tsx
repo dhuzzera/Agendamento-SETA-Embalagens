@@ -16,7 +16,7 @@ import {
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, Download } from "lucide-react";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
@@ -155,9 +155,64 @@ export function AppointmentsList() {
   const hasFilters =
     repFilter !== ALL || statusFilter !== ALL || !!from || !!to;
 
+  const exportCsv = () => {
+    if (rows.length === 0) {
+      toast.info("Nenhum agendamento para exportar.");
+      return;
+    }
+    const headers = [
+      "Data",
+      "Início",
+      "Fim",
+      "Status",
+      "Representante",
+      "Cliente",
+      "Empresa",
+      "E-mail",
+      "Telefone",
+      "Observações",
+    ];
+    const esc = (v: string | null | undefined) => {
+      const s = (v ?? "").toString().replace(/"/g, '""');
+      return /[",;\n]/.test(s) ? `"${s}"` : s;
+    };
+    const lines = [
+      headers.join(";"),
+      ...rows.map((r) =>
+        [
+          format(new Date(r.appointment_date + "T00:00"), "dd/MM/yyyy"),
+          r.start_time.slice(0, 5),
+          r.end_time.slice(0, 5),
+          labelStatus(r.status),
+          repName(r.representative_id),
+          r.client.name,
+          r.client.company,
+          r.client.email,
+          r.client.phone,
+          r.notes,
+        ]
+          .map(esc)
+          .join(";")
+      ),
+    ];
+    // BOM for Excel UTF-8 detection
+    const blob = new Blob(["\ufeff" + lines.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `agendamentos_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`${rows.length} agendamento(s) exportado(s)`);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">
             {isAdmin ? "Agendamentos" : "Minhas reuniões"}
@@ -168,6 +223,12 @@ export function AppointmentsList() {
               : "Histórico e próximas reuniões."}
           </p>
         </div>
+        {isAdmin && (
+          <Button onClick={exportCsv} variant="outline">
+            <Download className="mr-1.5 h-4 w-4" />
+            Exportar CSV
+          </Button>
+        )}
       </div>
 
       <Card>
