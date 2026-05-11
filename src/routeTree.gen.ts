@@ -20,6 +20,7 @@ import { Route as AppAlterarSenhaRouteImport } from './routes/_app/alterar-senha
 import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
 import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app/admin.usuarios'
+import { Route as AppAdminPerformanceRouteImport } from './routes/_app/admin.performance'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
 
 const LoginRoute = LoginRouteImport.update({
@@ -76,6 +77,11 @@ const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppAdminPerformanceRoute = AppAdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   id: '/api/public/calendar/$token',
   path: '/api/public/calendar/$token',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/admin/performance': typeof AppAdminPerformanceRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/admin/performance': typeof AppAdminPerformanceRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/_app/admin/performance': typeof AppAdminPerformanceRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
   '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/disponibilidade'
     | '/agendar/$slug'
+    | '/admin/performance'
     | '/admin/usuarios'
     | '/api/public/calendar/$token'
   fileRoutesByTo: FileRoutesByTo
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/disponibilidade'
     | '/agendar/$slug'
+    | '/admin/performance'
     | '/admin/usuarios'
     | '/api/public/calendar/$token'
   id:
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/disponibilidade'
     | '/agendar/$slug'
+    | '/_app/admin/performance'
     | '/_app/admin/usuarios'
     | '/api/public/calendar/$token'
   fileRoutesById: FileRoutesById
@@ -254,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/admin/performance': {
+      id: '/_app/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AppAdminPerformanceRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
     '/api/public/calendar/$token': {
       id: '/api/public/calendar/$token'
       path: '/api/public/calendar/$token'
@@ -265,10 +284,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppAdminRouteChildren {
+  AppAdminPerformanceRoute: typeof AppAdminPerformanceRoute
   AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
 }
 
 const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminPerformanceRoute: AppAdminPerformanceRoute,
   AppAdminUsuariosRoute: AppAdminUsuariosRoute,
 }
 
@@ -307,3 +328,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
