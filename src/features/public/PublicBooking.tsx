@@ -203,11 +203,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Carregando…
-      </div>
-    );
+    return <BookingSkeleton />;
   }
 
   if (!profile) {
