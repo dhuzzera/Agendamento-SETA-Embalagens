@@ -77,14 +77,18 @@ export function AppointmentDetailsDialog({
     setEndTime(appointment.end_time.slice(0, 5));
     setStatus(appointment.status);
     setNotes(appointment.notes ?? "");
-    // load internal notes fresh
-    void supabase
-      .from("appointments")
-      .select("internal_notes")
-      .eq("id", appointment.id)
-      .maybeSingle()
-      .then(({ data }) => setInternalNotes((data?.internal_notes as string) ?? ""));
-  }, [appointment]);
+    // load internal notes fresh (admin only)
+    if (isAdmin) {
+      void supabase
+        .from("appointments")
+        .select("internal_notes")
+        .eq("id", appointment.id)
+        .maybeSingle()
+        .then(({ data }) => setInternalNotes((data?.internal_notes as string) ?? ""));
+    } else {
+      setInternalNotes("");
+    }
+  }, [appointment, isAdmin]);
 
   if (!appointment) return null;
 
