@@ -15,8 +15,9 @@ import {
   startOfDay,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, ChevronLeft, ChevronRight, Calendar as CalIcon } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Calendar as CalIcon, Download } from "lucide-react";
 import { toast } from "sonner";
+import { buildGoogleCalendarUrl, downloadIcsFile, type CalendarEvent } from "@/lib/calendar";
 
 type Profile = {
   id: string;
