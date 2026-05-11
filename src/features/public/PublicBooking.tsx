@@ -67,6 +67,7 @@ export function PublicBooking({ slug }: { slug: string }) {
         return;
       }
       setProfile(p as Profile);
+      const today = new Date().toISOString().slice(0, 10);
       const [{ data: a }, { data: b }] = await Promise.all([
         supabase
           .from("availabilities")
@@ -76,7 +77,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         supabase
           .from("blocks")
           .select("block_date, start_time, end_time")
-          .eq("representative_id", p.id),
+          .eq("representative_id", p.id)
+          .gte("block_date", today),
       ]);
       setAvails((a as Avail[]) ?? []);
       setBlocks((b as Block[]) ?? []);
