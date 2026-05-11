@@ -104,6 +104,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Preload da webfont latin (subset crítico) para acelerar FCP/LCP.
+      {
+        rel: "preload",
+        href: "/fonts/inter-latin.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
       // Acelera primeiras chamadas ao backend (auth/sessão) reduzindo TTFB perceived
       { rel: "preconnect", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://rmqnyqzcxiqbjmryfhqe.supabase.co" },
