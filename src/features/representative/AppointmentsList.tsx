@@ -326,7 +326,20 @@ export function AppointmentsList() {
               {rows.map((r) => (
                 <div
                   key={r.id}
-                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setSelected(r);
+                    setDialogOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelected(r);
+                      setDialogOpen(true);
+                    }
+                  }}
+                  className="flex cursor-pointer flex-col gap-3 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -372,7 +385,14 @@ export function AppointmentsList() {
                       {labelStatus(r.status)}
                     </Badge>
                     {r.status === "scheduled" && (
-                      <Button size="sm" variant="outline" onClick={() => cancel(r.id)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void cancel(r.id);
+                        }}
+                      >
                         Cancelar
                       </Button>
                     )}
@@ -383,6 +403,14 @@ export function AppointmentsList() {
           )}
         </CardContent>
       </Card>
+
+      <AppointmentDetailsDialog
+        appointment={selected}
+        representativeName={selected ? repName(selected.representative_id) : ""}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onChanged={load}
+      />
     </div>
   );
 }
