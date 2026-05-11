@@ -227,12 +227,19 @@ export function AppointmentsList() {
   const clearFilters = () => {
     setRepFilter(ALL);
     setStatusFilter(ALL);
+    setMeetingTypeFilter(ALL);
+    setAddressQuery("");
     setFrom("");
     setTo("");
   };
 
   const hasFilters =
-    repFilter !== ALL || statusFilter !== ALL || !!from || !!to;
+    repFilter !== ALL ||
+    statusFilter !== ALL ||
+    meetingTypeFilter !== ALL ||
+    !!addressQuery ||
+    !!from ||
+    !!to;
 
   const exportCsv = () => {
     if (rows.length === 0) {
