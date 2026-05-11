@@ -104,11 +104,19 @@ export function RepDashboard() {
         <p className="text-muted-foreground">Sua agenda comercial Seta.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={today} />
-        <StatCard to="/agenda" icon={<Calendar />} label="Próximos 7 dias" value={week} />
-        <StatCard to="/disponibilidade" icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
-      </div>
+      {stats ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={stats.today} />
+          <StatCard to="/agenda" icon={<Calendar />} label="Próximos 7 dias" value={stats.week} />
+          <StatCard to="/disponibilidade" icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -146,7 +154,13 @@ export function RepDashboard() {
           </Link>
         </CardHeader>
         <CardContent>
-          {upcoming.length === 0 ? (
+          {upcoming === null ? (
+            <div className="divide-y">
+              <ListRowSkeleton />
+              <ListRowSkeleton />
+              <ListRowSkeleton />
+            </div>
+          ) : upcoming.length === 0 ? (
             <p className="text-sm text-muted-foreground">Sem reuniões agendadas.</p>
           ) : (
             <div className="divide-y">
