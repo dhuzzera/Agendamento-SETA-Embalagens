@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { adminCreateUser, adminDeleteUser } from "@/lib/admin-users.functions";
 
 type RepRow = {
   id: string;
@@ -79,15 +81,15 @@ export function UserManagement() {
     }
   };
 
+  const deleteFn = useServerFn(adminDeleteUser);
   const remove = async (u: RepRow) => {
     if (!confirm(`Excluir ${u.full_name}? Esta ação removerá agenda e dados.`)) return;
-    // Calls a server-side RPC or admin API. Without service role on client we can only
-    // delete the profile row; auth user remains. For now, deactivate.
-    const { error } = await supabase.from("profiles").update({ active: false }).eq("id", u.id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Usuário desativado (exclusão completa requer painel)");
+    try {
+      await deleteFn({ data: { id: u.id } });
+      toast.success("Usuário excluído");
       void load();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Erro ao excluir");
     }
   };
 
@@ -190,6 +192,7 @@ function UserDialog({
   const [role, setRole] = useState<"admin" | "representative">(edit?.role ?? "representative");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const createFn = useServerFn(adminCreateUser);
 
   const submit = async () => {
     setBusy(true);
@@ -201,7 +204,6 @@ function UserDialog({
           .eq("id", edit.id);
         if (error) throw error;
 
-        // Update role
         if (role !== edit.role) {
           await supabase.from("user_roles").delete().eq("user_id", edit.id);
           await supabase.from("user_roles").insert({ user_id: edit.id, role });
@@ -213,20 +215,16 @@ function UserDialog({
           setBusy(false);
           return;
         }
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: name, phone } },
+        await createFn({
+          data: {
+            email,
+            password,
+            full_name: name,
+            phone: phone || null,
+            slug: slug || null,
+            role,
+          },
         });
-        if (error) throw error;
-        const uid = data.user?.id;
-        if (uid) {
-          await supabase.from("profiles").update({ phone, slug: slug || null }).eq("id", uid);
-          if (role === "admin") {
-            await supabase.from("user_roles").delete().eq("user_id", uid);
-            await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-          }
-        }
         toast.success("Usuário criado");
       }
       onClose();
