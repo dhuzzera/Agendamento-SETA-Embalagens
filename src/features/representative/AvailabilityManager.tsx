@@ -39,6 +39,7 @@ export function AvailabilityManager() {
   const { profile } = useAuth();
   const [avails, setAvails] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [calendarToken, setCalendarToken] = useState<string | null>(null);
 
   // form
   const [wd, setWd] = useState(1);
