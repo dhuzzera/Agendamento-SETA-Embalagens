@@ -112,6 +112,42 @@ export type Database = {
           },
         ]
       }
+      availability_changes: {
+        Row: {
+          action: string
+          affected_appointment_ids: string[]
+          availability_id: string | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          representative_id: string
+        }
+        Insert: {
+          action: string
+          affected_appointment_ids?: string[]
+          availability_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          representative_id: string
+        }
+        Update: {
+          action?: string
+          affected_appointment_ids?: string[]
+          availability_id?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          representative_id?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           block_date: string
