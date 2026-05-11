@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { SetaLogo } from "@/components/SetaLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { FullscreenSplashSkeleton } from "@/components/Skeletons";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -201,9 +202,8 @@ function LoginPage() {
               <Label htmlFor="password" className="px-0.5">
                 Senha
               </Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 autoComplete="current-password"
                 required
                 disabled={busy}
