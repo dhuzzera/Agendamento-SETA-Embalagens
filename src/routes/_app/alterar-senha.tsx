@@ -19,11 +19,12 @@ function ChangePasswordPage() {
   const forced = profile?.must_change_password ?? false;
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
+  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (pw.length < 8) {
-      toast.error("A senha deve ter pelo menos 8 caracteres");
+    if (!pw) {
+      toast.error("Digite uma senha");
       return;
     }
     if (pw !== pw2) {
