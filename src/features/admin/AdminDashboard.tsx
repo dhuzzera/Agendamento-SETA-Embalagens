@@ -7,6 +7,12 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-f
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { lazy, Suspense } from "react";
+import {
+  PageHeaderSkeleton,
+  StatCardsRowSkeleton,
+  ListCardSkeleton,
+  ChartSkeleton,
+} from "@/components/Skeletons";
 const MonthlyMetrics = lazy(() =>
   import("./MonthlyMetrics").then((m) => ({ default: m.MonthlyMetrics })),
 );
