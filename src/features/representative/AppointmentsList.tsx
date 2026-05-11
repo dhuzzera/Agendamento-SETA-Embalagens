@@ -17,6 +17,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-f
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { X, Download } from "lucide-react";
+import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
