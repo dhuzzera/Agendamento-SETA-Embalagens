@@ -49,6 +49,8 @@ type Profile = {
   avatar_url: string | null;
   bio: string | null;
   active: boolean;
+  allow_online: boolean;
+  allow_presencial: boolean;
 };
 
 type Avail = {
