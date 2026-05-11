@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, Plus, Apple, Copy, CalendarPlus, Pencil, Check, X } from "lucide-react";
+import { Trash2, Plus, Apple, Copy, CalendarPlus, Pencil, Check, X, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 type Avail = {
@@ -373,6 +373,14 @@ function AvailRow({
 }
 
 function CalendarSubscriptionCard({ token }: { token: string | null }) {
+  const STORAGE_KEY = "seta:lastIcsSync";
+  const [lastSync, setLastSync] = useState<Date | null>(() => {
+    if (typeof window === "undefined") return null;
+    const v = window.localStorage.getItem(STORAGE_KEY);
+    return v ? new Date(v) : null;
+  });
+  const [refreshing, setRefreshing] = useState(false);
+
   if (!token) return null;
   const httpsUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/calendar/${token}.ics`;
   const webcalUrl = httpsUrl.replace(/^https?:/, "webcal:");
@@ -383,6 +391,31 @@ function CalendarSubscriptionCard({ token }: { token: string | null }) {
       toast.success("URL copiada");
     } catch {
       toast.error("Não foi possível copiar");
+    }
+  };
+
+  const refreshNow = async () => {
+    setRefreshing(true);
+    try {
+      // Cache-bust query param + no-store força o servidor e o app de calendário
+      // a buscar o feed atualizado em vez de usar o cache.
+      const res = await fetch(`${httpsUrl}?t=${Date.now()}`, {
+        method: "GET",
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      await res.text();
+      const now = new Date();
+      setLastSync(now);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, now.toISOString());
+      }
+      toast.success("Agenda sincronizada");
+    } catch {
+      toast.error("Não foi possível atualizar agora");
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -423,7 +456,16 @@ function CalendarSubscriptionCard({ token }: { token: string | null }) {
             <CalendarPlus className="h-4 w-4" />
             Adicionar ao Google Calendar
           </a>
+          <Button variant="outline" onClick={refreshNow} disabled={refreshing}>
+            <RefreshCw className={`mr-1.5 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Atualizando..." : "Atualizar agora"}
+          </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          {lastSync
+            ? `Última sincronização: ${lastSync.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}`
+            : "Ainda não sincronizado nesta sessão."}
+        </p>
         <p className="text-xs text-muted-foreground">
           Mantenha esta URL privada — quem tiver acesso a ela poderá ver seus horários e
           contatos dos clientes.
