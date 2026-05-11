@@ -161,7 +161,32 @@ export function AppointmentsList() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, from, to]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, from, to]);
+
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    arr.sort((a, b) => {
+      if (sortBy === "date_asc" || sortBy === "date_desc") {
+        const cmp =
+          a.appointment_date.localeCompare(b.appointment_date) ||
+          a.start_time.localeCompare(b.start_time);
+        return sortBy === "date_asc" ? cmp : -cmp;
+      }
+      if (sortBy === "meeting_type") {
+        return (
+          a.meeting_type.localeCompare(b.meeting_type) ||
+          b.appointment_date.localeCompare(a.appointment_date)
+        );
+      }
+      // location: presencial first ordered by address, online last
+      const al = a.location?.toLowerCase() ?? "";
+      const bl = b.location?.toLowerCase() ?? "";
+      if (!al && bl) return 1;
+      if (al && !bl) return -1;
+      return al.localeCompare(bl) || b.appointment_date.localeCompare(a.appointment_date);
+    });
+    return arr;
+  }, [rows, sortBy]);
 
   const cancel = async (id: string) => {
     if (!confirm("Cancelar este agendamento?")) return;
