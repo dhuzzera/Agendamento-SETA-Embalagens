@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { SetaLogo } from "@/components/SetaLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FullscreenSplashSkeleton } from "@/components/Skeletons";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -12,15 +14,18 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const { signIn, user } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (user) {
-    navigate({ to: "/dashboard" });
-  }
+  useEffect(() => {
+    if (user) navigate({ to: "/dashboard" });
+  }, [user, navigate]);
+
+  // Evita flash do formulário enquanto a sessão hidrata.
+  if (loading || user) return <FullscreenSplashSkeleton />;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +95,7 @@ function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={busy}>
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {busy ? "Entrando…" : "Entrar"}
             </Button>
           </form>
