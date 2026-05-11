@@ -42,7 +42,7 @@ function LoginPage() {
         className="hidden flex-col justify-between p-10 text-primary-foreground lg:flex"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <SetaLogo variant="light" />
+        <SetaLogo variant="light" className="h-14" />
         <div>
           <h2 className="text-3xl font-bold !text-primary-foreground">
             Bem-vindo ao painel comercial.
@@ -64,7 +64,7 @@ function LoginPage() {
               className="rounded-lg p-4"
               style={{ background: "var(--gradient-hero)" }}
             >
-              <SetaLogo variant="light" />
+              <SetaLogo variant="light" className="h-12" />
             </div>
           </div>
           <h1 className="text-2xl font-semibold">Entrar</h1>

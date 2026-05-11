@@ -166,7 +166,7 @@ function Index() {
 
       <footer className="border-t bg-background py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-center text-sm text-muted-foreground sm:flex-row sm:px-6">
-          <SetaLogo variant="dark" />
+          <SetaLogo variant="dark" className="h-8" />
           <p>
             © {new Date().getFullYear()} Seta Embalagens — Produzimos embalagens, entregamos
             confiança.

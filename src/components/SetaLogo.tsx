@@ -14,9 +14,12 @@ export function SetaLogo({ variant = "dark", className = "" }: Props) {
     <img
       src={src}
       alt="Seta Embalagens"
-      className={`h-9 w-auto ${className}`}
+      width={1266}
+      height={633}
+      className={`h-10 w-auto select-none ${className}`}
       decoding="async"
       loading="eager"
+      draggable={false}
     />
   );
 }
