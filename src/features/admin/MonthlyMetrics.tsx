@@ -135,7 +135,7 @@ export function MonthlyMetrics() {
         </p>
       </div>
       {byMonth.map((m) => (
-        <MonthCard key={m.key} {...m} />
+        <MonthCard key={m.key} label={m.label} data={m.data} totals={m.totals} />
       ))}
     </div>
   );
