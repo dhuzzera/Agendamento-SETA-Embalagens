@@ -12,6 +12,7 @@ export type Profile = {
   avatar_url: string | null;
   slug: string | null;
   active: boolean;
+  must_change_password: boolean;
 };
 
 type AuthState = {
