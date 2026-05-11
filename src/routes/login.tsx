@@ -160,7 +160,23 @@ function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+          <form
+            onSubmit={onSubmit}
+            noValidate
+            aria-busy={busy}
+            className="mt-8 flex flex-col gap-5"
+          >
+            {errorMsg && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="flex items-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span className="leading-snug">{errorMsg}</span>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="px-0.5">
                 E-mail corporativo
@@ -170,8 +186,13 @@ function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
+                disabled={busy}
+                aria-invalid={!!errorMsg}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
                 placeholder="seu.nome@setaembalagens.com.br"
                 className="h-11 w-full px-3.5 text-sm"
               />
@@ -185,8 +206,13 @@ function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
+                disabled={busy}
+                aria-invalid={!!errorMsg}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
                 placeholder="••••••••"
                 className="h-11 w-full px-3.5 text-sm"
               />
@@ -196,8 +222,14 @@ function LoginPage() {
               className="mt-2 h-11 w-full px-3.5 text-sm font-medium shadow-[var(--shadow-elegant)]"
               disabled={busy}
             >
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {busy ? "Entrando…" : "Entrar"}
+              {busy ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                  <span>Entrando…</span>
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
 
