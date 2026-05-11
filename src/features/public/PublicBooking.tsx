@@ -427,9 +427,12 @@ export function PublicBooking({ slug }: { slug: string }) {
                   }
                 />
                 <SummaryRow
-                  label="Horário"
-                  value={`${selected.start.slice(0, 5)} – ${selected.end.slice(0, 5)} (${durationMin} min)`}
+                  label="Modalidade"
+                  value={isPresencial ? "Presencial" : "Online"}
                 />
+                {isPresencial && address && (
+                  <SummaryRow label="Endereço" value={address} />
+                )}
                 <SummaryRow label="Nome" value={name} />
                 {company && <SummaryRow label="Empresa" value={company} />}
                 <SummaryRow label="E-mail" value={email} />
