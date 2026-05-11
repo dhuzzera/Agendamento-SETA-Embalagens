@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { AppHeader } from "@/components/AppHeader";
-import { FullscreenSplashSkeleton } from "@/components/Skeletons";
+import { FullscreenSplashSkeleton, PageHeaderSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -10,9 +10,13 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const { user, loading, profile } = useAuth();
   const location = useLocation();
+
+  // Splash full-screen apenas durante a hidratação inicial da sessão.
   if (loading) return <FullscreenSplashSkeleton />;
   if (!user) return <Navigate to="/login" />;
 
+  // Se já temos user mas o profile ainda chega, NÃO bloqueia o layout —
+  // renderiza header + skeleton para o conteúdo, melhorando FCP/TTI.
   if (
     profile?.must_change_password &&
     location.pathname !== "/alterar-senha"
@@ -27,9 +31,8 @@ function AppLayout() {
         key={location.pathname}
         className="page-fade-in mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
       >
-        <Outlet />
+        {profile ? <Outlet /> : <PageHeaderSkeleton />}
       </main>
     </div>
   );
 }
-
