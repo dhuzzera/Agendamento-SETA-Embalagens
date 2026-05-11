@@ -27,11 +27,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import {
-  buildGoogleCalendarUrl,
-  downloadIcsFile,
-  type CalendarEvent,
-} from "@/lib/calendar";
+import type { CalendarEvent } from "@/lib/calendar";
+
+// Calendar helpers are loaded on demand only after a booking is confirmed,
+// keeping them out of the initial bundle for the public page.
+type CalendarLib = typeof import("@/lib/calendar");
+let calendarLibPromise: Promise<CalendarLib> | null = null;
+const loadCalendarLib = () => {
+  if (!calendarLibPromise) {
+    calendarLibPromise = import("@/lib/calendar");
+  }
+  return calendarLibPromise;
+};
 
 type Profile = {
   id: string;
