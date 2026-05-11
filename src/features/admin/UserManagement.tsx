@@ -42,11 +42,13 @@ export function UserManagement() {
   const [edit, setEdit] = useState<RepRow | null>(null);
 
   const load = async () => {
-    const { data: profs } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("full_name");
-    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const [{ data: profs }, { data: roles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, phone, slug, active")
+        .order("full_name"),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
     const roleMap = new Map<string, "admin" | "representative">();
     roles?.forEach((r) => {
       const cur = roleMap.get(r.user_id);

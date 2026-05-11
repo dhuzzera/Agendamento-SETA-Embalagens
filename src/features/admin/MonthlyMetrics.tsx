@@ -37,12 +37,21 @@ export function MonthlyMetrics() {
 
   useEffect(() => {
     const load = async () => {
+      // Limita a janela a 6 meses para evitar varredura completa da tabela.
+      const since = new Date();
+      since.setMonth(since.getMonth() - 5);
+      since.setDate(1);
+      const sinceStr = since.toISOString().slice(0, 10);
       const [{ data: appts }, { data: avails }] = await Promise.all([
         supabase
           .from("appointments")
           .select("appointment_date, start_time, end_time, status")
+          .gte("appointment_date", sinceStr)
           .order("appointment_date", { ascending: true }),
-        supabase.from("availabilities").select("weekday, start_time, end_time, active"),
+        supabase
+          .from("availabilities")
+          .select("weekday, start_time, end_time, active")
+          .eq("active", true),
       ]);
 
       const list = (appts ?? []) as Appt[];

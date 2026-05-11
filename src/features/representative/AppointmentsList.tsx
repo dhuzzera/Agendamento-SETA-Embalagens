@@ -70,7 +70,8 @@ export function AppointmentsList() {
         "id, appointment_date, start_time, end_time, status, notes, client_id, representative_id"
       )
       .order("appointment_date", { ascending: false })
-      .order("start_time");
+      .order("start_time")
+      .limit(200);
 
     if (!isAdmin) q = q.eq("representative_id", profile.id);
     else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
