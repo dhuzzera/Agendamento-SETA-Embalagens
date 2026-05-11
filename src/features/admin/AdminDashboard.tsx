@@ -6,6 +6,7 @@ import { Calendar, Users, Shield, TrendingUp } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { MonthlyMetrics } from "./MonthlyMetrics";
 
 type Counts = {
   reps: number;
@@ -153,6 +154,8 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <MonthlyMetrics />
     </div>
   );
 }
