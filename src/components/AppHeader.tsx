@@ -1,8 +1,10 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Calendar, Users, Settings, LayoutDashboard } from "lucide-react";
+import { LogOut, Calendar, Users, Settings, LayoutDashboard, Shield, UserCircle2 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
+import { useViewMode } from "@/lib/view-mode";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function AppHeader() {
   const { profile, role, signOut } = useAuth();
@@ -40,6 +42,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
+          {isAdmin && <ViewSwitcher />}
           <div className="hidden text-right text-sm sm:block">
             <div className="font-medium leading-tight">{profile?.full_name}</div>
             <div className="text-xs text-sidebar-foreground/70">
@@ -79,5 +82,33 @@ function NavLink({
       {icon}
       {children}
     </Link>
+  );
+}
+
+function ViewSwitcher() {
+  const [mode, setMode] = useViewMode();
+  const opts: { value: "admin" | "representative"; label: string; icon: React.ReactNode }[] = [
+    { value: "admin", label: "Admin", icon: <Shield className="h-3.5 w-3.5" /> },
+    { value: "representative", label: "Representante", icon: <UserCircle2 className="h-3.5 w-3.5" /> },
+  ];
+  return (
+    <div className="hidden items-center gap-0.5 rounded-full bg-sidebar-accent/40 p-0.5 sm:flex">
+      {opts.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => setMode(o.value)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+            mode === o.value
+              ? "bg-background text-foreground shadow-sm"
+              : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
+          )}
+        >
+          {o.icon}
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
