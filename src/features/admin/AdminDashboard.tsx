@@ -158,7 +158,9 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <MonthlyMetrics />
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted/50" />}>
+        <MonthlyMetrics />
+      </Suspense>
     </div>
   );
 }
