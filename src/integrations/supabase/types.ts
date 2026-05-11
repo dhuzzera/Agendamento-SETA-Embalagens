@@ -14,16 +14,246 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          client_id: string
+          created_at: string
+          end_time: string
+          id: string
+          internal_notes: string | null
+          notes: string | null
+          representative_id: string
+          start_time: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          client_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          internal_notes?: string | null
+          notes?: string | null
+          representative_id: string
+          start_time: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          client_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          internal_notes?: string | null
+          notes?: string | null
+          representative_id?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      availabilities: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_time: string
+          id: string
+          meeting_duration_min: number
+          representative_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_time: string
+          id?: string
+          meeting_duration_min?: number
+          representative_id: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_time?: string
+          id?: string
+          meeting_duration_min?: number
+          representative_id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availabilities_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocks: {
+        Row: {
+          block_date: string
+          created_at: string
+          end_time: string | null
+          id: string
+          reason: string | null
+          representative_id: string
+          start_time: string | null
+        }
+        Insert: {
+          block_date: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          reason?: string | null
+          representative_id: string
+          start_time?: string | null
+        }
+        Update: {
+          block_date?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          reason?: string | null
+          representative_id?: string
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocks_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          active: boolean
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          phone?: string | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "representative"
+      appointment_status:
+        | "scheduled"
+        | "completed"
+        | "cancelled"
+        | "rescheduled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +380,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "representative"],
+      appointment_status: [
+        "scheduled",
+        "completed",
+        "cancelled",
+        "rescheduled",
+      ],
+    },
   },
 } as const
