@@ -109,7 +109,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     const load = async () => {
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, active")
+        .select("id, full_name, avatar_url, bio, active, allow_online, allow_presencial")
         .eq("slug", slug)
         .maybeSingle();
       if (!p || !p.active) {
@@ -117,6 +117,9 @@ export function PublicBooking({ slug }: { slug: string }) {
         return;
       }
       setProfile(p as Profile);
+      // Pré-seleciona modalidade conforme o que o representante aceita
+      if (!p.allow_online && p.allow_presencial) setMeetingType("presencial");
+      else setMeetingType("online");
       const today = new Date().toISOString().slice(0, 10);
       const [{ data: a }, { data: b }] = await Promise.all([
         supabase
