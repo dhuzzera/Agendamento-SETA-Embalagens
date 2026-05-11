@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useViewMode } from "@/lib/view-mode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,9 @@ const ALL = "__all__";
 
 export function AppointmentsList() {
   const { profile, role } = useAuth();
-  const isAdmin = role === "admin";
+  const [viewMode] = useViewMode();
+  // Apenas admin (e no modo admin) pode filtrar/ver outros representantes.
+  const isAdmin = role === "admin" && viewMode === "admin";
 
   const [rows, setRows] = useState<Row[]>([]);
   const [reps, setReps] = useState<Rep[]>([]);
