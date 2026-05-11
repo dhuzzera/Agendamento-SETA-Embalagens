@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -13,10 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  isSameDay,
+  parseISO,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { X, Download } from "lucide-react";
+import { X, Download, CalendarDays } from "lucide-react";
 import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
 import { ListRowSkeleton } from "@/components/Skeletons";
 
@@ -53,6 +62,11 @@ export function AppointmentsList() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
 
+  // Calendar
+  const [calMonth, setCalMonth] = useState<Date>(startOfMonth(new Date()));
+  const [monthDates, setMonthDates] = useState<Date[]>([]);
+  const [monthLoading, setMonthLoading] = useState(false);
+
   useEffect(() => {
     if (!isAdmin) return;
     void supabase
@@ -61,6 +75,27 @@ export function AppointmentsList() {
       .order("full_name")
       .then(({ data }) => setReps((data as Rep[]) ?? []));
   }, [isAdmin]);
+
+  // Carrega as datas do mês visível para destacar dias com reuniões
+  useEffect(() => {
+    if (!profile) return;
+    const start = format(startOfMonth(calMonth), "yyyy-MM-dd");
+    const end = format(endOfMonth(calMonth), "yyyy-MM-dd");
+    let q = supabase
+      .from("appointments")
+      .select("appointment_date, status")
+      .gte("appointment_date", start)
+      .lte("appointment_date", end)
+      .neq("status", "cancelled");
+    if (!isAdmin) q = q.eq("representative_id", profile.id);
+    else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
+    setMonthLoading(true);
+    void q.then(({ data }) => {
+      setMonthLoading(false);
+      const set = new Set((data ?? []).map((d) => d.appointment_date as string));
+      setMonthDates([...set].map((s) => parseISO(s)));
+    });
+  }, [profile, isAdmin, repFilter, calMonth]);
 
   const load = async () => {
     if (!profile) return;
@@ -235,6 +270,122 @@ export function AppointmentsList() {
           </Button>
         )}
       </div>
+
+      {/* Calendário do mês com dias que possuem reuniões destacados */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Calendário do mês
+            {monthLoading && (
+              <span className="text-xs font-normal text-muted-foreground">
+                carregando…
+              </span>
+            )}
+          </CardTitle>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" />
+              dias com reuniões
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col items-start gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <Calendar
+            mode="single"
+            locale={ptBR}
+            month={calMonth}
+            onMonthChange={setCalMonth}
+            selected={from && to && from === to ? parseISO(from) : undefined}
+            onSelect={(d) => {
+              if (!d) {
+                setFrom("");
+                setTo("");
+                return;
+              }
+              const s = format(d, "yyyy-MM-dd");
+              setFrom(s);
+              setTo(s);
+            }}
+            modifiers={{ hasMeeting: monthDates }}
+            modifiersClassNames={{
+              hasMeeting:
+                "relative font-semibold text-primary after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+            }}
+            className="pointer-events-auto rounded-md border bg-card p-3"
+          />
+
+          <div className="flex-1 space-y-3 text-sm lg:max-w-xs">
+            <p className="font-medium">
+              {from && to && from === to
+                ? `Reuniões em ${format(parseISO(from), "dd 'de' MMMM", { locale: ptBR })}`
+                : "Selecione um dia"}
+            </p>
+            {from && to && from === to ? (
+              (() => {
+                const dayRows = rows.filter((r) =>
+                  isSameDay(parseISO(r.appointment_date), parseISO(from)),
+                );
+                if (dayRows.length === 0) {
+                  return (
+                    <p className="text-muted-foreground">
+                      Nenhuma reunião neste dia.
+                    </p>
+                  );
+                }
+                return (
+                  <ul className="space-y-2">
+                    {dayRows.map((r) => (
+                      <li
+                        key={r.id}
+                        className="flex items-center justify-between rounded-md border p-2"
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">
+                            {r.client.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {r.start_time.slice(0, 5)} – {r.end_time.slice(0, 5)}
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            r.status === "scheduled"
+                              ? "default"
+                              : r.status === "cancelled"
+                                ? "destructive"
+                                : "secondary"
+                          }
+                        >
+                          {labelStatus(r.status)}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()
+            ) : (
+              <p className="text-muted-foreground">
+                Clique em uma data para filtrar a lista abaixo. Os dias com
+                ponto azul possuem reuniões agendadas.
+              </p>
+            )}
+            {from && to && from === to && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setFrom("");
+                  setTo("");
+                }}
+              >
+                <X className="mr-1 h-3.5 w-3.5" />
+                Limpar dia
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
