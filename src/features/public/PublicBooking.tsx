@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/lib/calendar";
+import { ClientCalendarTutorial } from "./ClientCalendarTutorial";
 
 // Calendar helpers are loaded on demand only after a booking is confirmed,
 // keeping them out of the initial bundle for the public page.
@@ -447,43 +448,14 @@ export function PublicBooking({ slug }: { slug: string }) {
                 </ul>
               </div>
 
-              {/* CTAs adicionar ao calendário */}
-              <div className="mt-6 space-y-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Adicionar ao calendário
-                </p>
-                <div className="flex flex-col items-stretch gap-2 sm:flex-row">
-                  <a
-                    href={googleUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-disabled={!calendarLib}
-                    onClick={(e) => {
-                      if (!calendarLib) e.preventDefault();
-                    }}
-                    className={cn(
-                      "inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm",
-                      !calendarLib && "pointer-events-none opacity-60",
-                    )}
-                  >
-                    <CalIcon className="h-4 w-4" />
-                    Google Calendar
-                  </a>
-                  <button
-                    type="button"
-                    disabled={!calendarLib}
-                    onClick={() =>
-                      calendarLib?.downloadIcsFile(
-                        calendarEvent,
-                        `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
-                      )
-                    }
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground disabled:opacity-60 sm:text-sm"
-                  >
-                    <Download className="h-4 w-4" />
-                    Baixar .ics (Apple/Outlook)
-                  </button>
-                </div>
+              {/* Tutorial: adicionar à agenda do cliente (mesmo padrão usado pelo representante) */}
+              <div className="mt-6">
+                <ClientCalendarTutorial
+                  calendarEvent={calendarEvent}
+                  fileName={`reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`}
+                  calendarLib={calendarLib}
+                  googleUrl={googleUrl}
+                />
               </div>
             </div>
           </div>
