@@ -55,13 +55,13 @@ function Index() {
         />
         <div className="relative mx-auto max-w-3xl text-primary-foreground">
           <span className="inline-flex items-center rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-            Plataforma oficial Seta Embalagens
+            Plataforma oficial SETA Embalagens
           </span>
           <h1 className="mt-5 text-4xl font-bold tracking-tight !text-primary-foreground sm:text-5xl lg:text-6xl">
-            Agendamento comercial,<br className="hidden sm:block" /> com a confiança Seta.
+            Agendamento comercial,<br className="hidden sm:block" /> com a confiança SETA.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-primary-foreground/90">
-            Plataforma oficial dos representantes comerciais da Seta Embalagens.
+            Plataforma oficial dos representantes comerciais da SETA Embalagens.
             Reuniões organizadas, sem dupla marcação e com o padrão institucional
             que entregamos há décadas ao mercado B2B.
           </p>
@@ -78,7 +78,7 @@ function Index() {
               rel="noopener noreferrer"
               className="text-sm font-medium text-primary-foreground/90 underline-offset-4 hover:underline"
             >
-              Conheça a Seta Embalagens →
+              Conheça a SETA Embalagens →
             </a>
           </div>
         </div>
@@ -117,18 +117,18 @@ function Index() {
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <span className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-              Padrão Seta
+              Padrão SETA
             </span>
             <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
               Atendimento profissional, do primeiro contato ao fechamento.
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Construída sob a identidade visual e os valores da Seta Embalagens —
+              Construída sob a identidade visual e os valores da SETA Embalagens —
               respeito, resultado, transparência, confiança e qualidade.
             </p>
             <ul className="mt-6 space-y-3 text-sm">
               {[
-                "Identidade visual oficial Seta Embalagens",
+                "Identidade visual oficial SETA Embalagens",
                 "Compatível com Apple Calendar, Google Calendar e Outlook",
                 "Disponível em qualquer dispositivo — celular, tablet ou desktop",
                 "Acesso seguro com perfis de Administrador e Representante",
@@ -169,7 +169,7 @@ function Index() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-center text-sm text-muted-foreground sm:flex-row sm:px-6">
           <SetaLogo variant="dark" className="h-8" />
           <p>
-            © {new Date().getFullYear()} Seta Embalagens — Produzimos embalagens, entregamos
+            © {new Date().getFullYear()} SETA Embalagens — Produzimos embalagens, entregamos
             confiança.
           </p>
         </div>

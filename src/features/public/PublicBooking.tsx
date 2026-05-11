@@ -354,7 +354,7 @@ export function PublicBooking({ slug }: { slug: string }) {
         <div>
           <h1 className="text-2xl font-bold">Representante não encontrado</h1>
           <p className="mt-2 text-muted-foreground">
-            Verifique o link recebido com o representante Seta.
+            Verifique o link recebido com o representante SETA.
           </p>
         </div>
       </div>
@@ -364,7 +364,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   if (success && selected) {
     const isPresencial = meetingType === "presencial";
     const calendarEvent: CalendarEvent = {
-      title: `Reunião com ${profile.full_name} — Seta Embalagens`,
+      title: `Reunião com ${profile.full_name} — SETA Embalagens`,
       description: `Reunião comercial ${isPresencial ? "presencial" : "online"} com ${profile.full_name}.${
         isPresencial && address ? `\n\nEndereço: ${address}` : ""
       }${notes ? `\n\nObservações: ${notes}` : ""}`,
@@ -402,7 +402,7 @@ export function PublicBooking({ slug }: { slug: string }) {
                 Tudo certo, {name.split(" ")[0]}!
               </h1>
               <p className="mt-2 text-sm text-primary-foreground/85">
-                Sua reunião comercial com a Seta Embalagens está agendada.
+                Sua reunião comercial com a SETA Embalagens está agendada.
               </p>
             </div>
 
@@ -554,7 +554,7 @@ export function PublicBooking({ slug }: { slug: string }) {
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Conheça mais a Seta em{" "}
+            Conheça mais a SETA em{" "}
             <a
               href="https://setaembalagens.com.br"
               target="_blank"
@@ -602,7 +602,7 @@ export function PublicBooking({ slug }: { slug: string }) {
               </h1>
               <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <CalIcon className="h-3.5 w-3.5" />
-                Representante Seta Embalagens
+                Representante SETA Embalagens
               </p>
             </div>
           </CardContent>
@@ -906,7 +906,7 @@ function PublicHeader() {
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center transition-opacity hover:opacity-80"
-          aria-label="Seta Embalagens — site institucional"
+          aria-label="SETA Embalagens — site institucional"
         >
           <SetaLogo variant="dark" className="h-12 w-auto sm:h-14" />
         </a>
@@ -939,7 +939,7 @@ function PublicFooter() {
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Seta Embalagens — Produzimos embalagens, entregamos confiança.
+          © {new Date().getFullYear()} SETA Embalagens — Produzimos embalagens, entregamos confiança.
         </p>
         <a
           href="https://setaembalagens.com.br"

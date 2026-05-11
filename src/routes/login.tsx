@@ -35,7 +35,7 @@ function translateAuthError(raw: string): string {
     return "Sem conexão com o servidor. Verifique sua internet e tente novamente.";
   }
   if (msg.includes("user is banned") || msg.includes("disabled")) {
-    return "Sua conta está desativada. Fale com o administrador da Seta.";
+    return "Sua conta está desativada. Fale com o administrador da SETA.";
   }
   return "Não foi possível entrar. Tente novamente em instantes.";
 }
@@ -135,7 +135,7 @@ function LoginPage() {
         </div>
 
         <p className="relative text-xs text-primary-foreground/70">
-          © {new Date().getFullYear()} Seta Embalagens — Todos os direitos reservados.
+          © {new Date().getFullYear()} SETA Embalagens — Todos os direitos reservados.
         </p>
       </div>
 
@@ -234,7 +234,7 @@ function LoginPage() {
           </form>
 
           <div className="mt-8 border-t pt-6 text-center text-xs text-muted-foreground">
-            Sem conta? Solicite acesso ao administrador da Seta.
+            Sem conta? Solicite acesso ao administrador da SETA.
             <div className="mt-2">
               <Link to="/" className="font-medium text-primary hover:underline">
                 ← Voltar para a página inicial

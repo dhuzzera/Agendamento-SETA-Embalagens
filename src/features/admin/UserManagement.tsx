@@ -102,7 +102,7 @@ export function UserManagement() {
         <div>
           <h1 className="text-3xl font-bold">Gestão de usuários</h1>
           <p className="text-muted-foreground">
-            Administradores e representantes da operação Seta.
+            Administradores e representantes da operação SETA.
           </p>
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEdit(null); }}>

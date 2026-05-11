@@ -40,7 +40,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Seta Embalagens — design system institucional
+/* SETA Embalagens — design system institucional
  * Paleta: azul institucional, branco, cinzas neutros
  */
 
@@ -100,7 +100,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 250);
 
-  /* Azul institucional Seta */
+  /* Azul institucional SETA */
   --primary: oklch(0.34 0.105 250);
   --primary-foreground: oklch(0.99 0 0);
   --primary-hover: oklch(0.28 0.115 250);
