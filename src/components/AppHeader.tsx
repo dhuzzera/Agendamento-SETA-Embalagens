@@ -9,6 +9,7 @@ import {
   Shield,
   UserCircle2,
   Menu,
+  Activity,
 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
@@ -29,6 +30,7 @@ const NAV = [
   { to: "/agenda", label: "Agenda", icon: Calendar, adminOnly: false },
   { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
   { to: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
+  { to: "/admin/performance", label: "Performance", icon: Activity, adminOnly: true },
 ] as const;
 
 export function AppHeader() {

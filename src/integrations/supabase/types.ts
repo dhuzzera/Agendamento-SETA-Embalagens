@@ -213,6 +213,42 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metric_name: string
+          navigation_type: string | null
+          rating: string | null
+          route: string
+          user_agent: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_name: string
+          navigation_type?: string | null
+          rating?: string | null
+          route: string
+          user_agent?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_name?: string
+          navigation_type?: string | null
+          rating?: string | null
+          route?: string
+          user_agent?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           active: boolean
