@@ -593,26 +593,31 @@ export function PublicBooking({ slug }: { slug: string }) {
           </Card>
         ) : (
           <Card className="mt-6 border-0 shadow-[var(--shadow-card)]">
-            <CardContent className="p-6">
-              <div className="mb-6 flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="p-6 sm:p-8">
+              <div className="mb-6 flex flex-col gap-3 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">Confirme seus dados</h2>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <CalIcon className="h-3.5 w-3.5" />
-                    {format(selected.date, "EEEE, dd 'de' MMMM", {
-                      locale: ptBR,
-                    })}{" "}
-                    • {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+                    Confirme seus dados
+                  </p>
+                  <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                    <CalIcon className="h-3.5 w-3.5 text-primary" />
+                    <span className="capitalize">
+                      {format(selected.date, "EEEE, dd 'de' MMMM", {
+                        locale: ptBR,
+                      })}
+                    </span>
+                    <span className="text-muted-foreground">•</span>
+                    {selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
+                <button
+                  type="button"
                   onClick={() => setSelected(null)}
+                  className="inline-flex items-center justify-center gap-1.5 self-start rounded-full border-2 border-primary/30 bg-background px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground sm:self-auto"
                 >
-                  <ArrowLeft className="mr-1.5 h-4 w-4" />
+                  <ArrowLeft className="h-3.5 w-3.5" />
                   Trocar horário
-                </Button>
+                </button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -655,18 +660,19 @@ export function PublicBooking({ slug }: { slug: string }) {
                 </div>
               </div>
 
-              <Button
+              <button
+                type="button"
                 onClick={submit}
                 disabled={busy}
-                className="mt-6 w-full"
-                size="lg"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-primary px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.18em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-60"
               >
                 {busy ? "Confirmando…" : "Confirmar agendamento"}
-              </Button>
+              </button>
             </CardContent>
           </Card>
         )}
       </div>
+      <PublicFooter />
     </div>
   );
 }
