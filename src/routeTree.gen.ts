@@ -18,6 +18,7 @@ import { Route as AppDisponibilidadeRouteImport } from './routes/_app/disponibil
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAlterarSenhaRouteImport } from './routes/_app/alterar-senha'
 import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app/admin.usuarios'
 import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
 
@@ -65,10 +66,15 @@ const AppAgendaRoute = AppAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AppRouteRoute,
 } as any)
-const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
-  id: '/admin/usuarios',
-  path: '/admin/usuarios',
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AppAdminRoute,
 } as any)
 const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
   id: '/api/public/calendar/$token',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/agenda': typeof AppAgendaRoute
   '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/agenda': typeof AppAgendaRoute
   '/alterar-senha': typeof AppAlterarSenhaRoute
   '/dashboard': typeof AppDashboardRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteRouteWithChildren
   '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/agenda': typeof AppAgendaRoute
   '/_app/alterar-senha': typeof AppAlterarSenhaRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/login'
+    | '/admin'
     | '/agenda'
     | '/alterar-senha'
     | '/dashboard'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/login'
+    | '/admin'
     | '/agenda'
     | '/alterar-senha'
     | '/dashboard'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/$slug'
     | '/login'
+    | '/_app/admin'
     | '/_app/agenda'
     | '/_app/alterar-senha'
     | '/_app/dashboard'
@@ -228,12 +240,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAgendaRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/admin/usuarios': {
       id: '/_app/admin/usuarios'
-      path: '/admin/usuarios'
+      path: '/usuarios'
       fullPath: '/admin/usuarios'
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
-      parentRoute: typeof AppRouteRoute
+      parentRoute: typeof AppAdminRoute
     }
     '/api/public/calendar/$token': {
       id: '/api/public/calendar/$token'
@@ -245,20 +264,32 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminUsuariosRoute: AppAdminUsuariosRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteRouteChildren {
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAgendaRoute: typeof AppAgendaRoute
   AppAlterarSenhaRoute: typeof AppAlterarSenhaRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDisponibilidadeRoute: typeof AppDisponibilidadeRoute
-  AppAdminUsuariosRoute: typeof AppAdminUsuariosRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppAgendaRoute: AppAgendaRoute,
   AppAlterarSenhaRoute: AppAlterarSenhaRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDisponibilidadeRoute: AppDisponibilidadeRoute,
-  AppAdminUsuariosRoute: AppAdminUsuariosRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
