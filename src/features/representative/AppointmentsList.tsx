@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,12 @@ import {
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { X, Download, CalendarDays } from "lucide-react";
-import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
+// Dialog pesado (edição/admin) — só baixa quando o usuário abrir um agendamento.
+const AppointmentDetailsDialog = lazy(() =>
+  import("@/features/admin/AppointmentDetailsDialog").then((m) => ({
+    default: m.AppointmentDetailsDialog,
+  })),
+);
 import { ListRowSkeleton } from "@/components/Skeletons";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
@@ -561,13 +566,17 @@ export function AppointmentsList() {
         </CardContent>
       </Card>
 
-      <AppointmentDetailsDialog
-        appointment={selected}
-        representativeName={selected ? repName(selected.representative_id) : ""}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onChanged={load}
-      />
+      {dialogOpen && (
+        <Suspense fallback={null}>
+          <AppointmentDetailsDialog
+            appointment={selected}
+            representativeName={selected ? repName(selected.representative_id) : ""}
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            onChanged={load}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
