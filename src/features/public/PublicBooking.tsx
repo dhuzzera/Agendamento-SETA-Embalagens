@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SetaLogo } from "@/components/SetaLogo";
 import {
   addDays,
@@ -41,6 +42,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [weekStart, setWeekStart] = useState(() => startOfDay(new Date()));
+  const [loadedWeek, setLoadedWeek] = useState<string | null>(null);
   const [selected, setSelected] = useState<{ date: Date; start: string; end: string } | null>(
     null
   );
@@ -92,6 +94,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (!profile) return;
     const start = format(weekStart, "yyyy-MM-dd");
     const end = format(addDays(weekStart, 6), "yyyy-MM-dd");
+    setLoadedWeek(null);
     supabase
       .from("appointments")
       .select("appointment_date, start_time, end_time")
@@ -99,7 +102,10 @@ export function PublicBooking({ slug }: { slug: string }) {
       .eq("status", "scheduled")
       .gte("appointment_date", start)
       .lte("appointment_date", end)
-      .then(({ data }) => setAppts((data as Appt[]) ?? []));
+      .then(({ data }) => {
+        setAppts((data as Appt[]) ?? []);
+        setLoadedWeek(start);
+      });
   }, [profile, weekStart]);
 
   const days = useMemo(
@@ -197,11 +203,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Carregando…
-      </div>
-    );
+    return <BookingSkeleton />;
   }
 
   if (!profile) {
@@ -342,7 +344,9 @@ export function PublicBooking({ slug }: { slug: string }) {
 
               <div className="grid gap-3 md:grid-cols-7">
                 {days.map((day) => {
-                  const slots = slotsFor(day);
+                  const weekKey = format(weekStart, "yyyy-MM-dd");
+                  const isLoadingSlots = loadedWeek !== weekKey;
+                  const slots = isLoadingSlots ? [] : slotsFor(day);
                   return (
                     <div
                       key={day.toISOString()}
@@ -357,7 +361,13 @@ export function PublicBooking({ slug }: { slug: string }) {
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        {slots.length === 0 ? (
+                        {isLoadingSlots ? (
+                          <>
+                            <Skeleton className="h-7 w-full" />
+                            <Skeleton className="h-7 w-full" />
+                            <Skeleton className="h-7 w-full" />
+                          </>
+                        ) : slots.length === 0 ? (
                           <p className="text-center text-xs text-muted-foreground">—</p>
                         ) : (
                           slots.map((s) => (
@@ -460,5 +470,51 @@ function PublicHeader() {
         </span>
       </div>
     </header>
+  );
+}
+
+function BookingSkeleton() {
+  return (
+    <div className="min-h-screen bg-secondary">
+      <PublicHeader />
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        {/* Rep card */}
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Week grid */}
+        <Card className="mt-6">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-8 w-44" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-7">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="rounded-lg border bg-background p-3">
+                  <div className="mb-2 flex flex-col items-center gap-1">
+                    <Skeleton className="h-3 w-8" />
+                    <Skeleton className="h-5 w-6" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-7 w-full" />
+                    <Skeleton className="h-7 w-full" />
+                    <Skeleton className="h-7 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
