@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { X, Download } from "lucide-react";
 import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
+import { ListRowSkeleton } from "@/components/Skeletons";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
@@ -317,7 +318,11 @@ export function AppointmentsList() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <p className="p-6 text-sm text-muted-foreground">Carregando…</p>
+            <div className="divide-y px-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ListRowSkeleton key={i} />
+              ))}
+            </div>
           ) : rows.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">
               Nenhuma reunião encontrada com os filtros atuais.
