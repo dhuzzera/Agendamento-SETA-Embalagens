@@ -111,7 +111,7 @@ export function buildIcsContent(event: CalendarEvent): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Seta Embalagens//Agendamento//PT-BR",
+    "PRODID:-//SETA Embalagens//Agendamento//PT-BR",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-TIMEZONE:${SP_TZID}`,

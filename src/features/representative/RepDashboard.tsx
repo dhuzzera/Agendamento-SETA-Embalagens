@@ -105,7 +105,7 @@ export function RepDashboard() {
       <HolidayConfirmDialog representativeId={repId} />
       <div>
         <h1 className="text-3xl font-bold">Olá, {profile?.full_name?.split(" ")[0]}</h1>
-        <p className="text-muted-foreground">Sua agenda comercial Seta.</p>
+        <p className="text-muted-foreground">Sua agenda comercial SETA.</p>
       </div>
 
       {stats ? (

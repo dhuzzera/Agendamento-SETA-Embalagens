@@ -96,7 +96,7 @@ export function AdminDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Painel administrativo</h1>
-        <p className="text-muted-foreground">Visão geral da operação comercial Seta.</p>
+        <p className="text-muted-foreground">Visão geral da operação comercial SETA.</p>
       </div>
 
       {counts ? (

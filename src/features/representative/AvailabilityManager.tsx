@@ -583,7 +583,7 @@ function CalendarSubscriptionCard({ token }: { token: string | null }) {
                 </li>
                 <li>
                   <span className="font-medium text-foreground">3.</span> No
-                  celular Android, abra o app Google Agenda — a agenda Seta
+                  celular Android, abra o app Google Agenda — a agenda SETA
                   aparece junto.
                 </li>
               </ol>
@@ -613,7 +613,7 @@ function CalendarSubscriptionCard({ token }: { token: string | null }) {
                 </li>
                 <li>
                   <span className="font-medium text-foreground">2.</span> Cole
-                  a URL acima e dê um nome (ex.: “Agenda Seta”).
+                  a URL acima e dê um nome (ex.: “Agenda SETA”).
                 </li>
                 <li>
                   <span className="font-medium text-foreground">3.</span>{" "}
