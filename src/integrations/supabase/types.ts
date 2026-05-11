@@ -258,6 +258,8 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          allow_online: boolean
+          allow_presencial: boolean
           avatar_url: string | null
           bio: string | null
           calendar_token: string
@@ -272,6 +274,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          allow_online?: boolean
+          allow_presencial?: boolean
           avatar_url?: string | null
           bio?: string | null
           calendar_token?: string
@@ -286,6 +290,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          allow_online?: boolean
+          allow_presencial?: boolean
           avatar_url?: string | null
           bio?: string | null
           calendar_token?: string
