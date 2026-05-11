@@ -1,42 +1,95 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { X } from "lucide-react";
+
+type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
 type Row = {
   id: string;
   appointment_date: string;
   start_time: string;
   end_time: string;
-  status: "scheduled" | "completed" | "cancelled" | "rescheduled";
+  status: Status;
   notes: string | null;
+  representative_id: string;
   client: { name: string; company: string | null; email: string; phone: string | null };
 };
 
+type Rep = { id: string; full_name: string };
+
+const ALL = "__all__";
+
 export function AppointmentsList() {
   const { profile, role } = useAuth();
+  const isAdmin = role === "admin";
+
   const [rows, setRows] = useState<Row[]>([]);
+  const [reps, setReps] = useState<Rep[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Filters
+  const [repFilter, setRepFilter] = useState<string>(ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [from, setFrom] = useState<string>("");
+  const [to, setTo] = useState<string>("");
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void supabase
+      .from("profiles")
+      .select("id, full_name")
+      .order("full_name")
+      .then(({ data }) => setReps((data as Rep[]) ?? []));
+  }, [isAdmin]);
 
   const load = async () => {
     if (!profile) return;
+    setLoading(true);
     let q = supabase
       .from("appointments")
-      .select("id, appointment_date, start_time, end_time, status, notes, client_id")
+      .select(
+        "id, appointment_date, start_time, end_time, status, notes, client_id, representative_id"
+      )
       .order("appointment_date", { ascending: false })
       .order("start_time");
-    if (role !== "admin") q = q.eq("representative_id", profile.id);
-    const { data } = await q;
+
+    if (!isAdmin) q = q.eq("representative_id", profile.id);
+    else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
+
+    if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
+    if (from) q = q.gte("appointment_date", from);
+    if (to) q = q.lte("appointment_date", to);
+
+    const { data, error } = await q;
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (!data) return;
     const ids = [...new Set(data.map((d) => d.client_id))];
-    const { data: clis } = await supabase
-      .from("clients")
-      .select("id, name, company, email, phone")
-      .in("id", ids);
+    const { data: clis } = ids.length
+      ? await supabase
+          .from("clients")
+          .select("id, name, company, email, phone")
+          .in("id", ids)
+      : { data: [] as { id: string; name: string; company: string | null; email: string; phone: string | null }[] };
     const map = new Map(clis?.map((c) => [c.id, c]));
     setRows(
       data.map((d) => ({
@@ -53,7 +106,8 @@ export function AppointmentsList() {
 
   useEffect(() => {
     void load();
-  }, [profile, role]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, role, repFilter, statusFilter, from, to]);
 
   const cancel = async (id: string) => {
     if (!confirm("Cancelar este agendamento?")) return;
@@ -68,31 +122,160 @@ export function AppointmentsList() {
     }
   };
 
+  const repName = useMemo(() => {
+    const m = new Map(reps.map((r) => [r.id, r.full_name]));
+    return (id: string) => m.get(id) ?? "—";
+  }, [reps]);
+
+  const setPeriod = (kind: "today" | "week" | "month" | "all") => {
+    const now = new Date();
+    if (kind === "today") {
+      const d = format(now, "yyyy-MM-dd");
+      setFrom(d);
+      setTo(d);
+    } else if (kind === "week") {
+      setFrom(format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"));
+      setTo(format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"));
+    } else if (kind === "month") {
+      setFrom(format(startOfMonth(now), "yyyy-MM-dd"));
+      setTo(format(endOfMonth(now), "yyyy-MM-dd"));
+    } else {
+      setFrom("");
+      setTo("");
+    }
+  };
+
+  const clearFilters = () => {
+    setRepFilter(ALL);
+    setStatusFilter(ALL);
+    setFrom("");
+    setTo("");
+  };
+
+  const hasFilters =
+    repFilter !== ALL || statusFilter !== ALL || !!from || !!to;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Minhas reuniões</h1>
-        <p className="text-muted-foreground">Histórico e próximas reuniões.</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {isAdmin ? "Agendamentos" : "Minhas reuniões"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isAdmin
+              ? "Visão consolidada de todas as agendas dos representantes."
+              : "Histórico e próximas reuniões."}
+          </p>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de agendamentos</CardTitle>
+          <CardTitle className="text-base">Filtros</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {isAdmin && (
+              <div>
+                <Label className="text-xs">Representante</Label>
+                <Select value={repFilter} onValueChange={setRepFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL}>Todos</SelectItem>
+                    {reps.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos</SelectItem>
+                  <SelectItem value="scheduled">Agendado</SelectItem>
+                  <SelectItem value="completed">Concluído</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                  <SelectItem value="rescheduled">Remarcado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">De</Label>
+              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Até</Label>
+              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setPeriod("today")}>
+              Hoje
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setPeriod("week")}>
+              Esta semana
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setPeriod("month")}>
+              Este mês
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setPeriod("all")}>
+              Todo o período
+            </Button>
+            {hasFilters && (
+              <Button size="sm" variant="ghost" onClick={clearFilters} className="ml-auto">
+                <X className="mr-1 h-3.5 w-3.5" />
+                Limpar
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Lista de agendamentos
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              ({rows.length})
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {rows.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">Nenhuma reunião.</p>
+          {loading ? (
+            <p className="p-6 text-sm text-muted-foreground">Carregando…</p>
+          ) : rows.length === 0 ? (
+            <p className="p-6 text-sm text-muted-foreground">
+              Nenhuma reunião encontrada com os filtros atuais.
+            </p>
           ) : (
             <div className="divide-y">
               {rows.map((r) => (
-                <div key={r.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
+                <div
+                  key={r.id}
+                  className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{r.client.name}</span>
                       {r.client.company && (
                         <span className="text-sm text-muted-foreground">
                           • {r.client.company}
                         </span>
+                      )}
+                      {isAdmin && (
+                        <Badge variant="outline" className="text-xs">
+                          {repName(r.representative_id)}
+                        </Badge>
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
