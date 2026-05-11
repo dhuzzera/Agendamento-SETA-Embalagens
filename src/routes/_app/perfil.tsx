@@ -44,6 +44,8 @@ function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
+  const [allowOnline, setAllowOnline] = useState(true);
+  const [allowPresencial, setAllowPresencial] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,6 +55,8 @@ function ProfilePage() {
       setFullName(profile.full_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
+      setAllowOnline(profile.allow_online ?? true);
+      setAllowPresencial(profile.allow_presencial ?? true);
     }
   }, [profile]);
 
