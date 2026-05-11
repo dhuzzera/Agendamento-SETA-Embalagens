@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 function DashboardRouter() {
   const { role } = useAuth();
   const [mode] = useViewMode();
+  // Não-admin nunca vê o painel administrativo, mesmo que force "mode=admin".
   if (role !== "admin") return <RepDashboard />;
   return mode === "representative" ? <RepDashboard /> : <AdminDashboard />;
 }
