@@ -66,6 +66,11 @@ export function AppointmentsList() {
   // Filters
   const [repFilter, setRepFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>(ALL);
+  const [addressQuery, setAddressQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<
+    "date_desc" | "date_asc" | "meeting_type" | "location"
+  >("date_desc");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
 
@@ -120,6 +125,8 @@ export function AppointmentsList() {
     else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
 
     if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
+    if (meetingTypeFilter !== ALL) q = q.eq("meeting_type", meetingTypeFilter);
+    if (addressQuery.trim()) q = q.ilike("location", `%${addressQuery.trim()}%`);
     if (from) q = q.gte("appointment_date", from);
     if (to) q = q.lte("appointment_date", to);
 
@@ -154,7 +161,32 @@ export function AppointmentsList() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, from, to]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, from, to]);
+
+  const sortedRows = useMemo(() => {
+    const arr = [...rows];
+    arr.sort((a, b) => {
+      if (sortBy === "date_asc" || sortBy === "date_desc") {
+        const cmp =
+          a.appointment_date.localeCompare(b.appointment_date) ||
+          a.start_time.localeCompare(b.start_time);
+        return sortBy === "date_asc" ? cmp : -cmp;
+      }
+      if (sortBy === "meeting_type") {
+        return (
+          a.meeting_type.localeCompare(b.meeting_type) ||
+          b.appointment_date.localeCompare(a.appointment_date)
+        );
+      }
+      // location: presencial first ordered by address, online last
+      const al = a.location?.toLowerCase() ?? "";
+      const bl = b.location?.toLowerCase() ?? "";
+      if (!al && bl) return 1;
+      if (al && !bl) return -1;
+      return al.localeCompare(bl) || b.appointment_date.localeCompare(a.appointment_date);
+    });
+    return arr;
+  }, [rows, sortBy]);
 
   const cancel = async (id: string) => {
     if (!confirm("Cancelar este agendamento?")) return;
@@ -195,12 +227,19 @@ export function AppointmentsList() {
   const clearFilters = () => {
     setRepFilter(ALL);
     setStatusFilter(ALL);
+    setMeetingTypeFilter(ALL);
+    setAddressQuery("");
     setFrom("");
     setTo("");
   };
 
   const hasFilters =
-    repFilter !== ALL || statusFilter !== ALL || !!from || !!to;
+    repFilter !== ALL ||
+    statusFilter !== ALL ||
+    meetingTypeFilter !== ALL ||
+    !!addressQuery ||
+    !!from ||
+    !!to;
 
   const exportCsv = () => {
     if (rows.length === 0) {
@@ -441,6 +480,41 @@ export function AppointmentsList() {
               <Label className="text-xs">Até</Label>
               <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
+            <div>
+              <Label className="text-xs">Modalidade</Label>
+              <Select value={meetingTypeFilter} onValueChange={setMeetingTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todas</SelectItem>
+                  <SelectItem value="online">Online</SelectItem>
+                  <SelectItem value="presencial">Presencial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Endereço contém</Label>
+              <Input
+                value={addressQuery}
+                onChange={(e) => setAddressQuery(e.target.value)}
+                placeholder="Ex.: Av. Paulista"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Ordenar por</Label>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_desc">Data (mais recente)</SelectItem>
+                  <SelectItem value="date_asc">Data (mais antiga)</SelectItem>
+                  <SelectItem value="meeting_type">Modalidade</SelectItem>
+                  <SelectItem value="location">Endereço</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => setPeriod("today")}>
@@ -487,7 +561,7 @@ export function AppointmentsList() {
             </p>
           ) : (
             <div className="divide-y">
-              {rows.map((r) => (
+              {sortedRows.map((r) => (
                 <div
                   key={r.id}
                   role="button"
