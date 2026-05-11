@@ -216,6 +216,19 @@ export function PublicBooking({ slug }: { slug: string }) {
   }
 
   if (success && selected) {
+    const calendarEvent: CalendarEvent = {
+      title: `Reunião com ${profile.full_name} — Seta Embalagens`,
+      description: `Reunião comercial com ${profile.full_name}.${
+        notes ? `\n\nObservações: ${notes}` : ""
+      }`,
+      date: format(selected.date, "yyyy-MM-dd"),
+      startTime: selected.start,
+      endTime: selected.end,
+      organizerName: profile.full_name,
+      attendeeEmail: email,
+      attendeeName: name,
+    };
+    const googleUrl = buildGoogleCalendarUrl(calendarEvent);
     return (
       <div className="min-h-screen bg-secondary">
         <PublicHeader />
@@ -233,6 +246,34 @@ export function PublicBooking({ slug }: { slug: string }) {
             <p className="mt-4 text-sm text-muted-foreground">
               Em breve você receberá uma confirmação no e-mail informado ({email}).
             </p>
+
+            <div className="mt-6 space-y-2">
+              <p className="text-sm font-medium">Adicionar ao calendário</p>
+              <div className="flex flex-col items-stretch justify-center gap-2 sm:flex-row">
+                <a
+                  href={googleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                >
+                  <CalIcon className="h-4 w-4" />
+                  Google Calendar
+                </a>
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadIcsFile(
+                      calendarEvent,
+                      `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`
+                    )
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Download className="h-4 w-4" />
+                  Baixar .ics (Apple/Outlook)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
