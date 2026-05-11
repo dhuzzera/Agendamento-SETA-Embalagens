@@ -66,6 +66,11 @@ export function AppointmentsList() {
   // Filters
   const [repFilter, setRepFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>(ALL);
+  const [addressQuery, setAddressQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<
+    "date_desc" | "date_asc" | "meeting_type" | "location"
+  >("date_desc");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
 
