@@ -102,6 +102,21 @@ export function AvailabilityManager() {
     void load();
   };
 
+  const updateAvail = async (id: string, patch: Partial<Avail>) => {
+    const { error } = await supabase.from("availabilities").update(patch).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success("Disponibilidade atualizada");
+    void load();
+    return true;
+  };
+
+  const toggleActive = async (a: Avail) => {
+    await updateAvail(a.id, { active: !a.active });
+  };
+
   const addBlock = async () => {
     if (!profile || !blockDate) return;
     const { error } = await supabase.from("blocks").insert({
