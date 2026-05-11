@@ -26,7 +26,12 @@ import {
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { X, Download, CalendarDays } from "lucide-react";
-import { AppointmentDetailsDialog } from "@/features/admin/AppointmentDetailsDialog";
+// Dialog pesado (edição/admin) — só baixa quando o usuário abrir um agendamento.
+const AppointmentDetailsDialog = lazy(() =>
+  import("@/features/admin/AppointmentDetailsDialog").then((m) => ({
+    default: m.AppointmentDetailsDialog,
+  })),
+);
 import { ListRowSkeleton } from "@/components/Skeletons";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
