@@ -33,7 +33,7 @@ const SlugRoute = SlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/$slug.lazy').then((d) => d.Route))
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,

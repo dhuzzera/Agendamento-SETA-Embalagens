@@ -27,11 +27,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import {
-  buildGoogleCalendarUrl,
-  downloadIcsFile,
-  type CalendarEvent,
-} from "@/lib/calendar";
+import type { CalendarEvent } from "@/lib/calendar";
+
+// Calendar helpers are loaded on demand only after a booking is confirmed,
+// keeping them out of the initial bundle for the public page.
+type CalendarLib = typeof import("@/lib/calendar");
+let calendarLibPromise: Promise<CalendarLib> | null = null;
+const loadCalendarLib = () => {
+  if (!calendarLibPromise) {
+    calendarLibPromise = import("@/lib/calendar");
+  }
+  return calendarLibPromise;
+};
 
 type Profile = {
   id: string;
@@ -77,6 +84,19 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
+
+  // Load calendar helpers only after a confirmed booking
+  useEffect(() => {
+    if (!success) return;
+    let cancelled = false;
+    void loadCalendarLib().then((m) => {
+      if (!cancelled) setCalendarLib(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [success]);
 
   useEffect(() => {
     const load = async () => {
@@ -343,7 +363,7 @@ export function PublicBooking({ slug }: { slug: string }) {
       attendeeEmail: email,
       attendeeName: name,
     };
-    const googleUrl = buildGoogleCalendarUrl(calendarEvent);
+    const googleUrl = calendarLib?.buildGoogleCalendarUrl(calendarEvent) ?? "#";
     const durationMin = Math.round(
       (parse(selected.end, "HH:mm:ss", selected.date).getTime() -
         parse(selected.start, "HH:mm:ss", selected.date).getTime()) /
@@ -437,20 +457,28 @@ export function PublicBooking({ slug }: { slug: string }) {
                     href={googleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm"
+                    aria-disabled={!calendarLib}
+                    onClick={(e) => {
+                      if (!calendarLib) e.preventDefault();
+                    }}
+                    className={cn(
+                      "inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground shadow-sm transition-all hover:bg-primary-hover hover:shadow-md sm:text-sm",
+                      !calendarLib && "pointer-events-none opacity-60",
+                    )}
                   >
                     <CalIcon className="h-4 w-4" />
                     Google Calendar
                   </a>
                   <button
                     type="button"
+                    disabled={!calendarLib}
                     onClick={() =>
-                      downloadIcsFile(
+                      calendarLib?.downloadIcsFile(
                         calendarEvent,
                         `reuniao-${format(selected.date, "yyyy-MM-dd")}.ics`,
                       )
                     }
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground sm:text-sm"
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-primary bg-background px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-all hover:bg-primary hover:text-primary-foreground disabled:opacity-60 sm:text-sm"
                   >
                     <Download className="h-4 w-4" />
                     Baixar .ics (Apple/Outlook)
