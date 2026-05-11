@@ -6,12 +6,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FullscreenSplashSkeleton } from "@/components/Skeletons";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
+
+/**
+ * Traduz erros do Supabase para mensagens claras e acionáveis.
+ */
+function translateAuthError(raw: string): string {
+  const msg = raw.toLowerCase();
+  if (msg.includes("invalid login credentials") || msg.includes("invalid_credentials")) {
+    return "E-mail ou senha incorretos. Verifique e tente novamente.";
+  }
+  if (msg.includes("email not confirmed")) {
+    return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
+  }
+  if (msg.includes("too many requests") || msg.includes("rate limit")) {
+    return "Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.";
+  }
+  if (msg.includes("user not found")) {
+    return "Não encontramos uma conta com esse e-mail.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Sem conexão com o servidor. Verifique sua internet e tente novamente.";
+  }
+  if (msg.includes("user is banned") || msg.includes("disabled")) {
+    return "Sua conta está desativada. Fale com o administrador da Seta.";
+  }
+  return "Não foi possível entrar. Tente novamente em instantes.";
+}
 
 function LoginPage() {
   const { signIn, user, loading } = useAuth();
@@ -19,6 +45,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard" });
@@ -29,11 +56,33 @@ function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+
+    // Validação local rápida — antes de bater na rede.
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setErrorMsg("Preencha e-mail e senha para continuar.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setErrorMsg("Digite um e-mail válido (ex.: nome@setaembalagens.com.br).");
+      return;
+    }
+
+    setErrorMsg(null);
     setBusy(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(trimmedEmail, password);
     setBusy(false);
-    if (error) toast.error("Falha no login: " + error);
-    else navigate({ to: "/dashboard" });
+
+    if (error) {
+      const friendly = translateAuthError(String(error));
+      setErrorMsg(friendly);
+      toast.error(friendly);
+      return;
+    }
+
+    toast.success("Login realizado com sucesso!");
+    navigate({ to: "/dashboard" });
   };
 
   return (
@@ -111,7 +160,23 @@ function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={onSubmit} className="mt-8 flex flex-col gap-5">
+          <form
+            onSubmit={onSubmit}
+            noValidate
+            aria-busy={busy}
+            className="mt-8 flex flex-col gap-5"
+          >
+            {errorMsg && (
+              <div
+                role="alert"
+                aria-live="assertive"
+                className="flex items-start gap-2.5 rounded-md border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span className="leading-snug">{errorMsg}</span>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="px-0.5">
                 E-mail corporativo
@@ -121,8 +186,13 @@ function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
+                disabled={busy}
+                aria-invalid={!!errorMsg}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
                 placeholder="seu.nome@setaembalagens.com.br"
                 className="h-11 w-full px-3.5 text-sm"
               />
@@ -136,8 +206,13 @@ function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
+                disabled={busy}
+                aria-invalid={!!errorMsg}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
                 placeholder="••••••••"
                 className="h-11 w-full px-3.5 text-sm"
               />
@@ -147,8 +222,14 @@ function LoginPage() {
               className="mt-2 h-11 w-full px-3.5 text-sm font-medium shadow-[var(--shadow-elegant)]"
               disabled={busy}
             >
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {busy ? "Entrando…" : "Entrar"}
+              {busy ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+                  <span>Entrando…</span>
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
 
