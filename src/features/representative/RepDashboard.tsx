@@ -9,14 +9,14 @@ import { Calendar, Copy, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { StatCardSkeleton, ListRowSkeleton } from "@/components/Skeletons";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
-  const [today, setToday] = useState(0);
-  const [week, setWeek] = useState(0);
+  const [stats, setStats] = useState<{ today: number; week: number } | null>(null);
   const [upcoming, setUpcoming] = useState<
-    { id: string; appointment_date: string; start_time: string; client_name: string }[]
-  >([]);
+    { id: string; appointment_date: string; start_time: string; client_name: string }[] | null
+  >(null);
   const [slugInput, setSlugInput] = useState(profile?.slug ?? "");
 
   useEffect(() => setSlugInput(profile?.slug ?? ""), [profile?.slug]);
@@ -40,8 +40,7 @@ export function RepDashboard() {
         .eq("representative_id", profile.id)
         .gte("appointment_date", todayStr)
         .lte("appointment_date", weekEnd);
-      setToday(tdC ?? 0);
-      setWeek(wkC ?? 0);
+      setStats({ today: tdC ?? 0, week: wkC ?? 0 });
 
       const { data } = await supabase
         .from("appointments")
@@ -66,6 +65,8 @@ export function RepDashboard() {
             client_name: cMap.get(d.client_id) ?? "—",
           }))
         );
+      } else {
+        setUpcoming([]);
       }
     };
     void load();
