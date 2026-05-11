@@ -65,11 +65,30 @@ function ChangePasswordPage() {
         <CardContent className="space-y-4">
           <div>
             <Label>Nova senha</Label>
-            <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} />
+            <div className="relative">
+              <Input
+                type={show ? "text" : "password"}
+                value={pw}
+                onChange={(e) => setPw(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           <div>
             <Label>Confirmar nova senha</Label>
-            <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+            <Input
+              type={show ? "text" : "password"}
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+            />
           </div>
           <Button onClick={submit} disabled={busy} className="w-full">
             {busy ? "Salvando…" : "Salvar nova senha"}
