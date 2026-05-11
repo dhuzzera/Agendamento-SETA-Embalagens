@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,9 +104,9 @@ export function RepDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard icon={<Calendar />} label="Hoje" value={today} />
-        <StatCard icon={<Calendar />} label="Próximos 7 dias" value={week} />
-        <StatCard icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
+        <StatCard to="/agenda" icon={<Calendar />} label="Hoje" value={today} />
+        <StatCard to="/agenda" icon={<Calendar />} label="Próximos 7 dias" value={week} />
+        <StatCard to="/disponibilidade" icon={<LinkIcon />} label="Slug" value={profile?.slug ?? "—"} />
       </div>
 
       <Card>
@@ -137,8 +138,11 @@ export function RepDashboard() {
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Próximas reuniões</CardTitle>
+          <Link to="/agenda" className="text-sm font-medium text-primary hover:underline">
+            Ver agenda →
+          </Link>
         </CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
@@ -146,7 +150,11 @@ export function RepDashboard() {
           ) : (
             <div className="divide-y">
               {upcoming.map((a) => (
-                <div key={a.id} className="flex items-center justify-between py-3">
+                <Link
+                  key={a.id}
+                  to="/agenda"
+                  className="-mx-6 flex items-center justify-between px-6 py-3 transition-colors hover:bg-muted/40"
+                >
                   <div>
                     <div className="font-medium">{a.client_name}</div>
                   </div>
@@ -156,7 +164,7 @@ export function RepDashboard() {
                     })}{" "}
                     às {a.start_time.slice(0, 5)}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -170,22 +178,26 @@ function StatCard({
   icon,
   label,
   value,
+  to,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number | string;
+  to: "/agenda" | "/disponibilidade" | "/dashboard";
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-2xl font-bold">{value}</div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
+    <Link to={to} className="block">
+      <Card className="transition-all hover:border-primary/40 hover:shadow-md">
+        <CardContent className="flex items-center gap-4 p-5">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-primary">
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-2xl font-bold">{value}</div>
+            <div className="text-xs text-muted-foreground">{label}</div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
