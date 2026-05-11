@@ -472,3 +472,49 @@ function PublicHeader() {
     </header>
   );
 }
+
+function BookingSkeleton() {
+  return (
+    <div className="min-h-screen bg-secondary">
+      <PublicHeader />
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        {/* Rep card */}
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Week grid */}
+        <Card className="mt-6">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-8 w-44" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-7">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="rounded-lg border bg-background p-3">
+                  <div className="mb-2 flex flex-col items-center gap-1">
+                    <Skeleton className="h-3 w-8" />
+                    <Skeleton className="h-5 w-6" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-7 w-full" />
+                    <Skeleton className="h-7 w-full" />
+                    <Skeleton className="h-7 w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
