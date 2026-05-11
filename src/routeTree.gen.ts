@@ -17,6 +17,7 @@ import { Route as AppDisponibilidadeRouteImport } from './routes/_app/disponibil
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppAgendaRouteImport } from './routes/_app/agenda'
 import { Route as AppAdminUsuariosRouteImport } from './routes/_app/admin.usuarios'
+import { Route as ApiPublicCalendarTokenRouteImport } from './routes/api/public/calendar.$token'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -57,6 +58,11 @@ const AppAdminUsuariosRoute = AppAdminUsuariosRouteImport.update({
   path: '/admin/usuarios',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const ApiPublicCalendarTokenRoute = ApiPublicCalendarTokenRouteImport.update({
+  id: '/api/public/calendar/$token',
+  path: '/api/public/calendar/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/admin/usuarios': typeof AppAdminUsuariosRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_app/disponibilidade': typeof AppDisponibilidadeRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/_app/admin/usuarios': typeof AppAdminUsuariosRoute
+  '/api/public/calendar/$token': typeof ApiPublicCalendarTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/disponibilidade'
     | '/agendar/$slug'
     | '/admin/usuarios'
+    | '/api/public/calendar/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/disponibilidade'
     | '/agendar/$slug'
     | '/admin/usuarios'
+    | '/api/public/calendar/$token'
   id:
     | '__root__'
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_app/disponibilidade'
     | '/agendar/$slug'
     | '/_app/admin/usuarios'
+    | '/api/public/calendar/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -123,6 +135,7 @@ export interface RootRouteChildren {
   AppRouteRoute: typeof AppRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   AgendarSlugRoute: typeof AgendarSlugRoute
+  ApiPublicCalendarTokenRoute: typeof ApiPublicCalendarTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -183,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsuariosRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/api/public/calendar/$token': {
+      id: '/api/public/calendar/$token'
+      path: '/api/public/calendar/$token'
+      fullPath: '/api/public/calendar/$token'
+      preLoaderRoute: typeof ApiPublicCalendarTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -209,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRouteRoute: AppRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   AgendarSlugRoute: AgendarSlugRoute,
+  ApiPublicCalendarTokenRoute: ApiPublicCalendarTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

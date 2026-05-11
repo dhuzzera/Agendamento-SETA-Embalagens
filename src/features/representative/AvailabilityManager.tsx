@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Apple, Copy, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 
 type Avail = {
@@ -39,6 +39,7 @@ export function AvailabilityManager() {
   const { profile } = useAuth();
   const [avails, setAvails] = useState<Avail[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [calendarToken, setCalendarToken] = useState<string | null>(null);
 
   // form
   const [wd, setWd] = useState(1);
@@ -70,6 +71,14 @@ export function AvailabilityManager() {
 
   useEffect(() => {
     void load();
+    if (profile) {
+      void supabase
+        .from("profiles")
+        .select("calendar_token")
+        .eq("id", profile.id)
+        .maybeSingle()
+        .then(({ data }) => setCalendarToken((data?.calendar_token as string) ?? null));
+    }
   }, [profile]);
 
   const addAvail = async () => {
@@ -122,6 +131,8 @@ export function AvailabilityManager() {
           Defina seus horários de atendimento e bloqueios.
         </p>
       </div>
+
+      <CalendarSubscriptionCard token={calendarToken} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -244,4 +255,65 @@ export function AvailabilityManager() {
 function formatDate(d: string) {
   const [y, m, day] = d.split("-");
   return `${day}/${m}/${y}`;
+}
+
+function CalendarSubscriptionCard({ token }: { token: string | null }) {
+  if (!token) return null;
+  const httpsUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/api/public/calendar/${token}.ics`;
+  const webcalUrl = httpsUrl.replace(/^https?:/, "webcal:");
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(httpsUrl);
+      toast.success("URL copiada");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <CalendarPlus className="h-4 w-4" />
+          Sincronizar com seu calendário
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Assine este link no Apple Calendar, Outlook ou qualquer app de calendário para ver
+          seus agendamentos automaticamente. A agenda atualiza sozinha (a cada ~30 min).
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input readOnly value={httpsUrl} onFocus={(e) => e.currentTarget.select()} />
+          <Button variant="outline" onClick={copy}>
+            <Copy className="mr-1.5 h-4 w-4" />
+            Copiar
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={webcalUrl}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+          >
+            <Apple className="h-4 w-4" />
+            Adicionar ao Apple Calendar
+          </a>
+          <a
+            href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+          >
+            <CalendarPlus className="h-4 w-4" />
+            Adicionar ao Google Calendar
+          </a>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Mantenha esta URL privada — quem tiver acesso a ela poderá ver seus horários e
+          contatos dos clientes.
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
