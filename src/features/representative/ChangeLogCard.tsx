@@ -184,6 +184,12 @@ function labelAction(a: Change["action"]) {
   return { created: "Criado", updated: "Editado", deleted: "Excluído" }[a];
 }
 
+function summarize(c: Change) {
+  if (c.action === "created") return describe(c.new_values);
+  if (c.action === "deleted") return describe(c.old_values);
+  return describe(c.new_values);
+}
+
 function describe(s: AvailSnap) {
   if (!s) return "—";
   const wd = s.weekday !== undefined ? WEEKDAYS[s.weekday] : "?";
