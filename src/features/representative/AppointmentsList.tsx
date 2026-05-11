@@ -62,6 +62,11 @@ export function AppointmentsList() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
 
+  // Calendar
+  const [calMonth, setCalMonth] = useState<Date>(startOfMonth(new Date()));
+  const [monthDates, setMonthDates] = useState<Date[]>([]);
+  const [monthLoading, setMonthLoading] = useState(false);
+
   useEffect(() => {
     if (!isAdmin) return;
     void supabase
@@ -70,6 +75,27 @@ export function AppointmentsList() {
       .order("full_name")
       .then(({ data }) => setReps((data as Rep[]) ?? []));
   }, [isAdmin]);
+
+  // Carrega as datas do mês visível para destacar dias com reuniões
+  useEffect(() => {
+    if (!profile) return;
+    const start = format(startOfMonth(calMonth), "yyyy-MM-dd");
+    const end = format(endOfMonth(calMonth), "yyyy-MM-dd");
+    let q = supabase
+      .from("appointments")
+      .select("appointment_date, status")
+      .gte("appointment_date", start)
+      .lte("appointment_date", end)
+      .neq("status", "cancelled");
+    if (!isAdmin) q = q.eq("representative_id", profile.id);
+    else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
+    setMonthLoading(true);
+    void q.then(({ data }) => {
+      setMonthLoading(false);
+      const set = new Set((data ?? []).map((d) => d.appointment_date as string));
+      setMonthDates([...set].map((s) => parseISO(s)));
+    });
+  }, [profile, isAdmin, repFilter, calMonth]);
 
   const load = async () => {
     if (!profile) return;
