@@ -84,6 +84,19 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [phone, setPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
+
+  // Load calendar helpers only after a confirmed booking
+  useEffect(() => {
+    if (!success) return;
+    let cancelled = false;
+    void loadCalendarLib().then((m) => {
+      if (!cancelled) setCalendarLib(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [success]);
 
   useEffect(() => {
     const load = async () => {
