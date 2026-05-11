@@ -2,6 +2,18 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Fallback metricamente ajustado ao Inter — evita CLS quando a webfont
+ * termina de baixar e substitui o system font. Valores derivados das
+ * métricas oficiais do Inter vs. Arial. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* Seta Embalagens — design system institucional
@@ -46,7 +58,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    "Inter", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --shadow-elegant: 0 10px 30px -12px color-mix(in oklab, var(--primary) 22%, transparent);
   --shadow-card: 0 4px 16px -8px oklch(0.2 0.02 250 / 0.12);
   --gradient-hero: linear-gradient(135deg, var(--primary) 0%, oklch(0.32 0.11 248) 100%);
