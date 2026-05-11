@@ -6,7 +6,10 @@ import { Calendar, Users, Shield, TrendingUp } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { MonthlyMetrics } from "./MonthlyMetrics";
+import { lazy, Suspense } from "react";
+const MonthlyMetrics = lazy(() =>
+  import("./MonthlyMetrics").then((m) => ({ default: m.MonthlyMetrics })),
+);
 
 type Counts = {
   reps: number;
@@ -155,7 +158,9 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <MonthlyMetrics />
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted/50" />}>
+        <MonthlyMetrics />
+      </Suspense>
     </div>
   );
 }
