@@ -123,6 +123,58 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [stateUf, setStateUf] = useState("");
+  const [cep, setCep] = useState("");
+  const [cepBusy, setCepBusy] = useState(false);
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [streetBase, setStreetBase] = useState(""); // logradouro + bairro from ViaCEP
+
+  const formatCep = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+  };
+
+  const lookupCep = async (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepBusy(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data?.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      const localidade: string = data.localidade ?? "";
+      const uf: string = (data.uf ?? "").toUpperCase();
+      const logradouro: string = data.logradouro ?? "";
+      const bairro: string = data.bairro ?? "";
+      const base = [logradouro, bairro].filter(Boolean).join(" - ");
+      setCity(localidade);
+      setStateUf(uf);
+      setStreetBase(base);
+      // compose initial address
+      const parts = [base, addressNumber && `nº ${addressNumber}`, addressComplement]
+        .filter(Boolean)
+        .join(", ");
+      setAddress(parts);
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Erro ao consultar o CEP");
+    } finally {
+      setCepBusy(false);
+    }
+  };
+
+  // Recompose address whenever number/complement change after a CEP lookup
+  useEffect(() => {
+    if (!streetBase) return;
+    const parts = [streetBase, addressNumber && `nº ${addressNumber}`, addressComplement]
+      .filter(Boolean)
+      .join(", ");
+    setAddress(parts);
+  }, [streetBase, addressNumber, addressComplement]);
+
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
