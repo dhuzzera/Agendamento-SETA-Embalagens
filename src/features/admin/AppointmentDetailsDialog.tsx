@@ -49,6 +49,8 @@ export type AppointmentDetails = {
   location?: string | null;
   city?: string | null;
   state?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   client: {
     name: string;
     company: string | null;
