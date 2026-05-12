@@ -172,6 +172,26 @@ export function AppointmentsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
 
+  // Realtime: recarrega quando houver mudança em appointments
+  useEffect(() => {
+    if (!profile) return;
+    const channel = supabase
+      .channel("appointments-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "appointments" },
+        () => {
+          void load();
+          setCalMonth((m) => new Date(m));
+        },
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
+
   const sortedRows = useMemo(() => {
     const arr = [...rows];
     arr.sort((a, b) => {
