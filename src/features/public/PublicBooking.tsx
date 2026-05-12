@@ -179,6 +179,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [travelBufferMin, setTravelBufferMin] = useState(180);
   const [maxDistanceKm, setMaxDistanceKm] = useState(30);
 
