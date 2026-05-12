@@ -690,15 +690,9 @@ export function PublicBooking({ slug }: { slug: string }) {
                     <span aria-hidden className="text-primary">•</span>
                     Adicione o compromisso à sua agenda usando os botões abaixo.
                   </li>
-                  {isPresencial && address && (
-                    <li className="flex gap-2">
-                      <span aria-hidden className="text-primary">•</span>
-                      O endereço completo está logo acima — abra no Google Maps para se planejar.
-                    </li>
-                  )}
                   <li className="flex gap-2">
                     <span aria-hidden className="text-primary">•</span>
-                    Em caso de imprevisto, responda o e-mail para reagendar com antecedência.
+                    Em caso de imprevisto, responda o e-mail ou converse com o representante para reagendar com antecedência.
                   </li>
                 </ul>
               </div>
