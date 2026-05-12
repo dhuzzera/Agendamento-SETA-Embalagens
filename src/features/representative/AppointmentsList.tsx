@@ -620,9 +620,11 @@ export function AppointmentsList() {
                       >
                         {r.meeting_type === "presencial" ? "Presencial" : "Online"}
                       </Badge>
-                      {r.meeting_type === "presencial" && r.location && (
+                      {r.meeting_type === "presencial" && (r.city || r.location) && (
                         <span className="text-xs text-muted-foreground">
-                          📍 {r.location}
+                          📍 {r.city ? `${r.city}${r.state ? ` - ${r.state.toUpperCase()}` : ""}` : ""}
+                          {r.city && r.location ? " • " : ""}
+                          {r.location ?? ""}
                         </span>
                       )}
                     </div>
