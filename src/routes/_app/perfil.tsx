@@ -53,8 +53,6 @@ function ProfilePage() {
       setFullName(profile.full_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
-      setAllowOnline(profile.allow_online ?? true);
-      setAllowPresencial(profile.allow_presencial ?? true);
     }
   }, [profile]);
 
