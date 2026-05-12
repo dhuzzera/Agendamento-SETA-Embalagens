@@ -1022,8 +1022,48 @@ export function PublicBooking({ slug }: { slug: string }) {
                         Informe o endereço completo onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
                       </p>
                     </div>
-                  </>
-                )}
+                    <div className="space-y-2 sm:col-span-2 rounded-lg border border-border bg-muted/30 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <Label className="text-sm">Localização precisa (opcional)</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Compartilhe sua localização atual para o representante encontrar o local com mais facilidade.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={requestGeolocation}
+                          disabled={geoBusy}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-60"
+                        >
+                          📍 {geoBusy ? "Capturando…" : latitude !== null ? "Atualizar localização" : "Usar minha localização"}
+                        </button>
+                      </div>
+                      {latitude !== null && longitude !== null && (
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-mono text-muted-foreground">
+                            {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              Ver no mapa
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => { setLatitude(null); setLongitude(null); }}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>
                   <Textarea
