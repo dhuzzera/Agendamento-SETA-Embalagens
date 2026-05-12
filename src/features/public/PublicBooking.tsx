@@ -64,7 +64,21 @@ type Block = {
   start_time: string | null;
   end_time: string | null;
 };
-type Appt = { appointment_date: string; start_time: string; end_time: string };
+type Appt = {
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  meeting_type: "online" | "presencial" | string;
+  city: string | null;
+  state: string | null;
+};
+
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
+
+const norm = (s: string | null | undefined) =>
+  (s ?? "").trim().toLowerCase();
 
 export function PublicBooking({ slug }: { slug: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
