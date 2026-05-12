@@ -104,6 +104,9 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [notes, setNotes] = useState("");
   const [meetingType, setMeetingType] = useState<"online" | "presencial">("online");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [stateUf, setStateUf] = useState("");
+  const [travelBufferMin, setTravelBufferMin] = useState(180);
   const [busy, setBusy] = useState(false);
   const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
 
