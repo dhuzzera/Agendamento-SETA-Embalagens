@@ -525,6 +525,9 @@ export function PublicBooking({ slug }: { slug: string }) {
                   label="Modalidade"
                   value={isPresencial ? "Presencial" : "Online"}
                 />
+                {isPresencial && (city || stateUf) && (
+                  <SummaryRow label="Cidade" value={`${city}${stateUf ? ` - ${stateUf}` : ""}`} />
+                )}
                 {isPresencial && address && (
                   <SummaryRow label="Endereço" value={address} />
                 )}
