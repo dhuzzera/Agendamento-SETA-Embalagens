@@ -71,6 +71,23 @@ type Appt = {
   meeting_type: "online" | "presencial" | string;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+const haversineKm = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(a));
 };
 
 const UF_LIST = [
@@ -110,6 +127,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [travelBufferMin, setTravelBufferMin] = useState(180);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(30);
 
   const requestGeolocation = () => {
     if (!("geolocation" in navigator)) {
@@ -194,22 +212,31 @@ export function PublicBooking({ slug }: { slug: string }) {
     void Promise.all([
       supabase
         .from("appointments")
-        .select("appointment_date, start_time, end_time, meeting_type, city, state")
+        .select("appointment_date, start_time, end_time, meeting_type, city, state, latitude, longitude")
         .eq("representative_id", profile.id)
         .eq("status", "scheduled")
         .gte("appointment_date", start)
         .lte("appointment_date", end),
-      supabase.from("app_settings").select("travel_buffer_minutes").eq("id", 1).maybeSingle(),
+      supabase.from("app_settings").select("travel_buffer_minutes, max_distance_km").eq("id", 1).maybeSingle(),
     ]).then(([apptsRes, settingsRes]) => {
       setAppts((apptsRes.data as Appt[]) ?? []);
       const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 180;
+      const km = (settingsRes.data?.max_distance_km as number | undefined) ?? 30;
       setTravelBufferMin(buf);
+      setMaxDistanceKm(km);
       setLoadedMonth(start);
     });
   }, [profile, month]);
 
   // Region locked for the day, if any presencial already exists
-  const dayRegion = (dateStr: string): { city: string; state: string } | null => {
+  const dayRegion = (
+    dateStr: string,
+  ): {
+    city: string;
+    state: string;
+    latitude: number | null;
+    longitude: number | null;
+  } | null => {
     const presenciais = appts
       .filter(
         (a) =>
@@ -220,7 +247,13 @@ export function PublicBooking({ slug }: { slug: string }) {
       )
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
     if (presenciais.length === 0) return null;
-    return { city: presenciais[0].city ?? "", state: presenciais[0].state ?? "" };
+    const first = presenciais[0];
+    return {
+      city: first.city ?? "",
+      state: first.state ?? "",
+      latitude: first.latitude,
+      longitude: first.longitude,
+    };
   };
 
   // Returns minutes-to-time helpers
@@ -244,15 +277,31 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (fullDayBlocked) return [];
     const dayAppts = appts.filter((a) => a.appointment_date === dateStr);
 
-    // If this is a presencial booking and the day already has a region locked
-    // to a different city/UF, the entire day is unavailable.
+    // If this is a presencial booking and the day already has a region locked,
+    // require the new visit to be within max_distance_km of the first visit
+    // (using GPS coords). Fallback to same city/UF when coords are missing.
     if (meetingType === "presencial") {
       const region = dayRegion(dateStr);
-      if (
-        region &&
-        (norm(region.city) !== norm(city) || norm(region.state) !== norm(stateUf))
-      ) {
-        return [];
+      if (region) {
+        if (
+          region.latitude != null &&
+          region.longitude != null &&
+          latitude != null &&
+          longitude != null
+        ) {
+          const dist = haversineKm(
+            region.latitude,
+            region.longitude,
+            latitude,
+            longitude,
+          );
+          if (dist > maxDistanceKm) return [];
+        } else if (
+          norm(region.city) !== norm(city) ||
+          norm(region.state) !== norm(stateUf)
+        ) {
+          return [];
+        }
       }
     }
 
@@ -333,7 +382,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates, meetingType, city, stateUf, travelBufferMin]);
+  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates, meetingType, city, stateUf, travelBufferMin, latitude, longitude, maxDistanceKm]);
 
   const availableDateKeys = useMemo(
     () => new Set(availableDates.map((d) => format(d, "yyyy-MM-dd"))),
@@ -358,7 +407,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (!selectedDate) return [];
     return slotsFor(selectedDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, avails, blocks, appts, meetingType, city, stateUf, travelBufferMin]);
+  }, [selectedDate, avails, blocks, appts, meetingType, city, stateUf, travelBufferMin, latitude, longitude, maxDistanceKm]);
 
   // Group slots by period of day for easier scanning on mobile
   const groupedSlots = useMemo(() => {
@@ -985,7 +1034,7 @@ export function PublicBooking({ slug }: { slug: string }) {
                       if (!region) return null;
                       return (
                         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-200">
-                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já está reservada para visitas em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar presencial nessa cidade.
+                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já tem uma visita presencial em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar dentro de um raio de <strong>{maxDistanceKm} km</strong> dessa visita {region.latitude != null && region.longitude != null ? "(use o botão de localização para validar)" : "(coordenadas não informadas — vale por cidade)"}.
                         </div>
                       );
                     })()}

@@ -146,32 +146,41 @@ export function AdminDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("app_settings")
-        .select("travel_buffer_minutes")
+        .select("travel_buffer_minutes, max_distance_km")
         .eq("id", 1)
         .maybeSingle();
-      return data ?? { travel_buffer_minutes: 180 };
+      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
     },
   });
   const [bufferInput, setBufferInput] = useState<string>("");
+  const [distanceInput, setDistanceInput] = useState<string>("");
   useEffect(() => {
     if (settings && bufferInput === "") {
       setBufferInput(String(settings.travel_buffer_minutes ?? 180));
     }
-  }, [settings, bufferInput]);
+    if (settings && distanceInput === "") {
+      setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
+    }
+  }, [settings, bufferInput, distanceInput]);
   const saveBuffer = async () => {
     const n = parseInt(bufferInput, 10);
+    const d = parseInt(distanceInput, 10);
     if (Number.isNaN(n) || n < 0 || n > 720) {
-      toast.error("Informe um valor entre 0 e 720 minutos");
+      toast.error("Tempo: informe um valor entre 0 e 720 minutos");
+      return;
+    }
+    if (Number.isNaN(d) || d < 1 || d > 500) {
+      toast.error("Raio: informe um valor entre 1 e 500 km");
       return;
     }
     const { error } = await supabase
       .from("app_settings")
-      .update({ travel_buffer_minutes: n })
+      .update({ travel_buffer_minutes: n, max_distance_km: d })
       .eq("id", 1);
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Tempo de deslocamento atualizado");
+      toast.success("Configurações atualizadas");
       void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
     }
   };
@@ -245,7 +254,7 @@ export function AdminDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
               <Label className="text-xs">Tempo de deslocamento entre visitas presenciais (minutos)</Label>
               <Input
@@ -256,7 +265,20 @@ export function AdminDashboard() {
                 onChange={(e) => setBufferInput(e.target.value)}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                O sistema bloqueia este intervalo antes/depois de cada visita presencial. Padrão: 180 minutos (3h).
+                Bloqueia este intervalo antes/depois de cada visita. Padrão: 180 min (3h).
+              </p>
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Raio máximo entre visitas no mesmo dia (km)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                value={distanceInput}
+                onChange={(e) => setDistanceInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                A primeira visita do dia define a região; as demais devem estar dentro desse raio. Padrão: 30 km.
               </p>
             </div>
             <Button onClick={saveBuffer}>Salvar</Button>
