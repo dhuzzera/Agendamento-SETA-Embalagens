@@ -367,9 +367,19 @@ export function PublicBooking({ slug }: { slug: string }) {
       toast.error("Preencha nome e e-mail");
       return;
     }
-    if (meetingType === "presencial" && !address.trim()) {
-      toast.error("Informe o endereço da reunião presencial");
-      return;
+    if (meetingType === "presencial") {
+      if (!address.trim()) {
+        toast.error("Informe o endereço da reunião presencial");
+        return;
+      }
+      if (!city.trim()) {
+        toast.error("Informe a cidade da reunião presencial");
+        return;
+      }
+      if (!stateUf.trim()) {
+        toast.error("Selecione o estado (UF) da reunião presencial");
+        return;
+      }
     }
     setBusy(true);
     try {
@@ -393,6 +403,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         notes: notes || null,
         meeting_type: meetingType,
         location: meetingType === "presencial" ? address.trim() : null,
+        city: meetingType === "presencial" ? city.trim() : null,
+        state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : null,
       });
       if (aErr) throw aErr;
       setSuccess(true);
