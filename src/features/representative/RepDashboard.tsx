@@ -264,6 +264,45 @@ export function RepDashboard() {
       )}
 
       <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings className="h-4 w-4 text-primary" />
+            Configurações de deslocamento
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Estas configurações são compartilhadas com toda a equipe.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label className="text-xs">Tempo entre visitas presenciais (minutos)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={720}
+                value={bufferInput}
+                onChange={(e) => setBufferInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Padrão: 180 min (3h).</p>
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Raio máximo no mesmo dia (km)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                value={distanceInput}
+                onChange={(e) => setDistanceInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Padrão: 30 km.</p>
+            </div>
+            <Button onClick={saveSettings}>Salvar</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Próximas reuniões</CardTitle>
           <Link to="/agenda" className="text-sm font-medium text-primary hover:underline">
