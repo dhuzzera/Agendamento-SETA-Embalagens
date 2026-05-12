@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Camera, Loader2, Trash2, User } from "lucide-react";
+import { Camera, Loader2, MapPin, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -44,6 +44,14 @@ function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
+  const [cep, setCep] = useState("");
+  const [cepBusy, setCepBusy] = useState(false);
+  const [streetBase, setStreetBase] = useState("");
+  const [address, setAddress] = useState("");
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [city, setCity] = useState("");
+  const [stateUf, setStateUf] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -53,8 +61,58 @@ function ProfilePage() {
       setFullName(profile.full_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
+      setCep(profile.cep ?? "");
+      setAddress(profile.address ?? "");
+      setAddressNumber(profile.address_number ?? "");
+      setAddressComplement(profile.address_complement ?? "");
+      setCity(profile.city ?? "");
+      setStateUf(profile.state ?? "");
     }
   }, [profile]);
+
+  const formatCep = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+  };
+
+  const lookupCep = async (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepBusy(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data?.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      const localidade: string = data.localidade ?? "";
+      const uf: string = (data.uf ?? "").toUpperCase();
+      const logradouro: string = data.logradouro ?? "";
+      const bairro: string = data.bairro ?? "";
+      const base = [logradouro, bairro].filter(Boolean).join(" - ");
+      setCity(localidade);
+      setStateUf(uf);
+      setStreetBase(base);
+      const parts = [base, addressNumber && `nº ${addressNumber}`, addressComplement]
+        .filter(Boolean)
+        .join(", ");
+      setAddress(parts);
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Erro ao consultar o CEP");
+    } finally {
+      setCepBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!streetBase) return;
+    const parts = [streetBase, addressNumber && `nº ${addressNumber}`, addressComplement]
+      .filter(Boolean)
+      .join(", ");
+    setAddress(parts);
+  }, [streetBase, addressNumber, addressComplement]);
 
   if (loading || !profile) {
     return (
@@ -176,6 +234,12 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
+          cep: cep.trim() || null,
+          address: address.trim() || null,
+          address_number: addressNumber.trim() || null,
+          address_complement: addressComplement.trim() || null,
+          city: city.trim() || null,
+          state: stateUf.trim().toUpperCase() || null,
         })
         .eq("id", profile.id);
       if (error) throw error;
@@ -305,6 +369,78 @@ function ProfilePage() {
             </div>
           </div>
 
+          <div className="mt-8">
+            <div className="mb-3 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-semibold">Endereço</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-6">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input
+                  id="cep"
+                  value={cep}
+                  onChange={(e) => {
+                    const v = formatCep(e.target.value);
+                    setCep(v);
+                    if (v.replace(/\D/g, "").length === 8) void lookupCep(v);
+                  }}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                  maxLength={9}
+                  disabled={cepBusy}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="address">Endereço</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setStreetBase("");
+                  }}
+                  placeholder="Rua, bairro"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="address_number">Número</Label>
+                <Input
+                  id="address_number"
+                  value={addressNumber}
+                  onChange={(e) => setAddressNumber(e.target.value)}
+                  placeholder="123"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="address_complement">Complemento</Label>
+                <Input
+                  id="address_complement"
+                  value={addressComplement}
+                  onChange={(e) => setAddressComplement(e.target.value)}
+                  placeholder="Sala, bloco, referência…"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="state">UF</Label>
+                <Input
+                  id="state"
+                  value={stateUf}
+                  onChange={(e) => setStateUf(e.target.value.toUpperCase().slice(0, 2))}
+                  maxLength={2}
+                  placeholder="SP"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} disabled={saving} size="lg">

@@ -16,6 +16,12 @@ export type Profile = {
   must_change_password: boolean;
   allow_online: boolean;
   allow_presencial: boolean;
+  cep: string | null;
+  address: string | null;
+  address_number: string | null;
+  address_complement: string | null;
+  city: string | null;
+  state: string | null;
 };
 
 type AuthState = {
