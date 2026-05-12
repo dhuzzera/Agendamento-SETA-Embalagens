@@ -369,6 +369,78 @@ function ProfilePage() {
             </div>
           </div>
 
+          <div className="mt-8">
+            <div className="mb-3 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-semibold">Endereço</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-6">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="cep">CEP</Label>
+                <Input
+                  id="cep"
+                  value={cep}
+                  onChange={(e) => {
+                    const v = formatCep(e.target.value);
+                    setCep(v);
+                    if (v.replace(/\D/g, "").length === 8) void lookupCep(v);
+                  }}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                  maxLength={9}
+                  disabled={cepBusy}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="address">Endereço</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setStreetBase("");
+                  }}
+                  placeholder="Rua, bairro"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="address_number">Número</Label>
+                <Input
+                  id="address_number"
+                  value={addressNumber}
+                  onChange={(e) => setAddressNumber(e.target.value)}
+                  placeholder="123"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="address_complement">Complemento</Label>
+                <Input
+                  id="address_complement"
+                  value={addressComplement}
+                  onChange={(e) => setAddressComplement(e.target.value)}
+                  placeholder="Sala, bloco, referência…"
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-4">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="state">UF</Label>
+                <Input
+                  id="state"
+                  value={stateUf}
+                  onChange={(e) => setStateUf(e.target.value.toUpperCase().slice(0, 2))}
+                  maxLength={2}
+                  placeholder="SP"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} disabled={saving} size="lg">
