@@ -234,6 +234,12 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
+          cep: cep.trim() || null,
+          address: address.trim() || null,
+          address_number: addressNumber.trim() || null,
+          address_complement: addressComplement.trim() || null,
+          city: city.trim() || null,
+          state: stateUf.trim().toUpperCase() || null,
         })
         .eq("id", profile.id);
       if (error) throw error;
