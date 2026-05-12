@@ -512,20 +512,23 @@ export function PublicBooking({ slug }: { slug: string }) {
     }
     setBusy(true);
     try {
-      const { data: client, error: cErr } = await supabase
+      const clientId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const { error: cErr } = await supabase
         .from("clients")
         .insert({
+          id: clientId,
           name,
           company: company || null,
           email,
           phone: phone || null,
-        })
-        .select("id")
-        .single();
+        });
       if (cErr) throw cErr;
       const { error: aErr } = await supabase.from("appointments").insert({
         representative_id: profile.id,
-        client_id: client.id,
+        client_id: clientId,
         appointment_date: format(selected.date, "yyyy-MM-dd"),
         start_time: selected.start,
         end_time: selected.end,
