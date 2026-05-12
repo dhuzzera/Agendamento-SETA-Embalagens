@@ -183,6 +183,39 @@ export function RepDashboard() {
         </CardContent>
       </Card>
 
+      {regionDays && regionDays.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              Agenda por região
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Cada dia com visita presencial fica reservado para a cidade do primeiro agendamento. Demais clientes presenciais devem ser da mesma região.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {regionDays.map((d) => (
+                <li key={d.date} className="flex items-center justify-between py-2.5 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="font-medium">
+                      {format(new Date(d.date + "T00:00"), "EEE, dd/MM", { locale: ptBR })}
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {d.city} - {d.state.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {d.count} {d.count === 1 ? "visita" : "visitas"} • bloqueado p/ esta região
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle>Próximas reuniões</CardTitle>
