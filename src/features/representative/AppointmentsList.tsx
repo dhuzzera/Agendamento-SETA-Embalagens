@@ -46,6 +46,8 @@ type Row = {
   notes: string | null;
   meeting_type: "online" | "presencial";
   location: string | null;
+  city: string | null;
+  state: string | null;
   representative_id: string;
   client: { name: string; company: string | null; email: string; phone: string | null };
 };
