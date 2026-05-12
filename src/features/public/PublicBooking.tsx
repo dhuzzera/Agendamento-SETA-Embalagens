@@ -543,7 +543,12 @@ export function PublicBooking({ slug }: { slug: string }) {
       if (aErr) throw aErr;
       setSuccess(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erro";
+      const msg =
+        (typeof e === "object" && e !== null && "message" in e
+          ? String((e as { message?: unknown }).message ?? "")
+          : "") ||
+        (e instanceof Error ? e.message : "") ||
+        "Não foi possível concluir o agendamento. Tente novamente.";
       if (msg.includes("já reservado") || msg.includes("uniq_appointment")) {
         toast.error("Esse horário acabou de ser reservado. Escolha outro.");
         setSelected(null);
