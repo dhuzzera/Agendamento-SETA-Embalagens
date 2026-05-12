@@ -17,16 +17,19 @@ export type Database = {
       app_settings: {
         Row: {
           id: number
+          max_distance_km: number
           travel_buffer_minutes: number
           updated_at: string
         }
         Insert: {
           id?: number
+          max_distance_km?: number
           travel_buffer_minutes?: number
           updated_at?: string
         }
         Update: {
           id?: number
+          max_distance_km?: number
           travel_buffer_minutes?: number
           updated_at?: string
         }
