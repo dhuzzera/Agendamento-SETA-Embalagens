@@ -123,7 +123,7 @@ export function AppointmentsList() {
     let q = supabase
       .from("appointments")
       .select(
-        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, client_id, representative_id"
+        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, latitude, longitude, client_id, representative_id"
       )
       .order("appointment_date", { ascending: false })
       .order("start_time")
