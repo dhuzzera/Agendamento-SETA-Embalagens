@@ -106,7 +106,35 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [stateUf, setStateUf] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [geoBusy, setGeoBusy] = useState(false);
   const [travelBufferMin, setTravelBufferMin] = useState(180);
+
+  const requestGeolocation = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocalização não suportada neste navegador");
+      return;
+    }
+    setGeoBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setGeoBusy(false);
+        toast.success("Localização capturada com sucesso");
+      },
+      (err) => {
+        setGeoBusy(false);
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? "Permissão de localização negada"
+            : "Não foi possível obter a localização"
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
   const [busy, setBusy] = useState(false);
   const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
 
