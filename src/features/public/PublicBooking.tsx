@@ -1034,7 +1034,7 @@ export function PublicBooking({ slug }: { slug: string }) {
                       if (!region) return null;
                       return (
                         <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-200">
-                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já está reservada para visitas em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar presencial nessa cidade.
+                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já tem uma visita presencial em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar dentro de um raio de <strong>{maxDistanceKm} km</strong> dessa visita {region.latitude != null && region.longitude != null ? "(use o botão de localização para validar)" : "(coordenadas não informadas — vale por cidade)"}.
                         </div>
                       );
                     })()}
