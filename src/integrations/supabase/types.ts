@@ -14,9 +14,28 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          travel_buffer_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          travel_buffer_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          travel_buffer_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
+          city: string | null
           client_id: string
           created_at: string
           end_time: string
@@ -27,11 +46,13 @@ export type Database = {
           notes: string | null
           representative_id: string
           start_time: string
+          state: string | null
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
         }
         Insert: {
           appointment_date: string
+          city?: string | null
           client_id: string
           created_at?: string
           end_time: string
@@ -42,11 +63,13 @@ export type Database = {
           notes?: string | null
           representative_id: string
           start_time: string
+          state?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
         }
         Update: {
           appointment_date?: string
+          city?: string | null
           client_id?: string
           created_at?: string
           end_time?: string
@@ -57,6 +80,7 @@ export type Database = {
           notes?: string | null
           representative_id?: string
           start_time?: string
+          state?: string | null
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
         }

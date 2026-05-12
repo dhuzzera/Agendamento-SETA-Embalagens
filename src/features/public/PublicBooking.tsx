@@ -64,7 +64,21 @@ type Block = {
   start_time: string | null;
   end_time: string | null;
 };
-type Appt = { appointment_date: string; start_time: string; end_time: string };
+type Appt = {
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  meeting_type: "online" | "presencial" | string;
+  city: string | null;
+  state: string | null;
+};
+
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
+
+const norm = (s: string | null | undefined) =>
+  (s ?? "").trim().toLowerCase();
 
 export function PublicBooking({ slug }: { slug: string }) {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -90,6 +104,9 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [notes, setNotes] = useState("");
   const [meetingType, setMeetingType] = useState<"online" | "presencial">("online");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [stateUf, setStateUf] = useState("");
+  const [travelBufferMin, setTravelBufferMin] = useState(180);
   const [busy, setBusy] = useState(false);
   const [calendarLib, setCalendarLib] = useState<CalendarLib | null>(null);
 
@@ -146,18 +163,46 @@ export function PublicBooking({ slug }: { slug: string }) {
     const start = format(startOfMonth(month), "yyyy-MM-dd");
     const end = format(endOfMonth(month), "yyyy-MM-dd");
     setLoadedMonth(null);
-    supabase
-      .from("appointments")
-      .select("appointment_date, start_time, end_time")
-      .eq("representative_id", profile.id)
-      .eq("status", "scheduled")
-      .gte("appointment_date", start)
-      .lte("appointment_date", end)
-      .then(({ data }) => {
-        setAppts((data as Appt[]) ?? []);
-        setLoadedMonth(start);
-      });
+    void Promise.all([
+      supabase
+        .from("appointments")
+        .select("appointment_date, start_time, end_time, meeting_type, city, state")
+        .eq("representative_id", profile.id)
+        .eq("status", "scheduled")
+        .gte("appointment_date", start)
+        .lte("appointment_date", end),
+      supabase.from("app_settings").select("travel_buffer_minutes").eq("id", 1).maybeSingle(),
+    ]).then(([apptsRes, settingsRes]) => {
+      setAppts((apptsRes.data as Appt[]) ?? []);
+      const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 180;
+      setTravelBufferMin(buf);
+      setLoadedMonth(start);
+    });
   }, [profile, month]);
+
+  // Region locked for the day, if any presencial already exists
+  const dayRegion = (dateStr: string): { city: string; state: string } | null => {
+    const presenciais = appts
+      .filter(
+        (a) =>
+          a.appointment_date === dateStr &&
+          a.meeting_type === "presencial" &&
+          a.city &&
+          a.state,
+      )
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+    if (presenciais.length === 0) return null;
+    return { city: presenciais[0].city ?? "", state: presenciais[0].state ?? "" };
+  };
+
+  // Returns minutes-to-time helpers
+  const addMinToHHMMSS = (t: string, mins: number) => {
+    const [h, m, s] = t.split(":").map((v) => parseInt(v, 10));
+    const total = h * 60 + m + mins;
+    const hh = String(Math.floor(total / 60)).padStart(2, "0");
+    const mm = String(total % 60).padStart(2, "0");
+    return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
+  };
 
   const slotsFor = (day: Date): { start: string; end: string }[] => {
     const wd = day.getDay();
@@ -170,6 +215,29 @@ export function PublicBooking({ slug }: { slug: string }) {
     );
     if (fullDayBlocked) return [];
     const dayAppts = appts.filter((a) => a.appointment_date === dateStr);
+
+    // If this is a presencial booking and the day already has a region locked
+    // to a different city/UF, the entire day is unavailable.
+    if (meetingType === "presencial") {
+      const region = dayRegion(dateStr);
+      if (
+        region &&
+        (norm(region.city) !== norm(city) || norm(region.state) !== norm(stateUf))
+      ) {
+        return [];
+      }
+    }
+
+    // Build presencial buffer windows for the day
+    const presBuffers =
+      meetingType === "presencial"
+        ? dayAppts
+            .filter((a) => a.meeting_type === "presencial")
+            .map((a) => ({
+              start: addMinToHHMMSS(a.start_time, -travelBufferMin),
+              end: addMinToHHMMSS(a.end_time, travelBufferMin),
+            }))
+        : [];
 
     const slots: { start: string; end: string }[] = [];
     for (const a of dayAvails) {
@@ -191,7 +259,10 @@ export function PublicBooking({ slug }: { slug: string }) {
         const taken = dayAppts.some(
           (ap) => sStr < ap.end_time && eStr > ap.start_time
         );
-        if (!past && !blocked && !taken) {
+        const travelConflict = presBuffers.some(
+          (b) => sStr < b.end && eStr > b.start,
+        );
+        if (!past && !blocked && !taken && !travelConflict) {
           slots.push({ start: sStr, end: eStr });
         }
         cur = slotEnd;
@@ -234,7 +305,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates]);
+  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates, meetingType, city, stateUf, travelBufferMin]);
 
   const availableDateKeys = useMemo(
     () => new Set(availableDates.map((d) => format(d, "yyyy-MM-dd"))),
@@ -259,7 +330,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (!selectedDate) return [];
     return slotsFor(selectedDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, avails, blocks, appts]);
+  }, [selectedDate, avails, blocks, appts, meetingType, city, stateUf, travelBufferMin]);
 
   // Group slots by period of day for easier scanning on mobile
   const groupedSlots = useMemo(() => {
@@ -296,9 +367,19 @@ export function PublicBooking({ slug }: { slug: string }) {
       toast.error("Preencha nome e e-mail");
       return;
     }
-    if (meetingType === "presencial" && !address.trim()) {
-      toast.error("Informe o endereço da reunião presencial");
-      return;
+    if (meetingType === "presencial") {
+      if (!address.trim()) {
+        toast.error("Informe o endereço da reunião presencial");
+        return;
+      }
+      if (!city.trim()) {
+        toast.error("Informe a cidade da reunião presencial");
+        return;
+      }
+      if (!stateUf.trim()) {
+        toast.error("Selecione o estado (UF) da reunião presencial");
+        return;
+      }
     }
     setBusy(true);
     try {
@@ -322,6 +403,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         notes: notes || null,
         meeting_type: meetingType,
         location: meetingType === "presencial" ? address.trim() : null,
+        city: meetingType === "presencial" ? city.trim() : null,
+        state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : null,
       });
       if (aErr) throw aErr;
       setSuccess(true);
@@ -335,7 +418,7 @@ export function PublicBooking({ slug }: { slug: string }) {
         const end = format(endOfMonth(month), "yyyy-MM-dd");
         const { data } = await supabase
           .from("appointments")
-          .select("appointment_date, start_time, end_time")
+          .select("appointment_date, start_time, end_time, meeting_type, city, state")
           .eq("representative_id", profile.id)
           .eq("status", "scheduled")
           .gte("appointment_date", start)
@@ -442,6 +525,9 @@ export function PublicBooking({ slug }: { slug: string }) {
                   label="Modalidade"
                   value={isPresencial ? "Presencial" : "Online"}
                 />
+                {isPresencial && (city || stateUf) && (
+                  <SummaryRow label="Cidade" value={`${city}${stateUf ? ` - ${stateUf}` : ""}`} />
+                )}
                 {isPresencial && address && (
                   <SummaryRow label="Endereço" value={address} />
                 )}
@@ -863,18 +949,50 @@ export function PublicBooking({ slug }: { slug: string }) {
                   );
                 })()}
                 {meetingType === "presencial" && (
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Endereço da reunião *</Label>
-                    <Textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Rua, número, complemento, bairro, cidade — UF"
-                      rows={2}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Informe o endereço completo onde o representante deve comparecer.
-                    </p>
-                  </div>
+                  <>
+                    {(() => {
+                      const region = selected ? dayRegion(format(selected.date, "yyyy-MM-dd")) : null;
+                      if (!region) return null;
+                      return (
+                        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-200">
+                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já está reservada para visitas em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar presencial nessa cidade.
+                        </div>
+                      );
+                    })()}
+                    <div className="space-y-1.5">
+                      <Label>Cidade *</Label>
+                      <Input
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Ex.: Joinville"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Estado (UF) *</Label>
+                      <select
+                        value={stateUf}
+                        onChange={(e) => setStateUf(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="">Selecione…</option>
+                        {UF_LIST.map((uf) => (
+                          <option key={uf} value={uf}>{uf}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>Endereço da reunião *</Label>
+                      <Textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Rua, número, complemento, bairro"
+                        rows={2}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Informe o endereço completo onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
+                      </p>
+                    </div>
+                  </>
                 )}
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>

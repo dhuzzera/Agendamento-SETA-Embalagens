@@ -46,6 +46,8 @@ type Row = {
   notes: string | null;
   meeting_type: "online" | "presencial";
   location: string | null;
+  city: string | null;
+  state: string | null;
   representative_id: string;
   client: { name: string; company: string | null; email: string; phone: string | null };
 };
@@ -71,6 +73,7 @@ export function AppointmentsList() {
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>(ALL);
   const [addressQuery, setAddressQuery] = useState<string>("");
+  const [cityQuery, setCityQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<
     "date_desc" | "date_asc" | "meeting_type" | "location"
   >("date_desc");
@@ -118,7 +121,7 @@ export function AppointmentsList() {
     let q = supabase
       .from("appointments")
       .select(
-        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, client_id, representative_id"
+        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, client_id, representative_id"
       )
       .order("appointment_date", { ascending: false })
       .order("start_time")
@@ -130,6 +133,7 @@ export function AppointmentsList() {
     if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
     if (meetingTypeFilter !== ALL) q = q.eq("meeting_type", meetingTypeFilter);
     if (addressQuery.trim()) q = q.ilike("location", `%${addressQuery.trim()}%`);
+    if (cityQuery.trim()) q = q.ilike("city", `%${cityQuery.trim()}%`);
     if (from) q = q.gte("appointment_date", from);
     if (to) q = q.lte("appointment_date", to);
 
@@ -164,7 +168,7 @@ export function AppointmentsList() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, from, to]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
 
   const sortedRows = useMemo(() => {
     const arr = [...rows];
@@ -232,6 +236,7 @@ export function AppointmentsList() {
     setStatusFilter(ALL);
     setMeetingTypeFilter(ALL);
     setAddressQuery("");
+    setCityQuery("");
     setFrom("");
     setTo("");
   };
@@ -241,6 +246,7 @@ export function AppointmentsList() {
     statusFilter !== ALL ||
     meetingTypeFilter !== ALL ||
     !!addressQuery ||
+    !!cityQuery ||
     !!from ||
     !!to;
 
@@ -497,6 +503,14 @@ export function AppointmentsList() {
               </Select>
             </div>
             <div>
+              <Label className="text-xs">Cidade</Label>
+              <Input
+                value={cityQuery}
+                onChange={(e) => setCityQuery(e.target.value)}
+                placeholder="Ex.: Joinville"
+              />
+            </div>
+            <div>
               <Label className="text-xs">Endereço contém</Label>
               <Input
                 value={addressQuery}
@@ -606,9 +620,11 @@ export function AppointmentsList() {
                       >
                         {r.meeting_type === "presencial" ? "Presencial" : "Online"}
                       </Badge>
-                      {r.meeting_type === "presencial" && r.location && (
+                      {r.meeting_type === "presencial" && (r.city || r.location) && (
                         <span className="text-xs text-muted-foreground">
-                          📍 {r.location}
+                          📍 {r.city ? `${r.city}${r.state ? ` - ${r.state.toUpperCase()}` : ""}` : ""}
+                          {r.city && r.location ? " • " : ""}
+                          {r.location ?? ""}
                         </span>
                       )}
                     </div>

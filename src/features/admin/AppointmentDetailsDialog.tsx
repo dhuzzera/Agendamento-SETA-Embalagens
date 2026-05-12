@@ -33,6 +33,10 @@ import {
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
+
 export type AppointmentDetails = {
   id: string;
   appointment_date: string;
@@ -43,6 +47,8 @@ export type AppointmentDetails = {
   representative_id: string;
   meeting_type?: "online" | "presencial" | string;
   location?: string | null;
+  city?: string | null;
+  state?: string | null;
   client: {
     name: string;
     company: string | null;
@@ -75,6 +81,9 @@ export function AppointmentDetailsDialog({
   const [status, setStatus] = useState<Status>("scheduled");
   const [notes, setNotes] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [city, setCity] = useState("");
+  const [stateUf, setStateUf] = useState("");
+  const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
@@ -85,6 +94,9 @@ export function AppointmentDetailsDialog({
     setEndTime(appointment.end_time.slice(0, 5));
     setStatus(appointment.status);
     setNotes(appointment.notes ?? "");
+    setCity(appointment.city ?? "");
+    setStateUf(appointment.state ?? "");
+    setLocation(appointment.location ?? "");
     // load internal notes fresh (admin only)
     if (isAdmin) {
       void supabase
@@ -102,6 +114,7 @@ export function AppointmentDetailsDialog({
 
   const save = async () => {
     setSaving(true);
+    const isPresencial = appointment.meeting_type === "presencial";
     const { error } = await supabase
       .from("appointments")
       .update({
@@ -111,6 +124,13 @@ export function AppointmentDetailsDialog({
         status,
         notes: notes || null,
         internal_notes: internalNotes || null,
+        ...(isPresencial
+          ? {
+              city: city.trim() || null,
+              state: stateUf.trim() ? stateUf.trim().toUpperCase() : null,
+              location: location.trim() || null,
+            }
+          : {}),
       })
       .eq("id", appointment.id);
     setSaving(false);
@@ -290,6 +310,37 @@ export function AppointmentDetailsDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              {appointment.meeting_type === "presencial" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Cidade</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex.: Joinville" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">UF</Label>
+                    <Select value={stateUf} onValueChange={setStateUf}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="UF" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UF_LIST.map((uf) => (
+                          <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <Label className="text-xs">Endereço</Label>
+                    <Textarea
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      rows={2}
+                      placeholder="Rua, número, bairro"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label className="text-xs">Observações do cliente</Label>
