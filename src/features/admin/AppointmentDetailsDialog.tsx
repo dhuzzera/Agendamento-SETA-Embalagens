@@ -114,6 +114,7 @@ export function AppointmentDetailsDialog({
 
   const save = async () => {
     setSaving(true);
+    const isPresencial = appointment.meeting_type === "presencial";
     const { error } = await supabase
       .from("appointments")
       .update({
@@ -123,6 +124,13 @@ export function AppointmentDetailsDialog({
         status,
         notes: notes || null,
         internal_notes: internalNotes || null,
+        ...(isPresencial
+          ? {
+              city: city.trim() || null,
+              state: stateUf.trim() ? stateUf.trim().toUpperCase() : null,
+              location: location.trim() || null,
+            }
+          : {}),
       })
       .eq("id", appointment.id);
     setSaving(false);
