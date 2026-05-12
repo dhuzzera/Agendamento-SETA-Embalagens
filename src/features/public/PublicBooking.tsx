@@ -123,6 +123,58 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [stateUf, setStateUf] = useState("");
+  const [cep, setCep] = useState("");
+  const [cepBusy, setCepBusy] = useState(false);
+  const [addressNumber, setAddressNumber] = useState("");
+  const [addressComplement, setAddressComplement] = useState("");
+  const [streetBase, setStreetBase] = useState(""); // logradouro + bairro from ViaCEP
+
+  const formatCep = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+  };
+
+  const lookupCep = async (raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepBusy(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data?.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      const localidade: string = data.localidade ?? "";
+      const uf: string = (data.uf ?? "").toUpperCase();
+      const logradouro: string = data.logradouro ?? "";
+      const bairro: string = data.bairro ?? "";
+      const base = [logradouro, bairro].filter(Boolean).join(" - ");
+      setCity(localidade);
+      setStateUf(uf);
+      setStreetBase(base);
+      // compose initial address
+      const parts = [base, addressNumber && `nº ${addressNumber}`, addressComplement]
+        .filter(Boolean)
+        .join(", ");
+      setAddress(parts);
+      toast.success("Endereço preenchido pelo CEP");
+    } catch {
+      toast.error("Erro ao consultar o CEP");
+    } finally {
+      setCepBusy(false);
+    }
+  };
+
+  // Recompose address whenever number/complement change after a CEP lookup
+  useEffect(() => {
+    if (!streetBase) return;
+    const parts = [streetBase, addressNumber && `nº ${addressNumber}`, addressComplement]
+      .filter(Boolean)
+      .join(", ");
+    setAddress(parts);
+  }, [streetBase, addressNumber, addressComplement]);
+
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
@@ -1038,6 +1090,31 @@ export function PublicBooking({ slug }: { slug: string }) {
                         </div>
                       );
                     })()}
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>CEP</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={cep}
+                          onChange={(e) => setCep(formatCep(e.target.value))}
+                          onBlur={(e) => lookupCep(e.target.value)}
+                          placeholder="00000-000"
+                          inputMode="numeric"
+                          maxLength={9}
+                          className="max-w-[160px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => lookupCep(cep)}
+                          disabled={cepBusy || cep.replace(/\D/g, "").length !== 8}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-60"
+                        >
+                          {cepBusy ? "Buscando…" : "Buscar CEP"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Digite o CEP para preencher cidade, estado e rua automaticamente.
+                      </p>
+                    </div>
                     <div className="space-y-1.5">
                       <Label>Cidade *</Label>
                       <Input
@@ -1059,18 +1136,35 @@ export function PublicBooking({ slug }: { slug: string }) {
                         ))}
                       </select>
                     </div>
+                    <div className="space-y-1.5">
+                      <Label>Número</Label>
+                      <Input
+                        value={addressNumber}
+                        onChange={(e) => setAddressNumber(e.target.value)}
+                        placeholder="Ex.: 123"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Complemento</Label>
+                      <Input
+                        value={addressComplement}
+                        onChange={(e) => setAddressComplement(e.target.value)}
+                        placeholder="Apto, bloco, sala…"
+                      />
+                    </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label>Endereço da reunião *</Label>
                       <Textarea
                         value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={(e) => { setAddress(e.target.value); setStreetBase(""); }}
                         placeholder="Rua, número, complemento, bairro"
                         rows={2}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Informe o endereço completo onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
+                        Confira o endereço onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
                       </p>
                     </div>
+
                     <div className="space-y-2 sm:col-span-2 rounded-lg border border-border bg-muted/30 p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
