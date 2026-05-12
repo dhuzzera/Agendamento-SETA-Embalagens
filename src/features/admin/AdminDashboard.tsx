@@ -237,6 +237,68 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings className="h-4 w-4 text-primary" />
+            Configurações de deslocamento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label className="text-xs">Tempo de deslocamento entre visitas presenciais (minutos)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={720}
+                value={bufferInput}
+                onChange={(e) => setBufferInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                O sistema bloqueia este intervalo antes/depois de cada visita presencial. Padrão: 180 minutos (3h).
+              </p>
+            </div>
+            <Button onClick={saveBuffer}>Salvar</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <MapPin className="h-4 w-4 text-primary" />
+            Agenda por cidade (próximos 30 dias)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!regionAgenda ? (
+            <ListCardSkeleton title={false} rows={3} />
+          ) : regionAgenda.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma visita presencial agendada.</p>
+          ) : (
+            <ul className="divide-y">
+              {regionAgenda.map((r, i) => (
+                <li key={i} className="flex items-center justify-between py-2.5 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="font-medium">
+                      {format(new Date(r.date + "T00:00"), "EEE, dd/MM", { locale: ptBR })}
+                    </div>
+                    <span className="text-muted-foreground">{r.rep}</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {r.city} - {r.state.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {r.count} {r.count === 1 ? "visita" : "visitas"}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <Suspense fallback={<ChartSkeleton height={256} />}>
         <MonthlyMetrics />
       </Suspense>
