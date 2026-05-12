@@ -330,7 +330,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (!selectedDate) return [];
     return slotsFor(selectedDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, avails, blocks, appts]);
+  }, [selectedDate, avails, blocks, appts, meetingType, city, stateUf, travelBufferMin]);
 
   // Group slots by period of day for easier scanning on mobile
   const groupedSlots = useMemo(() => {
