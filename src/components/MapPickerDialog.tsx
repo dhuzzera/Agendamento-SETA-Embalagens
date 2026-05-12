@@ -63,16 +63,7 @@ export function MapPickerDialog({ open, onOpenChange, initialLat, initialLng, on
         maxZoom: 19,
       }).addTo(map);
 
-      if (initialLat != null && initialLng != null) {
-        markerRef.current = L.marker([initialLat, initialLng], { icon, draggable: true }).addTo(map);
-        markerRef.current.on("dragend", () => {
-          const ll = markerRef.current.getLatLng();
-          setPos({ lat: ll.lat, lng: ll.lng });
-        });
-      }
-
-      map.on("click", (e: any) => {
-        const { lat, lng } = e.latlng;
+      const placeMarker = (lat: number, lng: number) => {
         if (markerRef.current) {
           markerRef.current.setLatLng([lat, lng]);
         } else {
@@ -83,12 +74,38 @@ export function MapPickerDialog({ open, onOpenChange, initialLat, initialLng, on
           });
         }
         setPos({ lat, lng });
+      };
+
+      if (initialLat != null && initialLng != null) {
+        placeMarker(initialLat, initialLng);
+      }
+
+      map.on("click", (e: any) => {
+        const { lat, lng } = e.latlng;
+        placeMarker(lat, lng);
       });
 
       mapRef.current = map;
       setLoading(false);
       // Force resize after dialog animation
       setTimeout(() => map.invalidateSize(), 200);
+
+      // Auto-fetch current location if no initial position provided
+      if (initialLat == null && initialLng == null && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (p) => {
+            if (cancelled || !mapRef.current) return;
+            const lat = p.coords.latitude;
+            const lng = p.coords.longitude;
+            mapRef.current.setView([lat, lng], 16);
+            placeMarker(lat, lng);
+          },
+          () => {
+            // Silent fail — user can click on map manually
+          },
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+        );
+      }
     })();
 
     return () => {
