@@ -26,7 +26,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { X, Download, CalendarDays } from "lucide-react";
+import { X, Download, CalendarDays, Navigation } from "lucide-react";
 // Dialog pesado (edição/admin) — só baixa quando o usuário abrir um agendamento.
 const AppointmentDetailsDialog = lazy(() =>
   import("@/features/admin/AppointmentDetailsDialog").then((m) => ({
@@ -447,19 +447,78 @@ export function AppointmentsList() {
                 ponto azul possuem reuniões agendadas.
               </p>
             )}
-            {from && to && from === to && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setFrom("");
-                  setTo("");
-                }}
-              >
-                <X className="mr-1 h-3.5 w-3.5" />
-                Limpar dia
-              </Button>
-            )}
+            {from && to && from === to && (() => {
+              const dayPresencial = rows
+                .filter(
+                  (r) =>
+                    isSameDay(parseISO(r.appointment_date), parseISO(from)) &&
+                    r.meeting_type === "presencial" &&
+                    r.status !== "cancelled",
+                )
+                .sort((a, b) => a.start_time.localeCompare(b.start_time));
+              const buildAddress = (r: (typeof rows)[number]) => {
+                if (r.latitude != null && r.longitude != null) {
+                  return `${r.latitude},${r.longitude}`;
+                }
+                return [r.location, r.city, r.state].filter(Boolean).join(", ");
+              };
+              const stops = dayPresencial.map(buildAddress).filter(Boolean);
+              const originParts = [
+                profile?.address,
+                profile?.address_number ? `nº ${profile.address_number}` : "",
+                profile?.city,
+                profile?.state,
+              ]
+                .filter(Boolean)
+                .join(", ");
+              const openRoute = () => {
+                if (stops.length === 0) return;
+                const destination = stops[stops.length - 1];
+                const waypoints = stops.slice(0, -1);
+                const params = new URLSearchParams({
+                  api: "1",
+                  travelmode: "driving",
+                  destination,
+                });
+                if (originParts) params.set("origin", originParts);
+                if (waypoints.length)
+                  params.set("waypoints", waypoints.join("|"));
+                window.open(
+                  `https://www.google.com/maps/dir/?${params.toString()}`,
+                  "_blank",
+                  "noopener,noreferrer",
+                );
+              };
+              return (
+                <div className="flex flex-col gap-2">
+                  {stops.length > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={openRoute}
+                      title={
+                        originParts
+                          ? `Saindo de ${originParts}`
+                          : "Defina seu endereço no perfil para incluir o ponto de partida"
+                      }
+                    >
+                      <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                      Rota no Google Maps ({stops.length})
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setFrom("");
+                      setTo("");
+                    }}
+                  >
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    Limpar dia
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         </CardContent>
       </Card>
