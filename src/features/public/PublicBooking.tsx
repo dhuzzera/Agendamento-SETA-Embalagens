@@ -1151,6 +1151,17 @@ export function PublicBooking({ slug }: { slug: string }) {
                           </div>
                         </div>
                       )}
+                      <MapPickerDialog
+                        open={mapPickerOpen}
+                        onOpenChange={setMapPickerOpen}
+                        initialLat={latitude}
+                        initialLng={longitude}
+                        onConfirm={(lat, lng) => {
+                          setLatitude(lat);
+                          setLongitude(lng);
+                          toast.success("Localização definida pelo mapa");
+                        }}
+                      />
                     </div>
                   </>
                 )}
