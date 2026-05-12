@@ -291,11 +291,16 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
+          address: string | null
+          address_complement: string | null
+          address_number: string | null
           allow_online: boolean
           allow_presencial: boolean
           avatar_url: string | null
           bio: string | null
           calendar_token: string
+          cep: string | null
+          city: string | null
           created_at: string
           email: string
           full_name: string
@@ -303,15 +308,21 @@ export type Database = {
           must_change_password: boolean
           phone: string | null
           slug: string | null
+          state: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          address?: string | null
+          address_complement?: string | null
+          address_number?: string | null
           allow_online?: boolean
           allow_presencial?: boolean
           avatar_url?: string | null
           bio?: string | null
           calendar_token?: string
+          cep?: string | null
+          city?: string | null
           created_at?: string
           email: string
           full_name: string
@@ -319,15 +330,21 @@ export type Database = {
           must_change_password?: boolean
           phone?: string | null
           slug?: string | null
+          state?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          address?: string | null
+          address_complement?: string | null
+          address_number?: string | null
           allow_online?: boolean
           allow_presencial?: boolean
           avatar_url?: string | null
           bio?: string | null
           calendar_token?: string
+          cep?: string | null
+          city?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -335,6 +352,7 @@ export type Database = {
           must_change_password?: boolean
           phone?: string | null
           slug?: string | null
+          state?: string | null
           updated_at?: string
         }
         Relationships: []
