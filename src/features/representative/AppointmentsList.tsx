@@ -168,7 +168,7 @@ export function AppointmentsList() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, from, to]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
 
   const sortedRows = useMemo(() => {
     const arr = [...rows];
