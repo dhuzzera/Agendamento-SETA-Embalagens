@@ -629,6 +629,18 @@ export function AppointmentsList() {
                           {r.location ?? ""}
                         </span>
                       )}
+                      {r.meeting_type === "presencial" && r.latitude != null && r.longitude != null && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs font-medium text-primary hover:underline"
+                          title={`${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}`}
+                        >
+                          🗺️ Localização precisa
+                        </a>
+                      )}
                     </div>
                     {r.notes && (
                       <p className="mt-1 text-xs text-muted-foreground">{r.notes}</p>
