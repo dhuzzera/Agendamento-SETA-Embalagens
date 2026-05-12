@@ -146,32 +146,41 @@ export function AdminDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("app_settings")
-        .select("travel_buffer_minutes")
+        .select("travel_buffer_minutes, max_distance_km")
         .eq("id", 1)
         .maybeSingle();
-      return data ?? { travel_buffer_minutes: 180 };
+      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
     },
   });
   const [bufferInput, setBufferInput] = useState<string>("");
+  const [distanceInput, setDistanceInput] = useState<string>("");
   useEffect(() => {
     if (settings && bufferInput === "") {
       setBufferInput(String(settings.travel_buffer_minutes ?? 180));
     }
-  }, [settings, bufferInput]);
+    if (settings && distanceInput === "") {
+      setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
+    }
+  }, [settings, bufferInput, distanceInput]);
   const saveBuffer = async () => {
     const n = parseInt(bufferInput, 10);
+    const d = parseInt(distanceInput, 10);
     if (Number.isNaN(n) || n < 0 || n > 720) {
-      toast.error("Informe um valor entre 0 e 720 minutos");
+      toast.error("Tempo: informe um valor entre 0 e 720 minutos");
+      return;
+    }
+    if (Number.isNaN(d) || d < 1 || d > 500) {
+      toast.error("Raio: informe um valor entre 1 e 500 km");
       return;
     }
     const { error } = await supabase
       .from("app_settings")
-      .update({ travel_buffer_minutes: n })
+      .update({ travel_buffer_minutes: n, max_distance_km: d })
       .eq("id", 1);
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Tempo de deslocamento atualizado");
+      toast.success("Configurações atualizadas");
       void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
     }
   };
