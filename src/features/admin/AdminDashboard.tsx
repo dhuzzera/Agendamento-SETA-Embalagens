@@ -254,7 +254,7 @@ export function AdminDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="flex-1">
               <Label className="text-xs">Tempo de deslocamento entre visitas presenciais (minutos)</Label>
               <Input
@@ -265,7 +265,20 @@ export function AdminDashboard() {
                 onChange={(e) => setBufferInput(e.target.value)}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                O sistema bloqueia este intervalo antes/depois de cada visita presencial. Padrão: 180 minutos (3h).
+                Bloqueia este intervalo antes/depois de cada visita. Padrão: 180 min (3h).
+              </p>
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Raio máximo entre visitas no mesmo dia (km)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                value={distanceInput}
+                onChange={(e) => setDistanceInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                A primeira visita do dia define a região; as demais devem estar dentro desse raio. Padrão: 30 km.
               </p>
             </div>
             <Button onClick={saveBuffer}>Salvar</Button>
