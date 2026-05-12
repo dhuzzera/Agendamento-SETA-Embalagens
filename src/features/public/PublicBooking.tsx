@@ -180,6 +180,30 @@ export function PublicBooking({ slug }: { slug: string }) {
     });
   }, [profile, month]);
 
+  // Region locked for the day, if any presencial already exists
+  const dayRegion = (dateStr: string): { city: string; state: string } | null => {
+    const presenciais = appts
+      .filter(
+        (a) =>
+          a.appointment_date === dateStr &&
+          a.meeting_type === "presencial" &&
+          a.city &&
+          a.state,
+      )
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+    if (presenciais.length === 0) return null;
+    return { city: presenciais[0].city ?? "", state: presenciais[0].state ?? "" };
+  };
+
+  // Returns minutes-to-time helpers
+  const addMinToHHMMSS = (t: string, mins: number) => {
+    const [h, m, s] = t.split(":").map((v) => parseInt(v, 10));
+    const total = h * 60 + m + mins;
+    const hh = String(Math.floor(total / 60)).padStart(2, "0");
+    const mm = String(total % 60).padStart(2, "0");
+    return `${hh}:${mm}:${String(s ?? 0).padStart(2, "0")}`;
+  };
+
   const slotsFor = (day: Date): { start: string; end: string }[] => {
     const wd = day.getDay();
     const dayAvails = avails.filter((a) => a.weekday === wd);
@@ -191,6 +215,29 @@ export function PublicBooking({ slug }: { slug: string }) {
     );
     if (fullDayBlocked) return [];
     const dayAppts = appts.filter((a) => a.appointment_date === dateStr);
+
+    // If this is a presencial booking and the day already has a region locked
+    // to a different city/UF, the entire day is unavailable.
+    if (meetingType === "presencial") {
+      const region = dayRegion(dateStr);
+      if (
+        region &&
+        (norm(region.city) !== norm(city) || norm(region.state) !== norm(stateUf))
+      ) {
+        return [];
+      }
+    }
+
+    // Build presencial buffer windows for the day
+    const presBuffers =
+      meetingType === "presencial"
+        ? dayAppts
+            .filter((a) => a.meeting_type === "presencial")
+            .map((a) => ({
+              start: addMinToHHMMSS(a.start_time, -travelBufferMin),
+              end: addMinToHHMMSS(a.end_time, travelBufferMin),
+            }))
+        : [];
 
     const slots: { start: string; end: string }[] = [];
     for (const a of dayAvails) {
@@ -212,7 +259,10 @@ export function PublicBooking({ slug }: { slug: string }) {
         const taken = dayAppts.some(
           (ap) => sStr < ap.end_time && eStr > ap.start_time
         );
-        if (!past && !blocked && !taken) {
+        const travelConflict = presBuffers.some(
+          (b) => sStr < b.end && eStr > b.start,
+        );
+        if (!past && !blocked && !taken && !travelConflict) {
           slots.push({ start: sStr, end: eStr });
         }
         cur = slotEnd;
