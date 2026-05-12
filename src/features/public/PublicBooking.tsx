@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { SetaLogo } from "@/components/SetaLogo";
+import { MapPickerDialog } from "@/components/MapPickerDialog";
 import {
   addMinutes,
   endOfMonth,
