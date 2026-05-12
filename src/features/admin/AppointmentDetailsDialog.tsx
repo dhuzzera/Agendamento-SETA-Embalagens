@@ -33,6 +33,10 @@ import {
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
+const UF_LIST = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
+
 export type AppointmentDetails = {
   id: string;
   appointment_date: string;
@@ -43,6 +47,8 @@ export type AppointmentDetails = {
   representative_id: string;
   meeting_type?: "online" | "presencial" | string;
   location?: string | null;
+  city?: string | null;
+  state?: string | null;
   client: {
     name: string;
     company: string | null;
