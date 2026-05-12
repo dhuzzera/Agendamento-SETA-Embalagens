@@ -127,6 +127,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [travelBufferMin, setTravelBufferMin] = useState(180);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(30);
 
   const requestGeolocation = () => {
     if (!("geolocation" in navigator)) {
