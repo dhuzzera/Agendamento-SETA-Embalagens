@@ -48,6 +48,8 @@ type Row = {
   location: string | null;
   city: string | null;
   state: string | null;
+  latitude: number | null;
+  longitude: number | null;
   representative_id: string;
   client: { name: string; company: string | null; email: string; phone: string | null };
 };
@@ -121,7 +123,7 @@ export function AppointmentsList() {
     let q = supabase
       .from("appointments")
       .select(
-        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, client_id, representative_id"
+        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, latitude, longitude, client_id, representative_id"
       )
       .order("appointment_date", { ascending: false })
       .order("start_time")
@@ -626,6 +628,18 @@ export function AppointmentsList() {
                           {r.city && r.location ? " • " : ""}
                           {r.location ?? ""}
                         </span>
+                      )}
+                      {r.meeting_type === "presencial" && r.latitude != null && r.longitude != null && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs font-medium text-primary hover:underline"
+                          title={`${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}`}
+                        >
+                          🗺️ Localização precisa
+                        </a>
                       )}
                     </div>
                     {r.notes && (

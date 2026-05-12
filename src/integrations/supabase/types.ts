@@ -41,7 +41,9 @@ export type Database = {
           end_time: string
           id: string
           internal_notes: string | null
+          latitude: number | null
           location: string | null
+          longitude: number | null
           meeting_type: string
           notes: string | null
           representative_id: string
@@ -58,7 +60,9 @@ export type Database = {
           end_time: string
           id?: string
           internal_notes?: string | null
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           meeting_type?: string
           notes?: string | null
           representative_id: string
@@ -75,7 +79,9 @@ export type Database = {
           end_time?: string
           id?: string
           internal_notes?: string | null
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           meeting_type?: string
           notes?: string | null
           representative_id?: string
