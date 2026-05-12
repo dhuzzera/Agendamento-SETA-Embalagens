@@ -503,6 +503,14 @@ export function AppointmentsList() {
               </Select>
             </div>
             <div>
+              <Label className="text-xs">Cidade</Label>
+              <Input
+                value={cityQuery}
+                onChange={(e) => setCityQuery(e.target.value)}
+                placeholder="Ex.: Joinville"
+              />
+            </div>
+            <div>
               <Label className="text-xs">Endereço contém</Label>
               <Input
                 value={addressQuery}
