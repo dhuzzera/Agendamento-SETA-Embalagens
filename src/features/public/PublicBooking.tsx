@@ -229,7 +229,14 @@ export function PublicBooking({ slug }: { slug: string }) {
   }, [profile, month]);
 
   // Region locked for the day, if any presencial already exists
-  const dayRegion = (dateStr: string): { city: string; state: string } | null => {
+  const dayRegion = (
+    dateStr: string,
+  ): {
+    city: string;
+    state: string;
+    latitude: number | null;
+    longitude: number | null;
+  } | null => {
     const presenciais = appts
       .filter(
         (a) =>
@@ -240,7 +247,13 @@ export function PublicBooking({ slug }: { slug: string }) {
       )
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
     if (presenciais.length === 0) return null;
-    return { city: presenciais[0].city ?? "", state: presenciais[0].state ?? "" };
+    const first = presenciais[0];
+    return {
+      city: first.city ?? "",
+      state: first.state ?? "",
+      latitude: first.latitude,
+      longitude: first.longitude,
+    };
   };
 
   // Returns minutes-to-time helpers
@@ -264,15 +277,31 @@ export function PublicBooking({ slug }: { slug: string }) {
     if (fullDayBlocked) return [];
     const dayAppts = appts.filter((a) => a.appointment_date === dateStr);
 
-    // If this is a presencial booking and the day already has a region locked
-    // to a different city/UF, the entire day is unavailable.
+    // If this is a presencial booking and the day already has a region locked,
+    // require the new visit to be within max_distance_km of the first visit
+    // (using GPS coords). Fallback to same city/UF when coords are missing.
     if (meetingType === "presencial") {
       const region = dayRegion(dateStr);
-      if (
-        region &&
-        (norm(region.city) !== norm(city) || norm(region.state) !== norm(stateUf))
-      ) {
-        return [];
+      if (region) {
+        if (
+          region.latitude != null &&
+          region.longitude != null &&
+          latitude != null &&
+          longitude != null
+        ) {
+          const dist = haversineKm(
+            region.latitude,
+            region.longitude,
+            latitude,
+            longitude,
+          );
+          if (dist > maxDistanceKm) return [];
+        } else if (
+          norm(region.city) !== norm(city) ||
+          norm(region.state) !== norm(stateUf)
+        ) {
+          return [];
+        }
       }
     }
 
