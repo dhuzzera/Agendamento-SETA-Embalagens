@@ -163,17 +163,21 @@ export function PublicBooking({ slug }: { slug: string }) {
     const start = format(startOfMonth(month), "yyyy-MM-dd");
     const end = format(endOfMonth(month), "yyyy-MM-dd");
     setLoadedMonth(null);
-    supabase
-      .from("appointments")
-      .select("appointment_date, start_time, end_time")
-      .eq("representative_id", profile.id)
-      .eq("status", "scheduled")
-      .gte("appointment_date", start)
-      .lte("appointment_date", end)
-      .then(({ data }) => {
-        setAppts((data as Appt[]) ?? []);
-        setLoadedMonth(start);
-      });
+    void Promise.all([
+      supabase
+        .from("appointments")
+        .select("appointment_date, start_time, end_time, meeting_type, city, state")
+        .eq("representative_id", profile.id)
+        .eq("status", "scheduled")
+        .gte("appointment_date", start)
+        .lte("appointment_date", end),
+      supabase.from("app_settings").select("travel_buffer_minutes").eq("id", 1).maybeSingle(),
+    ]).then(([apptsRes, settingsRes]) => {
+      setAppts((apptsRes.data as Appt[]) ?? []);
+      const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 180;
+      setTravelBufferMin(buf);
+      setLoadedMonth(start);
+    });
   }, [profile, month]);
 
   const slotsFor = (day: Date): { start: string; end: string }[] => {
