@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Copy, Link as LinkIcon, MapPin } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Calendar, Copy, Link as LinkIcon, MapPin, Settings } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -107,6 +108,52 @@ export function RepDashboard() {
       return [...map.entries()].map(([date, v]) => ({ date, ...v }));
     },
   });
+
+  // Configurações de deslocamento (compartilhadas entre admin e representantes)
+  const queryClient = useQueryClient();
+  const { data: settings } = useQuery({
+    queryKey: ["app-settings"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("travel_buffer_minutes, max_distance_km")
+        .eq("id", 1)
+        .maybeSingle();
+      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
+    },
+  });
+  const [bufferInput, setBufferInput] = useState<string>("");
+  const [distanceInput, setDistanceInput] = useState<string>("");
+  useEffect(() => {
+    if (settings && bufferInput === "") {
+      setBufferInput(String(settings.travel_buffer_minutes ?? 180));
+    }
+    if (settings && distanceInput === "") {
+      setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
+    }
+  }, [settings, bufferInput, distanceInput]);
+  const saveSettings = async () => {
+    const n = parseInt(bufferInput, 10);
+    const d = parseInt(distanceInput, 10);
+    if (Number.isNaN(n) || n < 0 || n > 720) {
+      toast.error("Tempo: informe um valor entre 0 e 720 minutos");
+      return;
+    }
+    if (Number.isNaN(d) || d < 1 || d > 500) {
+      toast.error("Raio: informe um valor entre 1 e 500 km");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ travel_buffer_minutes: n, max_distance_km: d })
+      .eq("id", 1);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Configurações atualizadas");
+      void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
+    }
+  };
 
   // Domínio público curto e estável (independente de preview/sandbox)
   const PUBLIC_HOST = "seta-agendamento.lovable.app";
@@ -215,6 +262,45 @@ export function RepDashboard() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Settings className="h-4 w-4 text-primary" />
+            Configurações de deslocamento
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Estas configurações são compartilhadas com toda a equipe.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label className="text-xs">Tempo entre visitas presenciais (minutos)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={720}
+                value={bufferInput}
+                onChange={(e) => setBufferInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Padrão: 180 min (3h).</p>
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Raio máximo no mesmo dia (km)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                value={distanceInput}
+                onChange={(e) => setDistanceInput(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">Padrão: 30 km.</p>
+            </div>
+            <Button onClick={saveSettings}>Salvar</Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">
