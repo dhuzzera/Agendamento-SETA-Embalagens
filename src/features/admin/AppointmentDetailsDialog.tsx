@@ -223,6 +223,24 @@ export function AppointmentDetailsDialog({
                   <Copy className="mr-1.5 h-3.5 w-3.5" />
                 </Button>
               </div>
+              {appointment.latitude != null && appointment.longitude != null && (
+                <div className="mt-3 rounded-md border border-primary/30 bg-primary/5 p-2.5 text-xs">
+                  <div className="mb-1 font-medium text-primary">📍 Localização precisa do cliente</div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-muted-foreground">
+                      {appointment.latitude.toFixed(6)}, {appointment.longitude.toFixed(6)}
+                    </span>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${appointment.latitude},${appointment.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3 w-3" /> Abrir no mapa
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
