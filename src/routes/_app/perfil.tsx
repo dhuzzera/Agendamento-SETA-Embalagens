@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Camera, Loader2, Trash2, User, Monitor, MapPin } from "lucide-react";
+
+import { Camera, Loader2, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -44,8 +44,6 @@ function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
-  const [allowOnline, setAllowOnline] = useState(true);
-  const [allowPresencial, setAllowPresencial] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -55,8 +53,6 @@ function ProfilePage() {
       setFullName(profile.full_name ?? "");
       setPhone(profile.phone ?? "");
       setBio(profile.bio ?? "");
-      setAllowOnline(profile.allow_online ?? true);
-      setAllowPresencial(profile.allow_presencial ?? true);
     }
   }, [profile]);
 
@@ -172,10 +168,6 @@ function ProfilePage() {
       toast.error(parsed.error.issues[0]?.message ?? "Dados inválidos");
       return;
     }
-    if (!allowOnline && !allowPresencial) {
-      toast.error("Mantenha pelo menos uma modalidade ativa (online ou presencial).");
-      return;
-    }
     setSaving(true);
     try {
       const { error } = await supabase
@@ -184,8 +176,6 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
-          allow_online: allowOnline,
-          allow_presencial: allowPresencial,
         })
         .eq("id", profile.id);
       if (error) throw error;
@@ -315,49 +305,6 @@ function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8 space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-            <div>
-              <h3 className="text-sm font-semibold">Modalidades de reunião aceitas</h3>
-              <p className="text-xs text-muted-foreground">
-                Controle quais opções aparecem para o cliente no seu link público.
-                Pelo menos uma deve permanecer ativa.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between rounded-md border bg-background p-3">
-              <div className="flex items-center gap-3">
-                <Monitor className="h-5 w-5 text-primary" />
-                <div>
-                  <div className="text-sm font-medium">Reuniões online</div>
-                  <div className="text-xs text-muted-foreground">
-                    Cliente recebe o convite com link de vídeo enviado por você.
-                  </div>
-                </div>
-              </div>
-              <Switch
-                checked={allowOnline}
-                onCheckedChange={setAllowOnline}
-                aria-label="Aceitar reuniões online"
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-md border bg-background p-3">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-primary" />
-                <div>
-                  <div className="text-sm font-medium">Reuniões presenciais</div>
-                  <div className="text-xs text-muted-foreground">
-                    Cliente informa o endereço onde você deve comparecer.
-                  </div>
-                </div>
-              </div>
-              <Switch
-                checked={allowPresencial}
-                onCheckedChange={setAllowPresencial}
-                aria-label="Aceitar reuniões presenciais"
-              />
-            </div>
-          </div>
 
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} disabled={saving} size="lg">

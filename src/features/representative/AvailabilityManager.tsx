@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Trash2,
@@ -22,6 +24,9 @@ import {
   ExternalLink,
   Info,
   CheckCircle2,
+  Settings,
+  Monitor,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ChangeLogCard } from "./ChangeLogCard";
@@ -319,8 +324,158 @@ export function AvailabilityManager() {
         </Card>
       </div>
 
+      <ModalitiesCard />
+      <TravelSettingsCard />
+
       {profile && <ChangeLogCard representativeId={profile.id} />}
     </div>
+  );
+}
+
+function ModalitiesCard() {
+  const { profile, refresh } = useAuth();
+  const [allowOnline, setAllowOnline] = useState(true);
+  const [allowPresencial, setAllowPresencial] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setAllowOnline(profile.allow_online ?? true);
+      setAllowPresencial(profile.allow_presencial ?? true);
+    }
+  }, [profile]);
+
+  const save = async () => {
+    if (!profile) return;
+    if (!allowOnline && !allowPresencial) {
+      toast.error("Mantenha pelo menos uma modalidade ativa.");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ allow_online: allowOnline, allow_presencial: allowPresencial })
+      .eq("id", profile.id);
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Modalidades atualizadas");
+      await refresh();
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Modalidades de reunião</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Controle quais opções aparecem para o cliente no seu link público. Pelo menos uma deve permanecer ativa.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between rounded-md border bg-background p-3">
+          <div className="flex items-center gap-3">
+            <Monitor className="h-5 w-5 text-primary" />
+            <div>
+              <div className="text-sm font-medium">Reuniões online</div>
+              <div className="text-xs text-muted-foreground">
+                Cliente recebe o convite com link de vídeo enviado por você.
+              </div>
+            </div>
+          </div>
+          <Switch checked={allowOnline} onCheckedChange={setAllowOnline} aria-label="Aceitar reuniões online" />
+        </div>
+        <div className="flex items-center justify-between rounded-md border bg-background p-3">
+          <div className="flex items-center gap-3">
+            <MapPin className="h-5 w-5 text-primary" />
+            <div>
+              <div className="text-sm font-medium">Reuniões presenciais</div>
+              <div className="text-xs text-muted-foreground">
+                Cliente informa o endereço onde você deve comparecer.
+              </div>
+            </div>
+          </div>
+          <Switch checked={allowPresencial} onCheckedChange={setAllowPresencial} aria-label="Aceitar reuniões presenciais" />
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={save} disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TravelSettingsCard() {
+  const queryClient = useQueryClient();
+  const { data: settings } = useQuery({
+    queryKey: ["app-settings"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("travel_buffer_minutes, max_distance_km")
+        .eq("id", 1)
+        .maybeSingle();
+      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
+    },
+  });
+  const [bufferInput, setBufferInput] = useState("");
+  const [distanceInput, setDistanceInput] = useState("");
+  useEffect(() => {
+    if (settings && bufferInput === "") setBufferInput(String(settings.travel_buffer_minutes ?? 180));
+    if (settings && distanceInput === "")
+      setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
+  }, [settings, bufferInput, distanceInput]);
+
+  const save = async () => {
+    const n = parseInt(bufferInput, 10);
+    const d = parseInt(distanceInput, 10);
+    if (Number.isNaN(n) || n < 0 || n > 720) {
+      toast.error("Tempo: informe um valor entre 0 e 720 minutos");
+      return;
+    }
+    if (Number.isNaN(d) || d < 1 || d > 500) {
+      toast.error("Raio: informe um valor entre 1 e 500 km");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ travel_buffer_minutes: n, max_distance_km: d })
+      .eq("id", 1);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Configurações atualizadas");
+      void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Settings className="h-4 w-4 text-primary" />
+          Configurações de deslocamento
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Aplicadas a reuniões presenciais. Estas configurações são compartilhadas com toda a equipe.
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Label className="text-xs">Tempo entre visitas presenciais (minutos)</Label>
+            <Input type="number" min={0} max={720} value={bufferInput} onChange={(e) => setBufferInput(e.target.value)} />
+            <p className="mt-1 text-xs text-muted-foreground">Padrão: 180 min (3h).</p>
+          </div>
+          <div className="flex-1">
+            <Label className="text-xs">Raio máximo no mesmo dia (km)</Label>
+            <Input type="number" min={1} max={500} value={distanceInput} onChange={(e) => setDistanceInput(e.target.value)} />
+            <p className="mt-1 text-xs text-muted-foreground">Padrão: 30 km.</p>
+          </div>
+          <Button onClick={save}>Salvar</Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
