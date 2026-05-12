@@ -1102,21 +1102,30 @@ export function PublicBooking({ slug }: { slug: string }) {
                     </div>
 
                     <div className="space-y-2 sm:col-span-2 rounded-lg border border-border bg-muted/30 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
                           <Label className="text-sm">Localização precisa (opcional)</Label>
                           <p className="text-xs text-muted-foreground">
-                            Compartilhe sua localização atual para o representante encontrar o local com mais facilidade.
+                            Use sua localização atual ou escolha um ponto no mapa para o representante encontrar com facilidade.
                           </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={requestGeolocation}
-                          disabled={geoBusy}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-60"
-                        >
-                          📍 {geoBusy ? "Capturando…" : latitude !== null ? "Atualizar localização" : "Usar minha localização"}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={requestGeolocation}
+                            disabled={geoBusy}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-60"
+                          >
+                            📍 {geoBusy ? "Capturando…" : latitude !== null ? "Atualizar atual" : "Usar atual"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMapPickerOpen(true)}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent"
+                          >
+                            🗺️ Escolher no mapa
+                          </button>
+                        </div>
                       </div>
                       {latitude !== null && longitude !== null && (
                         <div className="flex items-center justify-between gap-2 text-xs">
