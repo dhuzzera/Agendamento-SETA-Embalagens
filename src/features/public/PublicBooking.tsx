@@ -382,7 +382,7 @@ export function PublicBooking({ slug }: { slug: string }) {
     }
     return result;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates, meetingType, city, stateUf, travelBufferMin]);
+  }, [profile, month, avails, blocks, appts, workingWeekdays, fullyBlockedDates, meetingType, city, stateUf, travelBufferMin, latitude, longitude, maxDistanceKm]);
 
   const availableDateKeys = useMemo(
     () => new Set(availableDates.map((d) => format(d, "yyyy-MM-dd"))),
