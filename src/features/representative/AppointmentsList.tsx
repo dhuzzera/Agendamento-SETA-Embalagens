@@ -73,6 +73,7 @@ export function AppointmentsList() {
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>(ALL);
   const [addressQuery, setAddressQuery] = useState<string>("");
+  const [cityQuery, setCityQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<
     "date_desc" | "date_asc" | "meeting_type" | "location"
   >("date_desc");
