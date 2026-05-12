@@ -94,6 +94,9 @@ export function AppointmentDetailsDialog({
     setEndTime(appointment.end_time.slice(0, 5));
     setStatus(appointment.status);
     setNotes(appointment.notes ?? "");
+    setCity(appointment.city ?? "");
+    setStateUf(appointment.state ?? "");
+    setLocation(appointment.location ?? "");
     // load internal notes fresh (admin only)
     if (isAdmin) {
       void supabase
