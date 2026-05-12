@@ -236,6 +236,7 @@ export function AppointmentsList() {
     setStatusFilter(ALL);
     setMeetingTypeFilter(ALL);
     setAddressQuery("");
+    setCityQuery("");
     setFrom("");
     setTo("");
   };
@@ -245,6 +246,7 @@ export function AppointmentsList() {
     statusFilter !== ALL ||
     meetingTypeFilter !== ALL ||
     !!addressQuery ||
+    !!cityQuery ||
     !!from ||
     !!to;
 
