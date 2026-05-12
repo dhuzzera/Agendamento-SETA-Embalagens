@@ -1064,6 +1064,8 @@ export function PublicBooking({ slug }: { slug: string }) {
                         </div>
                       )}
                     </div>
+                  </>
+                )}
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>
                   <Textarea
