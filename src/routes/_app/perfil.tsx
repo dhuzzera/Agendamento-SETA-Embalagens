@@ -176,8 +176,6 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
-          allow_online: allowOnline,
-          allow_presencial: allowPresencial,
         })
         .eq("id", profile.id);
       if (error) throw error;
