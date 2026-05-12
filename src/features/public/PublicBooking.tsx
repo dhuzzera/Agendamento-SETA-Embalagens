@@ -433,6 +433,8 @@ export function PublicBooking({ slug }: { slug: string }) {
         location: meetingType === "presencial" ? address.trim() : null,
         city: meetingType === "presencial" ? city.trim() : null,
         state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : null,
+        latitude: meetingType === "presencial" ? latitude : null,
+        longitude: meetingType === "presencial" ? longitude : null,
       });
       if (aErr) throw aErr;
       setSuccess(true);
