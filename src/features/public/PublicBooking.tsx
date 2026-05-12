@@ -212,16 +212,18 @@ export function PublicBooking({ slug }: { slug: string }) {
     void Promise.all([
       supabase
         .from("appointments")
-        .select("appointment_date, start_time, end_time, meeting_type, city, state")
+        .select("appointment_date, start_time, end_time, meeting_type, city, state, latitude, longitude")
         .eq("representative_id", profile.id)
         .eq("status", "scheduled")
         .gte("appointment_date", start)
         .lte("appointment_date", end),
-      supabase.from("app_settings").select("travel_buffer_minutes").eq("id", 1).maybeSingle(),
+      supabase.from("app_settings").select("travel_buffer_minutes, max_distance_km").eq("id", 1).maybeSingle(),
     ]).then(([apptsRes, settingsRes]) => {
       setAppts((apptsRes.data as Appt[]) ?? []);
       const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 180;
+      const km = (settingsRes.data?.max_distance_km as number | undefined) ?? 30;
       setTravelBufferMin(buf);
+      setMaxDistanceKm(km);
       setLoadedMonth(start);
     });
   }, [profile, month]);
