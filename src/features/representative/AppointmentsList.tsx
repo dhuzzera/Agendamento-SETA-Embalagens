@@ -133,6 +133,7 @@ export function AppointmentsList() {
     if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
     if (meetingTypeFilter !== ALL) q = q.eq("meeting_type", meetingTypeFilter);
     if (addressQuery.trim()) q = q.ilike("location", `%${addressQuery.trim()}%`);
+    if (cityQuery.trim()) q = q.ilike("city", `%${cityQuery.trim()}%`);
     if (from) q = q.gte("appointment_date", from);
     if (to) q = q.lte("appointment_date", to);
 
