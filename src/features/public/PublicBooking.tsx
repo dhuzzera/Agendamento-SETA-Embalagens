@@ -1090,6 +1090,31 @@ export function PublicBooking({ slug }: { slug: string }) {
                         </div>
                       );
                     })()}
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>CEP</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={cep}
+                          onChange={(e) => setCep(formatCep(e.target.value))}
+                          onBlur={(e) => lookupCep(e.target.value)}
+                          placeholder="00000-000"
+                          inputMode="numeric"
+                          maxLength={9}
+                          className="max-w-[160px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => lookupCep(cep)}
+                          disabled={cepBusy || cep.replace(/\D/g, "").length !== 8}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent disabled:opacity-60"
+                        >
+                          {cepBusy ? "Buscando…" : "Buscar CEP"}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Digite o CEP para preencher cidade, estado e rua automaticamente.
+                      </p>
+                    </div>
                     <div className="space-y-1.5">
                       <Label>Cidade *</Label>
                       <Input
@@ -1111,18 +1136,35 @@ export function PublicBooking({ slug }: { slug: string }) {
                         ))}
                       </select>
                     </div>
+                    <div className="space-y-1.5">
+                      <Label>Número</Label>
+                      <Input
+                        value={addressNumber}
+                        onChange={(e) => setAddressNumber(e.target.value)}
+                        placeholder="Ex.: 123"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Complemento</Label>
+                      <Input
+                        value={addressComplement}
+                        onChange={(e) => setAddressComplement(e.target.value)}
+                        placeholder="Apto, bloco, sala…"
+                      />
+                    </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label>Endereço da reunião *</Label>
                       <Textarea
                         value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={(e) => { setAddress(e.target.value); setStreetBase(""); }}
                         placeholder="Rua, número, complemento, bairro"
                         rows={2}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Informe o endereço completo onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
+                        Confira o endereço onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
                       </p>
                     </div>
+
                     <div className="space-y-2 sm:col-span-2 rounded-lg border border-border bg-muted/30 p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
