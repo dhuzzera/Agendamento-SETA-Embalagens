@@ -946,18 +946,50 @@ export function PublicBooking({ slug }: { slug: string }) {
                   );
                 })()}
                 {meetingType === "presencial" && (
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Endereço da reunião *</Label>
-                    <Textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Rua, número, complemento, bairro, cidade — UF"
-                      rows={2}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Informe o endereço completo onde o representante deve comparecer.
-                    </p>
-                  </div>
+                  <>
+                    {(() => {
+                      const region = selected ? dayRegion(format(selected.date, "yyyy-MM-dd")) : null;
+                      if (!region) return null;
+                      return (
+                        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-200">
+                          <strong>Atenção:</strong> a agenda do dia {format(selected.date, "dd/MM")} já está reservada para visitas em <strong>{region.city} - {region.state.toUpperCase()}</strong>. Só é possível agendar presencial nessa cidade.
+                        </div>
+                      );
+                    })()}
+                    <div className="space-y-1.5">
+                      <Label>Cidade *</Label>
+                      <Input
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Ex.: Joinville"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Estado (UF) *</Label>
+                      <select
+                        value={stateUf}
+                        onChange={(e) => setStateUf(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="">Selecione…</option>
+                        {UF_LIST.map((uf) => (
+                          <option key={uf} value={uf}>{uf}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>Endereço da reunião *</Label>
+                      <Textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Rua, número, complemento, bairro"
+                        rows={2}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Informe o endereço completo onde o representante deve comparecer. Para otimizar deslocamentos, o sistema mantém um intervalo de {Math.round(travelBufferMin / 60)}h entre visitas presenciais e só permite uma cidade por dia.
+                      </p>
+                    </div>
+                  </>
                 )}
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Observações</Label>
