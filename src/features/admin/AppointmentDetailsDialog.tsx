@@ -299,6 +299,70 @@ export function AppointmentDetailsDialog({
             );
           })()}
 
+          {appointment.status !== "cancelled" && (() => {
+            const isPresencial = appointment.meeting_type === "presencial";
+            const modalidade = isPresencial ? "Presencial" : "Online";
+            const dateStr = format(
+              new Date((date || appointment.appointment_date) + "T00:00"),
+              "dd/MM/yyyy (EEEE)",
+              { locale: ptBR },
+            );
+            const horaIni = (startTime || appointment.start_time).slice(0, 5);
+            const horaFim = (endTime || appointment.end_time).slice(0, 5);
+            const repNome = representativeName || "seu representante";
+            const linhasEndereco =
+              isPresencial && (location || appointment.location)
+                ? `\nLocal: ${location || appointment.location}`
+                : "";
+            const subject = `Confirmação de reunião — ${dateStr} às ${horaIni}`;
+            const body =
+              `Olá, ${appointment.client.name}!\n\n` +
+              `Estou confirmando nossa reunião:\n\n` +
+              `• Data: ${dateStr}\n` +
+              `• Horário: ${horaIni} às ${horaFim}\n` +
+              `• Modalidade: ${modalidade}` +
+              `${linhasEndereco}\n\n` +
+              `Caso precise remarcar ou cancelar, é só responder este e-mail.\n\n` +
+              `Até breve!\n${repNome}\nSETA Embalagens`;
+            const mailto = `mailto:${encodeURIComponent(appointment.client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            const copyBody = async () => {
+              try {
+                await navigator.clipboard.writeText(`Assunto: ${subject}\n\n${body}`);
+                toast.success("Mensagem copiada");
+              } catch {
+                toast.error("Não foi possível copiar");
+              }
+            };
+            return (
+              <div className="rounded-md border bg-muted/30 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <Mail className="h-3.5 w-3.5" /> E-mail de confirmação
+                </div>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Mensagem pronta para o cliente. Abre no seu app de e-mail — basta
+                  revisar e enviar.
+                </p>
+                <div className="mb-3 max-h-40 overflow-auto rounded-md border bg-background p-2 text-xs whitespace-pre-wrap">
+                  <div className="mb-1 font-medium">Para: {appointment.client.email}</div>
+                  <div className="mb-1 font-medium">Assunto: {subject}</div>
+                  <div className="mt-2 text-muted-foreground">{body}</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" asChild>
+                    <a href={mailto}>
+                      <Mail className="mr-1.5 h-3.5 w-3.5" />
+                      Abrir e enviar
+                    </a>
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={copyBody}>
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />
+                    Copiar mensagem
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+
           {isAdmin ? (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
