@@ -418,7 +418,7 @@ export function PublicBooking({ slug }: { slug: string }) {
         const end = format(endOfMonth(month), "yyyy-MM-dd");
         const { data } = await supabase
           .from("appointments")
-          .select("appointment_date, start_time, end_time")
+          .select("appointment_date, start_time, end_time, meeting_type, city, state")
           .eq("representative_id", profile.id)
           .eq("status", "scheduled")
           .gte("appointment_date", start)
