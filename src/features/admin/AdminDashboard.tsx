@@ -96,6 +96,86 @@ export function AdminDashboard() {
     },
   });
 
+  // Próximos dias com região definida (presenciais agrupados por rep + data + cidade)
+  const { data: regionAgenda } = useQuery({
+    queryKey: ["admin-dashboard", "region-agenda"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const horizon = format(new Date(Date.now() + 30 * 86400000), "yyyy-MM-dd");
+      const { data: appts } = await supabase
+        .from("appointments")
+        .select("appointment_date, start_time, city, state, representative_id, status, meeting_type")
+        .eq("meeting_type", "presencial")
+        .in("status", ["scheduled", "rescheduled"])
+        .gte("appointment_date", today)
+        .lte("appointment_date", horizon)
+        .order("appointment_date")
+        .order("start_time");
+      if (!appts?.length) return [];
+      const repIds = [...new Set(appts.map((a) => a.representative_id))];
+      const { data: reps } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", repIds);
+      const repMap = new Map(reps?.map((r) => [r.id, r.full_name]));
+      const map = new Map<string, { date: string; rep: string; city: string; state: string; count: number }>();
+      for (const a of appts) {
+        if (!a.city || !a.state) continue;
+        const key = `${a.representative_id}_${a.appointment_date}`;
+        const cur = map.get(key);
+        if (!cur) {
+          map.set(key, {
+            date: a.appointment_date,
+            rep: repMap.get(a.representative_id) ?? "—",
+            city: a.city,
+            state: a.state,
+            count: 1,
+          });
+        } else cur.count += 1;
+      }
+      return [...map.values()];
+    },
+  });
+
+  // Travel buffer setting
+  const queryClient = useQueryClient();
+  const { data: settings } = useQuery({
+    queryKey: ["app-settings"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("travel_buffer_minutes")
+        .eq("id", 1)
+        .maybeSingle();
+      return data ?? { travel_buffer_minutes: 180 };
+    },
+  });
+  const [bufferInput, setBufferInput] = useState<string>("");
+  useEffect(() => {
+    if (settings && bufferInput === "") {
+      setBufferInput(String(settings.travel_buffer_minutes ?? 180));
+    }
+  }, [settings, bufferInput]);
+  const saveBuffer = async () => {
+    const n = parseInt(bufferInput, 10);
+    if (Number.isNaN(n) || n < 0 || n > 720) {
+      toast.error("Informe um valor entre 0 e 720 minutos");
+      return;
+    }
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ travel_buffer_minutes: n })
+      .eq("id", 1);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Tempo de deslocamento atualizado");
+      void queryClient.invalidateQueries({ queryKey: ["app-settings"] });
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
