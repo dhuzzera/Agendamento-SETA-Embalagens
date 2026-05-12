@@ -311,6 +311,37 @@ export function AppointmentDetailsDialog({
                 </Select>
               </div>
 
+              {appointment.meeting_type === "presencial" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs">Cidade</Label>
+                    <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ex.: Joinville" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">UF</Label>
+                    <Select value={stateUf} onValueChange={setStateUf}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="UF" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UF_LIST.map((uf) => (
+                          <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <Label className="text-xs">Endereço</Label>
+                    <Textarea
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      rows={2}
+                      placeholder="Rua, número, bairro"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <Label className="text-xs">Observações do cliente</Label>
                 <Textarea
