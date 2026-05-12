@@ -81,6 +81,9 @@ export function AppointmentDetailsDialog({
   const [status, setStatus] = useState<Status>("scheduled");
   const [notes, setNotes] = useState("");
   const [internalNotes, setInternalNotes] = useState("");
+  const [city, setCity] = useState("");
+  const [stateUf, setStateUf] = useState("");
+  const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
