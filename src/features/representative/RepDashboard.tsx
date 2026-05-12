@@ -76,6 +76,38 @@ export function RepDashboard() {
     },
   });
 
+  // Próximas regiões/cidades-base por dia (presenciais)
+  const { data: regionDays } = useQuery({
+    queryKey: ["rep-dashboard", "regions", repId],
+    enabled: !!repId,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const today = format(new Date(), "yyyy-MM-dd");
+      const horizon = format(new Date(Date.now() + 30 * 86400000), "yyyy-MM-dd");
+      const { data } = await supabase
+        .from("appointments")
+        .select("appointment_date, start_time, city, state, meeting_type, status")
+        .eq("representative_id", repId!)
+        .eq("meeting_type", "presencial")
+        .in("status", ["scheduled", "rescheduled"])
+        .gte("appointment_date", today)
+        .lte("appointment_date", horizon)
+        .order("appointment_date")
+        .order("start_time");
+      const map = new Map<string, { city: string; state: string; count: number }>();
+      for (const r of data ?? []) {
+        if (!r.city || !r.state) continue;
+        const cur = map.get(r.appointment_date);
+        if (!cur) {
+          map.set(r.appointment_date, { city: r.city, state: r.state, count: 1 });
+        } else {
+          cur.count += 1;
+        }
+      }
+      return [...map.entries()].map(([date, v]) => ({ date, ...v }));
+    },
+  });
+
   // Domínio público curto e estável (independente de preview/sandbox)
   const PUBLIC_HOST = "seta-agendamento.lovable.app";
   const link = profile?.slug ? `https://${PUBLIC_HOST}/${profile.slug}` : "";
