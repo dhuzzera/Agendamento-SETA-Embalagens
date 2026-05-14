@@ -497,7 +497,7 @@ function labelStatus(s: string) {
   return (
     {
       scheduled: "Agendado",
-      completed: "Concluído",
+      completed: "Finalizado",
       cancelled: "Cancelado",
       rescheduled: "Remarcado",
     } as Record<string, string>
