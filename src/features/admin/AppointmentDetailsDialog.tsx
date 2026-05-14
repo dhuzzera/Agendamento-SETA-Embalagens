@@ -125,8 +125,8 @@ export function AppointmentDetailsDialog({
         end_time: endTime + ":00",
         status,
         notes: notes || null,
-        internal_notes: internalNotes || null,
-        ...(isPresencial
+        ...(isAdmin ? { internal_notes: internalNotes || null } : {}),
+        ...(isAdmin && isPresencial
           ? {
               city: city.trim() || null,
               state: stateUf.trim() ? stateUf.trim().toUpperCase() : null,
