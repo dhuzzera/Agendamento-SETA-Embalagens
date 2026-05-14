@@ -483,11 +483,9 @@ export function AppointmentDetailsDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Fechar
             </Button>
-            {isAdmin && (
-              <Button onClick={save} disabled={saving}>
-                {saving ? "Salvando…" : "Salvar alterações"}
-              </Button>
-            )}
+            <Button onClick={save} disabled={saving}>
+              {saving ? "Salvando…" : "Salvar alterações"}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>
