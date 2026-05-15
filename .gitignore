@@ -16,6 +16,13 @@ dist-ssr
 .nitro
 *.local
 
+# Environment files — nunca commitar segredos
+.env
+.env.local
+.env.*.local
+# .env.example é seguro para commitar (sem valores reais)
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

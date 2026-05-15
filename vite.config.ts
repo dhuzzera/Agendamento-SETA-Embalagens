@@ -7,6 +7,37 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Detect deployment target via DEPLOY_TARGET env var or Vite mode.
+// - Default (no env): Cloudflare Workers (original behaviour)
+// - DEPLOY_TARGET=vercel or --mode vercel: Vercel (Nitro preset)
+// - DEPLOY_TARGET=render or --mode render: Render / Node.js (Nitro preset)
+const deployTarget = process.env.DEPLOY_TARGET ?? process.env.VITE_DEPLOY_TARGET ?? "cloudflare";
+
+// Nitro preset mapping
+const nitroPreset: Record<string, string> = {
+  vercel: "vercel",
+  render: "node-server",
+  node: "node-server",
+};
+
+const activePreset = nitroPreset[deployTarget];
+
+// Build extra plugins only when targeting Vercel or Render
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const extraPlugins: any[] = [];
+
+if (activePreset) {
+  // Dynamically import nitro only when needed so Cloudflare builds are unaffected
+  const { nitro } = await import("nitro/vite").catch(() => ({ nitro: null }));
+  if (nitro) {
+    extraPlugins.push(
+      nitro({
+        preset: activePreset,
+      }),
+    );
+  }
+}
+
 // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
 // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
@@ -38,6 +69,7 @@ export default defineConfig({
       reportCompressedSize: false,
     },
     plugins: [
+      ...extraPlugins,
       // PWA / Service Worker — cacheia o shell e assets para revisitas mais
       // rápidas. Desativado em dev e em previews/iframes (registro guardado
       // em src/components/PwaRegister.tsx).
