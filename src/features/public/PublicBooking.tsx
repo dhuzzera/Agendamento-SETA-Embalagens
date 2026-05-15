@@ -468,6 +468,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   }, [selectedDate, regionBlockedDates, appts]);
 
   // Days in the visible month that actually have at least one bookable slot
+  // (recalculated when filters, month, or appointments change)
   const availableDates = useMemo(() => {
     if (!profile) return [] as Date[];
     const start = startOfMonth(month);
