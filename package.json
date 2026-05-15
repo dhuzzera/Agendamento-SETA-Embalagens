@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "build:vercel": "vite build --config vite.config.vercel.ts",
 
-    "build:render": "cross-env DEPLOY_TARGET=render vite build",
+    "build:render": "vite build --config vite.config.render.ts",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "lint": "eslint .",
