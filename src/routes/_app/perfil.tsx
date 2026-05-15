@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -41,6 +41,9 @@ const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3 MB
 
 function ProfilePage() {
   const { profile, refresh, loading } = useAuth();
+  const navigate = useNavigate();
+  // Detecta se veio do fluxo de onboarding (primeiro acesso)
+  const isSetup = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("setup") === "1";
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
@@ -245,6 +248,11 @@ function ProfilePage() {
       if (error) throw error;
       await refresh();
       toast.success("Perfil atualizado!");
+      // Se é primeiro acesso, redireciona para configurar disponibilidade
+      if (isSetup) {
+        toast.info("Agora configure seus horários de atendimento.");
+        navigate({ to: "/disponibilidade" });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar";
       toast.error(msg);
@@ -261,6 +269,15 @@ function ProfilePage() {
           As informações abaixo aparecem no seu link público de agendamento.
         </p>
       </div>
+
+      {isSetup && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <p className="text-sm font-semibold text-primary">Passo 2 de 3 — Complete seu perfil</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Preencha suas informações e clique em "Salvar alterações". Depois você será direcionado para configurar seus horários.
+          </p>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

@@ -43,7 +43,12 @@ function ChangePasswordPage() {
       }
       await refresh();
       toast.success("Senha atualizada com sucesso");
-      navigate({ to: "/dashboard" });
+      // Após trocar a senha obrigatória, redireciona para editar o perfil
+      if (forced) {
+        navigate({ to: "/perfil", search: { setup: "1" } });
+      } else {
+        navigate({ to: "/dashboard" });
+      }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Erro ao atualizar senha");
     } finally {
