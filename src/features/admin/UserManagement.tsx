@@ -228,6 +228,10 @@ function UserDialog({
             role,
           },
         });
+        // Envia e-mail de boas-vindas com as credenciais (fire-and-forget)
+        void supabase.functions.invoke("send-welcome-email", {
+          body: { email, password, fullName: name },
+        });
         toast.success("Usuário criado");
       }
       onClose();
