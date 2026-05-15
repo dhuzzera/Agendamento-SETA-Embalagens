@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "build:vercel": "cross-env DEPLOY_TARGET=vercel vite build",
+    "build:vercel": "vite build --config vite.config.vercel.ts",
     "build:render": "cross-env DEPLOY_TARGET=render vite build",
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
