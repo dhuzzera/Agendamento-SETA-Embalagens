@@ -7,6 +7,7 @@ import {
   Scripts,
   useRouter,
 } from "@tanstack/react-router";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth-context";
@@ -156,6 +157,7 @@ function RootComponent() {
         <Outlet />
         <Toaster richColors position="top-right" />
         <PwaRegister />
+        <SpeedInsights />
       </AuthProvider>
     </QueryClientProvider>
   );
