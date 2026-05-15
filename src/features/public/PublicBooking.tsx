@@ -466,6 +466,9 @@ export function PublicBooking({ slug }: { slug: string }) {
     return `Este dia está reservado para ${region.city}${region.state ? ` - ${region.state}` : ""}. Agendamentos presenciais nesta data devem ser na mesma região.`;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, regionBlockedDates, appts]);
+
+  // Days in the visible month that actually have at least one bookable slot
+  const availableDates = useMemo(() => {
     if (!profile) return [] as Date[];
     const start = startOfMonth(month);
     const end = endOfMonth(month);
