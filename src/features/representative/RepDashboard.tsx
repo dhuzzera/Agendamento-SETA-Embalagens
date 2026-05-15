@@ -108,8 +108,11 @@ export function RepDashboard() {
     },
   });
 
-  // Domínio público curto e estável (independente de preview/sandbox)
-  const PUBLIC_HOST = "seta-agendamento.lovable.app";
+  // Domínio público — usa a URL atual em produção, fallback para o domínio Lovable
+  const PUBLIC_HOST =
+    typeof window !== "undefined" && window.location.hostname !== "localhost"
+      ? window.location.host
+      : (import.meta.env.VITE_PUBLIC_HOST ?? "seta-agendamento.lovable.app");
   const link = profile?.slug ? `https://${PUBLIC_HOST}/${profile.slug}` : "";
   const linkDisplay = profile?.slug ? `${PUBLIC_HOST}/${profile.slug}` : "";
 

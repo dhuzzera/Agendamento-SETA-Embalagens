@@ -418,8 +418,54 @@ export function PublicBooking({ slug }: { slug: string }) {
     return set;
   }, [blocks]);
 
-  // Days in the visible month that actually have at least one bookable slot
-  const availableDates = useMemo(() => {
+  // Dias bloqueados por região (presencial já tem outra cidade naquele dia)
+  const regionBlockedDates = useMemo(() => {
+    if (meetingType !== "presencial") return new Set<string>();
+    const set = new Set<string>();
+    if (!profile) return set;
+    const start = startOfMonth(month);
+    const end = endOfMonth(month);
+    const cursor = new Date(start);
+    const today = startOfDay(new Date());
+    while (cursor <= end) {
+      const d = new Date(cursor);
+      cursor.setDate(cursor.getDate() + 1);
+      if (isBefore(d, today)) continue;
+      if (!workingWeekdays.has(d.getDay())) continue;
+      const dateStr = format(d, "yyyy-MM-dd");
+      if (fullyBlockedDates.has(dateStr)) continue;
+      const region = dayRegion(dateStr);
+      if (!region) continue;
+      // Dia tem região bloqueada — verifica se o cliente atual está fora
+      if (
+        region.latitude != null &&
+        region.longitude != null &&
+        latitude != null &&
+        longitude != null
+      ) {
+        const dist = haversineKm(region.latitude, region.longitude, latitude, longitude);
+        if (dist > maxDistanceKm) set.add(dateStr);
+      } else if (
+        (city.trim() || stateUf.trim()) &&
+        (norm(region.city) !== norm(city) || norm(region.state) !== norm(stateUf))
+      ) {
+        set.add(dateStr);
+      }
+    }
+    return set;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingType, profile, month, appts, workingWeekdays, fullyBlockedDates, city, stateUf, latitude, longitude, maxDistanceKm]);
+
+  // Mensagem de região bloqueada para o dia selecionado
+  const regionBlockedMessage = useMemo(() => {
+    if (!selectedDate) return null;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    if (!regionBlockedDates.has(dateStr)) return null;
+    const region = dayRegion(dateStr);
+    if (!region) return null;
+    return `Este dia está reservado para ${region.city}${region.state ? ` - ${region.state}` : ""}. Agendamentos presenciais nesta data devem ser na mesma região.`;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, regionBlockedDates, appts]);
     if (!profile) return [] as Date[];
     const start = startOfMonth(month);
     const end = endOfMonth(month);
@@ -543,6 +589,23 @@ export function PublicBooking({ slug }: { slug: string }) {
         longitude: meetingType === "presencial" ? longitude : null,
       });
       if (aErr) throw aErr;
+
+      // Envia e-mail de confirmação via Edge Function (fire-and-forget)
+      void supabase.functions.invoke("send-booking-confirmation", {
+        body: {
+          clientName: name,
+          clientEmail: email,
+          representativeName: profile.full_name,
+          date: format(selected.date, "yyyy-MM-dd"),
+          startTime: selected.start,
+          endTime: selected.end,
+          meetingType,
+          location: meetingType === "presencial" ? address.trim() : undefined,
+          city: meetingType === "presencial" ? city.trim() : undefined,
+          state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : undefined,
+        },
+      });
+
       setSuccess(true);
     } catch (e: unknown) {
       const msg =
@@ -799,10 +862,15 @@ export function PublicBooking({ slug }: { slug: string }) {
                       onMonthChange={setMonth}
                       disabled={isDayDisabled}
                       showOutsideDays={false}
-                      modifiers={{ available: availableDates }}
+                      modifiers={{
+                        available: availableDates,
+                        regionBlocked: [...regionBlockedDates].map((d) => new Date(d + "T00:00")),
+                      }}
                       modifiersClassNames={{
                         available:
                           "relative font-semibold text-primary after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+                        regionBlocked:
+                          "opacity-40 line-through",
                       }}
                       className={cn(
                         "pointer-events-auto p-0 [--cell-size:2.75rem] sm:[--cell-size:2.5rem]",
@@ -820,7 +888,21 @@ export function PublicBooking({ slug }: { slug: string }) {
                       <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
                       Indisponível
                     </span>
+                    {meetingType === "presencial" && regionBlockedDates.size > 0 && (
+                      <span className="flex items-center gap-1.5">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-orange-400" />
+                        Região reservada
+                      </span>
+                    )}
                   </div>
+
+                  {/* Aviso de região bloqueada */}
+                  {regionBlockedMessage && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-800 dark:border-orange-800/40 dark:bg-orange-900/20 dark:text-orange-300">
+                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span>{regionBlockedMessage}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Slots */}

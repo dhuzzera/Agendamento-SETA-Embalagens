@@ -69,6 +69,9 @@ export function AppointmentsList() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Row | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 50;
 
   // Filters
   const [repFilter, setRepFilter] = useState<string>(ALL);
@@ -123,11 +126,12 @@ export function AppointmentsList() {
     let q = supabase
       .from("appointments")
       .select(
-        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, latitude, longitude, client_id, representative_id"
+        "id, appointment_date, start_time, end_time, status, notes, meeting_type, location, city, state, latitude, longitude, client_id, representative_id",
+        { count: "exact" }
       )
       .order("appointment_date", { ascending: false })
       .order("start_time")
-      .limit(200);
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (!isAdmin) q = q.eq("representative_id", profile.id);
     else if (repFilter !== ALL) q = q.eq("representative_id", repFilter);
@@ -139,12 +143,13 @@ export function AppointmentsList() {
     if (from) q = q.gte("appointment_date", from);
     if (to) q = q.lte("appointment_date", to);
 
-    const { data, error } = await q;
+    const { data, error, count } = await q;
     setLoading(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+    setTotalCount(count ?? 0);
     if (!data) return;
     const ids = [...new Set(data.map((d) => d.client_id))];
     const { data: clis } = ids.length
@@ -168,9 +173,14 @@ export function AppointmentsList() {
   };
 
   useEffect(() => {
+    setPage(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
+
+  useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to, page]);
 
   // Realtime: recarrega quando houver mudança em appointments
   useEffect(() => {
@@ -642,7 +652,7 @@ export function AppointmentsList() {
           <CardTitle>
             Lista de agendamentos
             <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({rows.length})
+              ({totalCount} no total)
             </span>
           </CardTitle>
         </CardHeader>
@@ -765,6 +775,32 @@ export function AppointmentsList() {
             </div>
           )}
         </CardContent>
+        {/* Paginação */}
+        {totalCount > PAGE_SIZE && (
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <span className="text-sm text-muted-foreground">
+              Página {page + 1} de {Math.ceil(totalCount / PAGE_SIZE)} · {totalCount} registros
+            </span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page === 0 || loading}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                ← Anterior
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={(page + 1) * PAGE_SIZE >= totalCount || loading}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Próxima →
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {dialogOpen && (

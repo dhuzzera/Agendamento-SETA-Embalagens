@@ -47,6 +47,10 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotBusy, setForgotBusy] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   useEffect(() => {
     if (user) navigate({ to: "/dashboard" });
@@ -84,6 +88,23 @@ function LoginPage() {
 
     toast.success("Login realizado com sucesso!");
     navigate({ to: "/dashboard" });
+  };
+
+  const onForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotBusy) return;
+    const trimmed = forgotEmail.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error("Digite um e-mail válido.");
+      return;
+    }
+    setForgotBusy(true);
+    const { supabase } = await import("@/integrations/supabase/client");
+    await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: `${window.location.origin}/alterar-senha`,
+    });
+    setForgotBusy(false);
+    setForgotSent(true);
   };
 
   return (
@@ -199,9 +220,16 @@ function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password" className="px-0.5">
-                Senha
-              </Label>
+              <div className="flex items-center justify-between px-0.5">
+                <Label htmlFor="password">Senha</Label>
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setForgotEmail(email.trim()); setForgotSent(false); }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <PasswordInput
                 id="password"
                 autoComplete="current-password"
@@ -243,6 +271,56 @@ function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal: Esqueci minha senha */}
+      {showForgot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-sm rounded-xl border bg-background p-6 shadow-xl">
+            {forgotSent ? (
+              <>
+                <h2 className="text-lg font-semibold">E-mail enviado!</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Se esse e-mail estiver cadastrado, você receberá um link para redefinir sua senha em instantes. Verifique também a caixa de spam.
+                </p>
+                <Button className="mt-4 w-full" onClick={() => setShowForgot(false)}>
+                  Fechar
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-semibold">Recuperar senha</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Digite seu e-mail e enviaremos um link para redefinir sua senha.
+                </p>
+                <form onSubmit={onForgotSubmit} className="mt-4 flex flex-col gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="forgot-email">E-mail</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="seu.nome@setaembalagens.com.br"
+                      disabled={forgotBusy}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setShowForgot(false)} disabled={forgotBusy}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="flex-1" disabled={forgotBusy}>
+                      {forgotBusy ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando…</>
+                      ) : "Enviar link"}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

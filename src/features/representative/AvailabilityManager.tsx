@@ -407,6 +407,8 @@ function ModalitiesCard() {
 
 function TravelSettingsCard() {
   const queryClient = useQueryClient();
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
   const { data: settings } = useQuery({
     queryKey: ["app-settings"],
     staleTime: 5 * 60_000,
@@ -428,6 +430,7 @@ function TravelSettingsCard() {
   }, [settings, bufferInput, distanceInput]);
 
   const save = async () => {
+    if (!isAdmin) return;
     const n = parseInt(bufferInput, 10);
     const d = parseInt(distanceInput, 10);
     if (Number.isNaN(n) || n < 0 || n > 720) {
@@ -457,23 +460,44 @@ function TravelSettingsCard() {
           Configurações de deslocamento
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Aplicadas a reuniões presenciais. Estas configurações são compartilhadas com toda a equipe.
+          {isAdmin
+            ? "Aplicadas a reuniões presenciais de toda a equipe."
+            : "Configurações globais de deslocamento definidas pelo administrador."}
         </p>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="flex-1">
             <Label className="text-xs">Tempo entre visitas presenciais (minutos)</Label>
-            <Input type="number" min={0} max={720} value={bufferInput} onChange={(e) => setBufferInput(e.target.value)} />
+            <Input
+              type="number"
+              min={0}
+              max={720}
+              value={bufferInput}
+              onChange={(e) => setBufferInput(e.target.value)}
+              disabled={!isAdmin}
+            />
             <p className="mt-1 text-xs text-muted-foreground">Padrão: 180 min (3h).</p>
           </div>
           <div className="flex-1">
             <Label className="text-xs">Raio máximo no mesmo dia (km)</Label>
-            <Input type="number" min={1} max={500} value={distanceInput} onChange={(e) => setDistanceInput(e.target.value)} />
+            <Input
+              type="number"
+              min={1}
+              max={500}
+              value={distanceInput}
+              onChange={(e) => setDistanceInput(e.target.value)}
+              disabled={!isAdmin}
+            />
             <p className="mt-1 text-xs text-muted-foreground">Padrão: 30 km.</p>
           </div>
-          <Button onClick={save}>Salvar</Button>
+          {isAdmin && <Button onClick={save}>Salvar</Button>}
         </div>
+        {!isAdmin && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Apenas administradores podem alterar estas configurações.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
