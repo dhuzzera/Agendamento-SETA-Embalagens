@@ -88,6 +88,7 @@ export function AppointmentDetailsDialog({
   const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [clientHistory, setClientHistory] = useState<number | null>(null);
 
   useEffect(() => {
     if (!appointment) return;
@@ -110,6 +111,27 @@ export function AppointmentDetailsDialog({
     } else {
       setInternalNotes("");
     }
+    // Histórico do cliente — quantas reuniões anteriores
+    void supabase
+      .from("appointments")
+      .select("*", { count: "exact", head: true })
+      .eq("client_id", appointment.id ? undefined! : "")
+      .then(() => {});
+    // Busca por email do cliente
+    void supabase
+      .from("clients")
+      .select("id")
+      .eq("email", appointment.client.email)
+      .then(({ data: clientRows }) => {
+        if (!clientRows?.length) { setClientHistory(null); return; }
+        const ids = clientRows.map((c) => c.id);
+        void supabase
+          .from("appointments")
+          .select("*", { count: "exact", head: true })
+          .in("client_id", ids)
+          .neq("id", appointment.id)
+          .then(({ count }) => setClientHistory(count ?? 0));
+      });
   }, [appointment, isAdmin]);
 
   if (!appointment) return null;
@@ -184,10 +206,20 @@ export function AppointmentDetailsDialog({
               {appointment.client.email}
               {appointment.client.phone && ` • ${appointment.client.phone}`}
             </div>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge variant="outline" className="text-xs">
                 Representante: {representativeName}
               </Badge>
+              {clientHistory !== null && clientHistory > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {clientHistory} {clientHistory === 1 ? "reunião anterior" : "reuniões anteriores"}
+                </Badge>
+              )}
+              {clientHistory === 0 && (
+                <Badge variant="secondary" className="text-xs text-muted-foreground">
+                  Primeiro agendamento
+                </Badge>
+              )}
             </div>
           </div>
 
