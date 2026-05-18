@@ -444,6 +444,24 @@ export function AppointmentDetailsDialog({
             >
               {cancelling ? "Cancelando…" : "Cancelar agendamento"}
             </Button>
+          ) : isAdmin && appointment.status === "cancelled" ? (
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!confirm("Excluir permanentemente este agendamento cancelado?")) return;
+                const { error } = await supabase
+                  .from("appointments")
+                  .delete()
+                  .eq("id", appointment.id);
+                if (error) { toast.error(error.message); return; }
+                toast.success("Agendamento excluído");
+                onChanged();
+                onOpenChange(false);
+              }}
+              disabled={saving}
+            >
+              Excluir permanentemente
+            </Button>
           ) : (
             <span />
           )}
