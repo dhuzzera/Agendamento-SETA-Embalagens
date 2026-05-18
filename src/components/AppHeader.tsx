@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   LogOut,
@@ -17,6 +17,7 @@ import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
 import { useViewMode, ViewModePermissionError } from "@/lib/view-mode";
 import { useTheme } from "@/hooks/use-theme";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -43,6 +44,21 @@ export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mode] = useViewMode();
   const { theme, toggle: toggleTheme } = useTheme();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Conta reuniões pendentes de confirmação
+  useEffect(() => {
+    if (!profile || role === "admin") return;
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    void supabase
+      .from("appointments")
+      .select("*", { count: "exact", head: true })
+      .eq("representative_id", profile.id)
+      .eq("status", "scheduled")
+      .lt("appointment_date", todayStr)
+      .then(({ count }) => setPendingCount(count ?? 0));
+  }, [profile, role]);
 
   const handleLogout = async () => {
     await signOut();
@@ -65,7 +81,7 @@ export function AppHeader() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {navItems.map((n) => (
-            <NavLink key={n.to} to={n.to} icon={<n.icon className="h-4 w-4" />}>
+            <NavLink key={n.to} to={n.to} icon={<n.icon className="h-4 w-4" />} badge={n.to === "/agenda" && pendingCount > 0 ? pendingCount : undefined}>
               {n.label}
             </NavLink>
           ))}
@@ -161,19 +177,26 @@ function NavLink({
   to,
   children,
   icon,
+  badge,
 }: {
   to: string;
   children: React.ReactNode;
   icon: React.ReactNode;
+  badge?: number;
 }) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="relative flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       activeProps={{ className: "bg-accent text-primary" }}
     >
       {icon}
       {children}
+      {badge != null && badge > 0 && (
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }

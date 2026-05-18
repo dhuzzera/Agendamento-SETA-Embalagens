@@ -75,6 +75,43 @@ export function useAppointmentNotifications() {
           }
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "appointments",
+        },
+        (payload) => {
+          const updated = payload.new as {
+            meeting_result?: string;
+            sale_value?: string;
+            representative_id: string;
+          };
+
+          // Notifica admin quando uma venda é fechada
+          if (role === "admin" && updated.meeting_result === "venda_fechada") {
+            const title = "💰 Venda fechada!";
+            const body = updated.sale_value
+              ? `Valor: R$ ${updated.sale_value}`
+              : "Um representante fechou uma venda.";
+
+            toast.success(title, { description: body });
+
+            if (
+              typeof window !== "undefined" &&
+              "Notification" in window &&
+              Notification.permission === "granted"
+            ) {
+              new Notification(title, {
+                body,
+                icon: "/icon-192.png",
+                tag: `sale-${payload.new.id}`,
+              });
+            }
+          }
+        },
+      )
       .subscribe();
 
     return () => {

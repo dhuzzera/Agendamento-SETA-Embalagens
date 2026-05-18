@@ -936,6 +936,9 @@ export function PublicBooking({ slug }: { slug: string }) {
                         <Clock className="h-4 w-4" />
                         Horários
                       </h3>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        Horário de Brasília (GMT-3)
+                      </p>
                       {selectedDate && (
                         <p className="mt-1 text-sm font-medium capitalize text-foreground">
                           {format(selectedDate, "EEEE, dd 'de' MMMM", {
@@ -1279,6 +1282,43 @@ export function PublicBooking({ slug }: { slug: string }) {
                   />
                 </div>
               </div>
+
+              {/* Resumo antes de confirmar */}
+              {name && email && selected && (
+                <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">Resumo do agendamento</p>
+                  <dl className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Data</dt>
+                      <dd className="font-medium capitalize">{format(selected.date, "dd/MM/yyyy (EEEE)", { locale: ptBR })}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Horário</dt>
+                      <dd className="font-medium">{selected.start.slice(0, 5)} – {selected.end.slice(0, 5)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Modalidade</dt>
+                      <dd className="font-medium">{meetingType === "presencial" ? "Presencial" : "Online"}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Nome</dt>
+                      <dd className="font-medium">{name}</dd>
+                    </div>
+                    {company && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Empresa</dt>
+                        <dd className="font-medium">{company}</dd>
+                      </div>
+                    )}
+                    {meetingType === "presencial" && city && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Cidade</dt>
+                        <dd className="font-medium">{city}{stateUf ? ` - ${stateUf}` : ""}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
 
               <button
                 type="button"
