@@ -590,7 +590,7 @@ export function PublicBooking({ slug }: { slug: string }) {
           phone: phone || null,
         });
       if (cErr) throw cErr;
-      const { error: aErr } = await supabase.from("appointments").insert({
+      const { data: apptData, error: aErr } = await supabase.from("appointments").insert({
         representative_id: profile.id,
         client_id: clientId,
         appointment_date: format(selected.date, "yyyy-MM-dd"),
@@ -603,8 +603,10 @@ export function PublicBooking({ slug }: { slug: string }) {
         state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : null,
         latitude: meetingType === "presencial" ? latitude : null,
         longitude: meetingType === "presencial" ? longitude : null,
-      });
+      }).select("id").single();
       if (aErr) throw aErr;
+
+      const appointmentId = apptData?.id;
 
       // Envia e-mail de confirmação via Edge Function (fire-and-forget)
       void supabase.functions.invoke("send-booking-confirmation", {
@@ -616,6 +618,7 @@ export function PublicBooking({ slug }: { slug: string }) {
           startTime: selected.start,
           endTime: selected.end,
           meetingType,
+          appointmentId,
           location: meetingType === "presencial" ? address.trim() : undefined,
           city: meetingType === "presencial" ? city.trim() : undefined,
           state: meetingType === "presencial" ? stateUf.trim().toUpperCase() : undefined,

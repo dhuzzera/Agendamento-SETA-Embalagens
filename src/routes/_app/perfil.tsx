@@ -57,6 +57,7 @@ function ProfilePage() {
   const [stateUf, setStateUf] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [meetingLink, setMeetingLink] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -70,6 +71,7 @@ function ProfilePage() {
       setAddressComplement(profile.address_complement ?? "");
       setCity(profile.city ?? "");
       setStateUf(profile.state ?? "");
+      setMeetingLink((profile as { meeting_link?: string }).meeting_link ?? "");
     }
   }, [profile]);
 
@@ -237,6 +239,7 @@ function ProfilePage() {
           full_name: parsed.data.full_name,
           phone: parsed.data.phone || null,
           bio: parsed.data.bio || null,
+          meeting_link: meetingLink.trim() || null,
           cep: cep.trim() || null,
           address: address.trim() || null,
           address_number: addressNumber.trim() || null,
@@ -383,6 +386,18 @@ function ProfilePage() {
               <div className="flex justify-end text-xs text-muted-foreground">
                 {bio.length}/500
               </div>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="meeting_link">Link de reunião online (Google Meet, Zoom, Teams)</Label>
+              <Input
+                id="meeting_link"
+                value={meetingLink}
+                onChange={(e) => setMeetingLink(e.target.value)}
+                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+              />
+              <p className="text-xs text-muted-foreground">
+                Este link será enviado automaticamente no e-mail de confirmação para reuniões online.
+              </p>
             </div>
           </div>
 
