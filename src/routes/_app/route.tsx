@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
 import { useAppointmentNotifications } from "@/hooks/use-appointment-notifications";
 import { AppHeader } from "@/components/AppHeader";
 import { PendingConfirmationDialog } from "@/features/representative/PendingConfirmationDialog";
@@ -11,7 +12,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { user, loading, profile } = useAuth();
+  const { user, loading, profile, refresh } = useAuth();
   const location = useLocation();
 
   // Notificações em tempo real de novos agendamentos
@@ -46,6 +47,19 @@ function AppLayout() {
         </main>
       </div>
     );
+  }
+
+  // Marca onboarding como completo quando chega na disponibilidade via setup
+  if (
+    profile &&
+    !(profile as { onboarding_completed?: boolean }).onboarding_completed &&
+    location.pathname === "/disponibilidade"
+  ) {
+    void supabase
+      .from("profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", profile.id)
+      .then(() => refresh());
   }
 
   return (
