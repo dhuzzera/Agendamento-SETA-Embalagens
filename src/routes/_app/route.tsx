@@ -50,17 +50,7 @@ function AppLayout() {
   }
 
   // Marca onboarding como completo quando chega na disponibilidade via setup
-  if (
-    profile &&
-    !(profile as { onboarding_completed?: boolean }).onboarding_completed &&
-    location.pathname === "/disponibilidade"
-  ) {
-    void supabase
-      .from("profiles")
-      .update({ onboarding_completed: true })
-      .eq("id", profile.id)
-      .then(() => refresh());
-  }
+  // (removido - agora é feito por botão explícito na disponibilidade)
 
   return (
     <div className="min-h-screen bg-secondary/40">

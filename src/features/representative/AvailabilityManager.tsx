@@ -185,6 +185,8 @@ export function AvailabilityManager() {
         </p>
       </div>
 
+      <OnboardingCompleteBanner />
+
       <CalendarSubscriptionCard token={calendarToken} />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -500,6 +502,40 @@ function TravelSettingsCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function OnboardingCompleteBanner() {
+  const { profile, refresh } = useAuth();
+  const isOnboarding = profile && !(profile as { onboarding_completed?: boolean }).onboarding_completed;
+
+  if (!isOnboarding) return null;
+
+  const complete = async () => {
+    if (!profile) return;
+    await supabase
+      .from("profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", profile.id);
+    await refresh();
+    window.location.href = "/dashboard";
+  };
+
+  return (
+    <div className="rounded-lg border border-green-300 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+      <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+        Passo 3 de 3 — Revise seus horários
+      </p>
+      <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+        Seus horários padrão (Seg–Sex, 7h–18h) já estão configurados. Ajuste se necessário e clique em "Concluir" quando estiver pronto.
+      </p>
+      <button
+        onClick={complete}
+        className="mt-3 inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+      >
+        ✓ Concluir configuração
+      </button>
+    </div>
   );
 }
 
