@@ -140,9 +140,25 @@ export function RepDashboard() {
   return (
     <div className="space-y-8">
       <HolidayConfirmDialog representativeId={repId} />
-      <div>
-        <h1 className="text-3xl font-bold">Olá, {profile?.full_name?.split(" ")[0]}</h1>
-        <p className="text-muted-foreground">Sua agenda comercial SETA.</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Olá, {profile?.full_name?.split(" ")[0]}</h1>
+          <p className="text-muted-foreground">Sua agenda comercial SETA.</p>
+        </div>
+        <div className="flex gap-2">
+          {link && (
+            <Button onClick={copyLink} variant="outline">
+              <Copy className="mr-1.5 h-4 w-4" />
+              Copiar meu link
+            </Button>
+          )}
+          <Link to="/agenda">
+            <Button>
+              <Calendar className="mr-1.5 h-4 w-4" />
+              Novo agendamento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {stats ? (

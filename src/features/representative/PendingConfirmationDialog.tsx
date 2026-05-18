@@ -125,26 +125,21 @@ export function PendingConfirmationDialog() {
 
     setBusy(completingId);
 
-    const resultLabel: Record<MeetingResult, string> = {
-      venda_fechada: "Venda fechada",
-      em_negociacao: "Em negociação",
-      proposta_reprovada: "Proposta reprovada",
-    };
-
-    let notes = `Resultado: ${resultLabel[result]}\n`;
-    if (result === "venda_fechada") {
-      notes += `Valor: R$ ${saleValue}\nOrçamento: ${budgetCode}\nPedido: ${orderCode}`;
-    } else if (result === "em_negociacao") {
-      notes += `Negociação: ${negotiationDetails}`;
-    } else {
-      notes += `Motivo: ${rejectionReason}`;
-    }
+    const resultNotes = result === "venda_fechada"
+      ? `Valor: R$ ${saleValue} | Orçamento: ${budgetCode} | Pedido: ${orderCode}`
+      : result === "em_negociacao"
+        ? negotiationDetails
+        : rejectionReason;
 
     const { error } = await supabase
       .from("appointments")
       .update({
         status: "completed",
-        internal_notes: notes,
+        meeting_result: result,
+        sale_value: result === "venda_fechada" ? saleValue.trim() : null,
+        budget_code: result === "venda_fechada" ? budgetCode.trim() : null,
+        order_code: result === "venda_fechada" ? orderCode.trim() : null,
+        result_notes: resultNotes.trim() || null,
       })
       .eq("id", completingId);
 

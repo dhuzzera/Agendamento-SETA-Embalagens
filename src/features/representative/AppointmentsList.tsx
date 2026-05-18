@@ -79,6 +79,7 @@ export function AppointmentsList() {
   const [repFilter, setRepFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [meetingTypeFilter, setMeetingTypeFilter] = useState<string>(ALL);
+  const [resultFilter, setResultFilter] = useState<string>(ALL);
   const [addressQuery, setAddressQuery] = useState<string>("");
   const [cityQuery, setCityQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<
@@ -140,6 +141,7 @@ export function AppointmentsList() {
 
     if (statusFilter !== ALL) q = q.eq("status", statusFilter as Status);
     if (meetingTypeFilter !== ALL) q = q.eq("meeting_type", meetingTypeFilter);
+    if (resultFilter !== ALL) q = q.eq("meeting_result", resultFilter);
     if (addressQuery.trim()) q = q.ilike("location", `%${addressQuery.trim()}%`);
     if (cityQuery.trim()) q = q.ilike("city", `%${cityQuery.trim()}%`);
     if (from) q = q.gte("appointment_date", from);
@@ -177,12 +179,12 @@ export function AppointmentsList() {
   useEffect(() => {
     setPage(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to]);
+  }, [repFilter, statusFilter, meetingTypeFilter, resultFilter, addressQuery, cityQuery, from, to]);
 
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, addressQuery, cityQuery, from, to, page]);
+  }, [profile, role, repFilter, statusFilter, meetingTypeFilter, resultFilter, addressQuery, cityQuery, from, to, page]);
 
   // Realtime: recarrega quando houver mudança em appointments
   useEffect(() => {
@@ -269,6 +271,7 @@ export function AppointmentsList() {
     setRepFilter(ALL);
     setStatusFilter(ALL);
     setMeetingTypeFilter(ALL);
+    setResultFilter(ALL);
     setAddressQuery("");
     setCityQuery("");
     setFrom("");
@@ -279,6 +282,7 @@ export function AppointmentsList() {
     repFilter !== ALL ||
     statusFilter !== ALL ||
     meetingTypeFilter !== ALL ||
+    resultFilter !== ALL ||
     !!addressQuery ||
     !!cityQuery ||
     !!from ||
@@ -598,6 +602,20 @@ export function AppointmentsList() {
                   <SelectItem value={ALL}>Todas</SelectItem>
                   <SelectItem value="online">Online</SelectItem>
                   <SelectItem value="presencial">Presencial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Resultado</Label>
+              <Select value={resultFilter} onValueChange={setResultFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>Todos</SelectItem>
+                  <SelectItem value="venda_fechada">Venda fechada</SelectItem>
+                  <SelectItem value="em_negociacao">Em negociação</SelectItem>
+                  <SelectItem value="proposta_reprovada">Reprovada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
