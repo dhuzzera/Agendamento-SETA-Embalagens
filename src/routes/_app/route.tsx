@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-
 import { useAuth } from "@/lib/auth-context";
 import { useAppointmentNotifications } from "@/hooks/use-appointment-notifications";
 import { AppHeader } from "@/components/AppHeader";
+import { PendingConfirmationDialog } from "@/features/representative/PendingConfirmationDialog";
 import { FullscreenSplashSkeleton, PageHeaderSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_app")({
@@ -31,6 +32,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen bg-secondary/40">
       <AppHeader />
+      <PendingConfirmationDialog />
       <main
         key={location.pathname}
         className="page-fade-in mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"

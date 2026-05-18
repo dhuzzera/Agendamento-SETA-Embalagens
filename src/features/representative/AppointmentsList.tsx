@@ -26,7 +26,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { X, Download, CalendarDays, Navigation } from "lucide-react";
+import { X, Download, CalendarDays, Navigation, Plus } from "lucide-react";
 // Dialog pesado (edição/admin) — só baixa quando o usuário abrir um agendamento.
 const AppointmentDetailsDialog = lazy(() =>
   import("@/features/admin/AppointmentDetailsDialog").then((m) => ({
@@ -34,6 +34,7 @@ const AppointmentDetailsDialog = lazy(() =>
   })),
 );
 import { ListRowSkeleton } from "@/components/Skeletons";
+import { ManualBookingDialog } from "./ManualBookingDialog";
 
 type Status = "scheduled" | "completed" | "cancelled" | "rescheduled";
 
@@ -69,6 +70,7 @@ export function AppointmentsList() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Row | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [manualBookingOpen, setManualBookingOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const PAGE_SIZE = 50;
@@ -350,12 +352,20 @@ export function AppointmentsList() {
               : "Histórico e próximas reuniões."}
           </p>
         </div>
-        {isAdmin && (
-          <Button onClick={exportCsv} variant="outline">
-            <Download className="mr-1.5 h-4 w-4" />
-            Exportar CSV
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isAdmin && (
+            <Button onClick={() => setManualBookingOpen(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Novo agendamento
+            </Button>
+          )}
+          {isAdmin && (
+            <Button onClick={exportCsv} variant="outline">
+              <Download className="mr-1.5 h-4 w-4" />
+              Exportar CSV
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Calendário do mês com dias que possuem reuniões destacados */}
@@ -802,6 +812,14 @@ export function AppointmentsList() {
           </div>
         )}
       </Card>
+
+      {manualBookingOpen && (
+        <ManualBookingDialog
+          open={manualBookingOpen}
+          onOpenChange={setManualBookingOpen}
+          onCreated={load}
+        />
+      )}
 
       {dialogOpen && (
         <Suspense fallback={null}>
