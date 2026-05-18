@@ -60,7 +60,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/dashboard" className="flex items-center">
-          <SetaLogo variant="dark" />
+          <SetaLogo variant="auto" />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -109,7 +109,7 @@ export function AppHeader() {
             <SheetContent side="right" className="w-72">
               <SheetHeader>
                 <SheetTitle>
-                  <SetaLogo variant="dark" />
+                  <SetaLogo variant="auto" />
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-1">
