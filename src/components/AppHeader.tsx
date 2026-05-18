@@ -35,7 +35,6 @@ const NAV = [
   { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
   { to: "/perfil", label: "Perfil", icon: UserCircle2, adminOnly: false },
   { to: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
-  { to: "/admin/performance", label: "Performance", icon: Activity, adminOnly: true },
 ] as const;
 
 export function AppHeader() {
