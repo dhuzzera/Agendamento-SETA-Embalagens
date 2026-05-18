@@ -7,14 +7,12 @@ type Props = { variant?: "light" | "dark" | "auto"; className?: string };
  * Logo institucional SETA Embalagens.
  * - "light"  → para fundos escuros (logo branca)
  * - "dark"   → para fundos claros (logo azul institucional)
- * - "auto"   → detecta o tema atual (dark mode = logo branca, light mode = logo azul)
+ * - "auto"   → detecta a classe .dark no HTML e alterna automaticamente
  */
 export function SetaLogo({ variant = "auto", className = "" }: Props) {
   if (variant === "auto") {
-    // Renderiza ambas e usa CSS para mostrar a correta
     return (
-      <picture>
-        <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
+      <>
         <img
           src={logoDark}
           alt="SETA Embalagens"
@@ -36,7 +34,7 @@ export function SetaLogo({ variant = "auto", className = "" }: Props) {
           loading="eager"
           draggable={false}
         />
-      </picture>
+      </>
     );
   }
 
