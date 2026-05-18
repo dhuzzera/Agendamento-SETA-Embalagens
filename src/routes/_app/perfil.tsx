@@ -42,8 +42,11 @@ const MAX_AVATAR_BYTES = 3 * 1024 * 1024; // 3 MB
 function ProfilePage() {
   const { profile, refresh, loading } = useAuth();
   const navigate = useNavigate();
-  // Detecta se veio do fluxo de onboarding (primeiro acesso)
-  const isSetup = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("setup") === "1";
+  // Detecta se está no fluxo de onboarding (perfil ainda não completou onboarding)
+  const isSetup = typeof window !== "undefined" && (
+    new URLSearchParams(window.location.search).get("setup") === "1" ||
+    !(profile as { onboarding_completed?: boolean } | null)?.onboarding_completed
+  );
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
@@ -254,7 +257,7 @@ function ProfilePage() {
       // Se é primeiro acesso, redireciona para configurar disponibilidade
       if (isSetup) {
         toast.info("Agora configure seus horários de atendimento.");
-        navigate({ to: "/disponibilidade?setup=1" });
+        window.location.href = "/disponibilidade";
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro ao salvar";
