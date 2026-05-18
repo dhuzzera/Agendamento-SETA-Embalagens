@@ -253,6 +253,12 @@ function ProfilePage() {
       toast.success("Perfil atualizado!");
       // Se é primeiro acesso, redireciona para configurar disponibilidade
       if (isSetup) {
+        // Marca onboarding como completo
+        await supabase
+          .from("profiles")
+          .update({ onboarding_completed: true })
+          .eq("id", profile.id);
+        await refresh();
         toast.info("Agora configure seus horários de atendimento.");
         navigate({ to: "/disponibilidade" });
       }

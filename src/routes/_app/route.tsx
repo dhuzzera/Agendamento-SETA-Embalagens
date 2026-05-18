@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAppointmentNotifications } from "@/hooks/use-appointment-notifications";
 import { AppHeader } from "@/components/AppHeader";
 import { PendingConfirmationDialog } from "@/features/representative/PendingConfirmationDialog";
+import { OnboardingWizard } from "@/features/representative/OnboardingWizard";
 import { FullscreenSplashSkeleton, PageHeaderSkeleton } from "@/components/Skeletons";
 
 export const Route = createFileRoute("/_app")({
@@ -27,6 +28,24 @@ function AppLayout() {
     location.pathname !== "/alterar-senha"
   ) {
     return <Navigate to="/alterar-senha" />;
+  }
+
+  // Mostra wizard de onboarding se o representante nunca completou a configuração inicial
+  if (
+    profile &&
+    !(profile as { onboarding_completed?: boolean }).onboarding_completed &&
+    location.pathname !== "/alterar-senha" &&
+    location.pathname !== "/perfil" &&
+    location.pathname !== "/disponibilidade"
+  ) {
+    return (
+      <div className="min-h-screen bg-secondary/40">
+        <AppHeader />
+        <main className="page-fade-in mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <OnboardingWizard />
+        </main>
+      </div>
+    );
   }
 
   return (
