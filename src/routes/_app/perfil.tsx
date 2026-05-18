@@ -280,7 +280,7 @@ function ProfilePage() {
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
           <p className="text-sm font-semibold text-primary">Passo 2 de 3 — Complete seu perfil</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Preencha suas informações e clique em "Salvar alterações". Depois você será direcionado para configurar seus horários.
+            Preencha suas informações e clique em "Próximo" para configurar seus horários.
           </p>
         </div>
       )}
@@ -480,7 +480,7 @@ function ProfilePage() {
           <div className="mt-6 flex justify-end">
             <Button onClick={handleSave} disabled={saving} size="lg">
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {saving ? "Salvando…" : "Salvar alterações"}
+              {saving ? "Salvando…" : isSetup ? "Próximo →" : "Salvar alterações"}
             </Button>
           </div>
         </CardContent>
