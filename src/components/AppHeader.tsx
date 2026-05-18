@@ -10,10 +10,13 @@ import {
   UserCircle2,
   Menu,
   Activity,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
 import { useViewMode, ViewModePermissionError } from "@/lib/view-mode";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -39,6 +42,7 @@ export function AppHeader() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mode] = useViewMode();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     await signOut();
@@ -69,6 +73,15 @@ export function AppHeader() {
 
         <div className="flex items-center gap-2 sm:gap-3">
           {isAdmin && <ViewSwitcher />}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
+            className="h-9 w-9"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
           <div className="hidden text-right text-sm lg:block">
             <div className="font-medium leading-tight text-foreground">
               {profile?.full_name}

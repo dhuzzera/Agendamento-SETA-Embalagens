@@ -209,10 +209,32 @@
 
 @layer utilities {
   .page-fade-in {
-    animation: pageFadeIn 220ms ease-out both;
+    animation: pageFadeIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes pageFadeIn {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(8px) scale(0.99); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card-fade-in {
+    animation: cardFadeIn 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes cardFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  .slide-in-right {
+    animation: slideInRight 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
 }

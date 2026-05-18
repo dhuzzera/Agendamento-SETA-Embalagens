@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Shield, TrendingUp, MapPin, Settings } from "lucide-react";
+import { Calendar, Users, Shield, TrendingUp, MapPin, Settings, FileText } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,12 @@ import {
   ListCardSkeleton,
   ChartSkeleton,
 } from "@/components/Skeletons";
+import { generatePdfReport } from "@/lib/export-pdf";
 const MonthlyMetrics = lazy(() =>
   import("./MonthlyMetrics").then((m) => ({ default: m.MonthlyMetrics })),
+);
+const TopRepresentatives = lazy(() =>
+  import("./TopRepresentatives").then((m) => ({ default: m.TopRepresentatives })),
 );
 
 export function AdminDashboard() {
@@ -187,9 +191,63 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Painel administrativo</h1>
-        <p className="text-muted-foreground">Visão geral da operação comercial SETA.</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Painel administrativo</h1>
+          <p className="text-muted-foreground">Visão geral da operação comercial SETA.</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={async () => {
+            const mStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+            const mEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+            const { data: appts } = await supabase
+              .from("appointments")
+              .select("appointment_date, start_time, end_time, status, meeting_type, representative_id, client_id")
+              .gte("appointment_date", mStart)
+              .lte("appointment_date", mEnd)
+              .order("appointment_date")
+              .order("start_time");
+            if (!appts?.length) { toast.info("Nenhum agendamento no mês para exportar."); return; }
+            const repIds = [...new Set(appts.map((a) => a.representative_id))];
+            const cliIds = [...new Set(appts.map((a) => a.client_id))];
+            const [{ data: reps }, { data: clis }] = await Promise.all([
+              supabase.from("profiles").select("id, full_name").in("id", repIds),
+              supabase.from("clients").select("id, name").in("id", cliIds),
+            ]);
+            const repMap = new Map(reps?.map((r) => [r.id, r.full_name]) ?? []);
+            const cliMap = new Map(clis?.map((c) => [c.id, c.name]) ?? []);
+            const statusLabel: Record<string, string> = { scheduled: "Agendado", completed: "Concluído", cancelled: "Cancelado", rescheduled: "Remarcado" };
+            const repCounts = new Map<string, number>();
+            for (const a of appts) { repCounts.set(a.representative_id, (repCounts.get(a.representative_id) ?? 0) + 1); }
+            const topReps = [...repCounts.entries()]
+              .map(([id, total]) => ({ name: repMap.get(id) ?? "—", total }))
+              .sort((a, b) => b.total - a.total)
+              .slice(0, 5);
+            generatePdfReport({
+              title: "Relatório Mensal — SETA Embalagens",
+              period: format(new Date(), "MMMM 'de' yyyy", { locale: ptBR }),
+              stats: [
+                { label: "Total de agendamentos", value: appts.length },
+                { label: "Concluídos", value: appts.filter((a) => a.status === "completed").length },
+                { label: "Cancelados", value: appts.filter((a) => a.status === "cancelled").length },
+                { label: "Representantes ativos", value: repIds.length },
+              ],
+              topReps,
+              appointments: appts.map((a) => ({
+                date: a.appointment_date.split("-").reverse().join("/"),
+                time: a.start_time.slice(0, 5) + " – " + a.end_time.slice(0, 5),
+                client: cliMap.get(a.client_id) ?? "—",
+                representative: repMap.get(a.representative_id) ?? "—",
+                type: a.meeting_type === "presencial" ? "Presencial" : "Online",
+                status: statusLabel[a.status] ?? a.status,
+              })),
+            });
+          }}
+        >
+          <FileText className="mr-1.5 h-4 w-4" />
+          Relatório PDF
+        </Button>
       </div>
 
       {counts ? (
@@ -320,6 +378,10 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <Suspense fallback={<ChartSkeleton height={256} />}>
+        <TopRepresentatives />
+      </Suspense>
 
       <Suspense fallback={<ChartSkeleton height={256} />}>
         <MonthlyMetrics />

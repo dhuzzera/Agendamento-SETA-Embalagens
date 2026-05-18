@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { StatCardSkeleton, ListRowSkeleton } from "@/components/Skeletons";
 import { HolidayConfirmDialog } from "./HolidayConfirmDialog";
+import { getQrCodeUrl, downloadQrCode } from "@/lib/qr-code";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
@@ -164,12 +165,36 @@ export function RepDashboard() {
         </CardHeader>
         <CardContent className="space-y-3">
           {profile?.slug ? (
-            <div className="flex items-center gap-2">
-              <Input readOnly value={linkDisplay} />
-              <Button variant="outline" onClick={copyLink}>
-                <Copy className="mr-1.5 h-4 w-4" /> Copiar
-              </Button>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <Input readOnly value={linkDisplay} />
+                <Button variant="outline" onClick={copyLink}>
+                  <Copy className="mr-1.5 h-4 w-4" /> Copiar
+                </Button>
+              </div>
+              {/* QR Code */}
+              <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/30 p-4 sm:flex-row sm:items-start">
+                <img
+                  src={getQrCodeUrl(link, 150)}
+                  alt="QR Code do link público"
+                  className="h-[150px] w-[150px] rounded-md border bg-white p-1"
+                />
+                <div className="text-center sm:text-left">
+                  <p className="text-sm font-medium">QR Code para cartão de visita</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Seus clientes podem escanear para acessar diretamente sua página de agendamento.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => downloadQrCode(link, `qr-${profile.slug}.png`)}
+                  >
+                    Baixar QR Code (PNG)
+                  </Button>
+                </div>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">
               Defina um slug para gerar seu link público.

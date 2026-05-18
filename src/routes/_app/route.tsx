@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Navigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
+import { useAppointmentNotifications } from "@/hooks/use-appointment-notifications";
 import { AppHeader } from "@/components/AppHeader";
 import { FullscreenSplashSkeleton, PageHeaderSkeleton } from "@/components/Skeletons";
 
@@ -10,6 +11,9 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const { user, loading, profile } = useAuth();
   const location = useLocation();
+
+  // Notificações em tempo real de novos agendamentos
+  useAppointmentNotifications();
 
   // Splash full-screen apenas durante a hidratação inicial da sessão.
   if (loading) return <FullscreenSplashSkeleton />;
