@@ -353,12 +353,10 @@ export function AppointmentsList() {
           </p>
         </div>
         <div className="flex gap-2">
-          {!isAdmin && (
-            <Button onClick={() => setManualBookingOpen(true)}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              Novo agendamento
-            </Button>
-          )}
+          <Button onClick={() => setManualBookingOpen(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Novo agendamento
+          </Button>
           {isAdmin && (
             <Button onClick={exportCsv} variant="outline">
               <Download className="mr-1.5 h-4 w-4" />

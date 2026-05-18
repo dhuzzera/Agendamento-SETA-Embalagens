@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useViewMode } from "@/lib/view-mode";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,12 @@ type Props = {
 };
 
 export function ManualBookingDialog({ open, onOpenChange, onCreated }: Props) {
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  const [viewMode] = useViewMode();
+  const isAdmin = role === "admin" && viewMode === "admin";
+
+  const [reps, setReps] = useState<{ id: string; full_name: string }[]>([]);
+  const [selectedRepId, setSelectedRepId] = useState<string>("");
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -43,6 +49,16 @@ export function ManualBookingDialog({ open, onOpenChange, onCreated }: Props) {
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Carrega lista de representantes para admin
+  useEffect(() => {
+    if (!isAdmin) return;
+    void supabase
+      .from("profiles")
+      .select("id, full_name")
+      .order("full_name")
+      .then(({ data }) => setReps((data ?? []) as { id: string; full_name: string }[]));
+  }, [isAdmin]);
+
   const reset = () => {
     setName("");
     setCompany("");
@@ -56,10 +72,18 @@ export function ManualBookingDialog({ open, onOpenChange, onCreated }: Props) {
     setStateUf("");
     setLocation("");
     setNotes("");
+    setSelectedRepId("");
   };
 
   const submit = async () => {
     if (!profile) return;
+
+    const repId = isAdmin ? selectedRepId : profile.id;
+    if (isAdmin && !repId) {
+      toast.error("Selecione um representante.");
+      return;
+    }
+
     if (!name.trim() || !email.trim()) {
       toast.error("Preencha nome e e-mail do cliente.");
       return;
@@ -92,7 +116,7 @@ export function ManualBookingDialog({ open, onOpenChange, onCreated }: Props) {
 
       // Cria o agendamento
       const { error: aErr } = await supabase.from("appointments").insert({
-        representative_id: profile.id,
+        representative_id: repId,
         client_id: clientId,
         appointment_date: date,
         start_time: startTime + ":00",
@@ -126,8 +150,26 @@ export function ManualBookingDialog({ open, onOpenChange, onCreated }: Props) {
 
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Crie um agendamento para um cliente que teve dificuldade em usar o link público.
+            {isAdmin
+              ? "Crie um agendamento para qualquer representante."
+              : "Crie um agendamento para um cliente que teve dificuldade em usar o link público."}
           </p>
+
+          {isAdmin && (
+            <div>
+              <Label className="text-xs">Representante *</Label>
+              <Select value={selectedRepId} onValueChange={setSelectedRepId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o representante" />
+                </SelectTrigger>
+                <SelectContent>
+                  {reps.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
