@@ -10,49 +10,116 @@ import {
   Calendar,
   Link as LinkIcon,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
+  Users,
+  Shield,
+  BarChart3,
+  FileText,
+  Bell,
+  Settings,
 } from "lucide-react";
 
-const STEPS = [
+type Step = {
+  icon: typeof UserCircle2;
+  title: string;
+  description: string;
+};
+
+const REP_STEPS: Step[] = [
   {
     icon: UserCircle2,
     title: "Complete seu perfil",
     description:
-      "Adicione sua foto, telefone e biografia. Essas informações aparecem no seu link público de agendamento.",
-    action: "Editar perfil",
-    route: "/perfil?setup=1",
+      "Adicione sua foto, telefone e biografia. Essas informações aparecem no seu link público — é o que seus clientes veem antes de agendar.",
   },
   {
     icon: Calendar,
     title: "Configure seus horários",
     description:
-      "Seus horários padrão já estão configurados (Seg–Sex, 7h–18h). Ajuste conforme sua rotina — adicione ou remova dias e horários.",
-    action: "Ver disponibilidade",
-    route: "/disponibilidade",
+      "Seus horários padrão já estão configurados (Seg–Sex, 7h–18h, reuniões de 1h). Ajuste conforme sua rotina — adicione ou remova dias, altere duração das reuniões e bloqueie datas.",
   },
   {
     icon: LinkIcon,
     title: "Compartilhe seu link",
     description:
-      "Seu link público já está ativo. Copie e envie para seus clientes — eles podem agendar reuniões diretamente por lá.",
-    action: "Ver meu link",
-    route: "/dashboard",
+      "Seu link público e QR Code estão na tela Início. Copie e envie para seus clientes — eles agendam direto por lá, sem precisar ligar ou mandar mensagem.",
+  },
+  {
+    icon: Bell,
+    title: "Notificações automáticas",
+    description:
+      "Quando um cliente agendar, você recebe uma notificação no navegador. Permita as notificações quando o sistema pedir para não perder nenhum agendamento.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Confirme suas reuniões",
+    description:
+      "Após cada reunião, o sistema pede para você marcar como concluída (com resultado: venda, negociação ou reprovação) ou cancelada. Isso alimenta os relatórios da equipe.",
+  },
+];
+
+const ADMIN_STEPS: Step[] = [
+  {
+    icon: Users,
+    title: "Gerencie representantes",
+    description:
+      "Em Usuários, crie contas para os representantes. Cada um recebe um e-mail com link para definir a senha. Você pode ativar, desativar ou excluir a qualquer momento.",
+  },
+  {
+    icon: Shield,
+    title: "Modo Admin vs Representante",
+    description:
+      "No canto superior, use o seletor Admin/Representante para alternar a visualização. No modo Representante, você vê o sistema como seus representantes veem — útil para suporte.",
+  },
+  {
+    icon: BarChart3,
+    title: "Dashboard de vendas",
+    description:
+      "O painel mostra vendas fechadas, negociações em andamento, taxa de conversão e ranking dos representantes mais ativos. Tudo atualizado em tempo real.",
+  },
+  {
+    icon: Calendar,
+    title: "Agenda unificada",
+    description:
+      "Veja todos os agendamentos de todos os representantes em um calendário visual. Filtre por representante, status, modalidade ou resultado.",
+  },
+  {
+    icon: FileText,
+    title: "Relatórios automáticos",
+    description:
+      "Toda segunda-feira você recebe um e-mail com o resumo da semana. Também pode exportar relatórios em PDF ou CSV a qualquer momento pelo painel.",
+  },
+  {
+    icon: Settings,
+    title: "Configurações globais",
+    description:
+      "Em Configurações de deslocamento, defina o tempo entre visitas presenciais e o raio máximo. Essas regras valem para todos os representantes automaticamente.",
   },
 ];
 
 export function OnboardingWizard() {
-  const { profile, refresh } = useAuth();
+  const { profile, role, refresh } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
 
+  const isAdmin = role === "admin";
+  const steps = isAdmin ? ADMIN_STEPS : REP_STEPS;
+
   const completeOnboarding = async () => {
     if (!profile) return;
-    await supabase
-      .from("profiles")
-      .update({ onboarding_completed: true })
-      .eq("id", profile.id);
-    await refresh();
-    navigate({ to: "/perfil", search: { setup: "1" } });
+    if (isAdmin) {
+      // Admin não precisa passar por perfil/disponibilidade
+      await supabase
+        .from("profiles")
+        .update({ onboarding_completed: true })
+        .eq("id", profile.id);
+      await refresh();
+      navigate({ to: "/dashboard" });
+    } else {
+      // Representante vai para o fluxo de perfil → disponibilidade
+      navigate({ to: "/perfil", search: { setup: "1" } });
+    }
   };
 
   return (
@@ -64,73 +131,79 @@ export function OnboardingWizard() {
             <SetaLogo variant="auto" className="h-12" />
           </div>
           <h1 className="text-2xl font-bold sm:text-3xl">
-            Bem-vindo à SETA Embalagens! 👋
+            {isAdmin ? "Bem-vindo ao painel administrativo! 🎯" : "Bem-vindo à SETA Embalagens! 👋"}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Vamos configurar sua conta em 3 passos rápidos.
+            {isAdmin
+              ? "Conheça as ferramentas disponíveis para gerenciar sua equipe."
+              : "Vamos configurar sua conta em poucos passos."}
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="space-y-4">
-          {STEPS.map((step, idx) => {
-            const Icon = step.icon;
-            const isActive = idx === currentStep;
-            const isDone = idx < currentStep;
-
-            return (
-              <Card
-                key={idx}
-                className={`transition-all ${isActive ? "border-primary shadow-md" : isDone ? "border-green-300 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20" : "opacity-60"}`}
-              >
-                <CardContent className="flex items-start gap-4 p-5">
+        {/* Steps carousel */}
+        <Card className="border-primary/20 shadow-md">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {currentStep + 1} de {steps.length}
+              </span>
+              <div className="flex gap-1">
+                {steps.map((_, idx) => (
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                      isDone
-                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
-                        : isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                    key={idx}
+                    className={`h-1.5 w-6 rounded-full transition-colors ${
+                      idx === currentStep ? "bg-primary" : idx < currentStep ? "bg-green-400" : "bg-muted"
                     }`}
-                  >
-                    {isDone ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : (
-                      <Icon className="h-5 w-5" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Passo {idx + 1}
-                      </span>
-                      {isDone && (
-                        <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                          ✓ Pronto
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="mt-1 text-base font-semibold">{step.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {step.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  />
+                ))}
+              </div>
+            </div>
 
-        {/* Action button */}
-        <div className="mt-8 flex justify-center">
-          <Button size="lg" onClick={completeOnboarding} className="px-8">
-            Começar configuração
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                {(() => {
+                  const Icon = steps[currentStep].icon;
+                  return <Icon className="h-6 w-6" />;
+                })()}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">{steps[currentStep].title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {steps[currentStep].description}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentStep((s) => s - 1)}
+                disabled={currentStep === 0}
+              >
+                <ArrowLeft className="mr-1.5 h-4 w-4" />
+                Anterior
+              </Button>
+
+              {currentStep < steps.length - 1 ? (
+                <Button size="sm" onClick={() => setCurrentStep((s) => s + 1)}>
+                  Próximo
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button size="sm" onClick={completeOnboarding}>
+                  {isAdmin ? "Ir para o painel" : "Começar configuração"}
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Você pode ajustar tudo isso depois nas configurações.
+          {isAdmin
+            ? "Você pode acessar essas funções a qualquer momento pelo menu."
+            : "Você pode ajustar tudo isso depois nas configurações."}
         </p>
       </div>
     </div>
