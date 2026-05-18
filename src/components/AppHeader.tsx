@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const NAV = [
-  { to: "/dashboard", label: "Painel", icon: LayoutDashboard, adminOnly: false },
+  { to: "/dashboard", label: "Início", icon: LayoutDashboard, adminOnly: false },
   { to: "/agenda", label: "Agenda", icon: Calendar, adminOnly: false },
   { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
   { to: "/perfil", label: "Perfil", icon: UserCircle2, adminOnly: false },
