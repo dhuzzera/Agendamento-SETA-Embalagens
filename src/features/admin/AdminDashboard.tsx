@@ -23,6 +23,9 @@ const MonthlyMetrics = lazy(() =>
 const TopRepresentatives = lazy(() =>
   import("./TopRepresentatives").then((m) => ({ default: m.TopRepresentatives })),
 );
+const UnifiedCalendar = lazy(() =>
+  import("./UnifiedCalendar").then((m) => ({ default: m.UnifiedCalendar })),
+);
 
 export function AdminDashboard() {
   const { data: counts } = useQuery({
@@ -378,6 +381,10 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <Suspense fallback={<ChartSkeleton height={256} />}>
+        <UnifiedCalendar />
+      </Suspense>
 
       <Suspense fallback={<ChartSkeleton height={256} />}>
         <TopRepresentatives />
