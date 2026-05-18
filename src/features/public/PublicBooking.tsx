@@ -1342,7 +1342,7 @@ function PublicHeader() {
           className="flex items-center transition-opacity hover:opacity-80"
           aria-label="SETA Embalagens — site institucional"
         >
-          <SetaLogo variant="dark" className="h-12 w-auto sm:h-14" />
+          <SetaLogo variant="auto" className="h-12 w-auto sm:h-14" />
         </a>
         <div className="flex items-center gap-4 sm:gap-8">
           <span className="hidden text-[13px] font-semibold uppercase tracking-[0.22em] text-primary md:inline">
@@ -1367,7 +1367,7 @@ function PublicFooter() {
     <footer className="mt-12 border-t border-border/60 bg-background">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-center sm:flex-row sm:px-8 sm:text-left">
         <div className="flex items-center gap-3">
-          <SetaLogo variant="dark" className="h-9 w-auto" />
+          <SetaLogo variant="auto" className="h-9 w-auto" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Embalagens
           </span>
