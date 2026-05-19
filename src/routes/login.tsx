@@ -53,7 +53,7 @@ function LoginPage() {
   const [forgotSent, setForgotSent] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: "/dashboard" });
+    if (user) navigate({ to: "/selecionar" });
   }, [user, navigate]);
 
   // Evita flash do formulário enquanto a sessão hidrata.
@@ -87,7 +87,7 @@ function LoginPage() {
     }
 
     toast.success("Login realizado com sucesso!");
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/selecionar" });
   };
 
   const onForgotSubmit = async (e: React.FormEvent) => {

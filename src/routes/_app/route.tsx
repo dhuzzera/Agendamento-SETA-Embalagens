@@ -37,7 +37,8 @@ function AppLayout() {
     !(profile as { onboarding_completed?: boolean }).onboarding_completed &&
     location.pathname !== "/alterar-senha" &&
     location.pathname !== "/perfil" &&
-    location.pathname !== "/disponibilidade"
+    location.pathname !== "/disponibilidade" &&
+    location.pathname !== "/selecionar"
   ) {
     return (
       <div className="min-h-screen bg-secondary/40">
