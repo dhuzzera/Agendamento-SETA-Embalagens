@@ -12,6 +12,7 @@ import {
   Activity,
   Moon,
   Sun,
+  ArrowLeft,
 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
@@ -74,8 +75,15 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/agendamento" className="flex items-center">
+        <Link to="/agendamento" className="flex items-center gap-3">
           <SetaLogo variant="auto" />
+        </Link>
+        <Link
+          to="/selecionar"
+          className="hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:flex"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Menu
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
