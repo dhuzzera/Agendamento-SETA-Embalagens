@@ -20,7 +20,7 @@ const SYSTEMS: SystemOption[] = [
     title: "Agendamento Comercial",
     description: "Gerencie reuniões, disponibilidade, clientes e resultados comerciais.",
     icon: Calendar,
-    route: "/dashboard",
+    route: "/agendamento",
     available: true,
   },
   {

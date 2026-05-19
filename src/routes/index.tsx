@@ -12,7 +12,7 @@ function Index() {
   const { user, loading } = useAuth();
   // Renderiza a landing imediatamente (FCP/LCP rápido). Só redireciona depois
   // que a sessão for confirmada; caso contrário mostra a página pública.
-  if (!loading && user) return <Navigate to="/dashboard" />;
+  if (!loading && user) return <Navigate to="/agendamento" />;
 
   return (
     <div className="min-h-screen bg-background">

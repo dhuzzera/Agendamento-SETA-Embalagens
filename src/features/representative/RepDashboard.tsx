@@ -312,7 +312,7 @@ function StatCard({
   icon: React.ReactNode;
   label: string;
   value: number | string;
-  to: "/agenda" | "/disponibilidade" | "/dashboard";
+  to: "/agenda" | "/disponibilidade" | "/agendamento";
 }) {
   return (
     <Link to={to} className="block">

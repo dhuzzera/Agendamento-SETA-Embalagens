@@ -47,7 +47,7 @@ function ChangePasswordPage() {
       if (forced) {
         navigate({ to: "/perfil", search: { setup: "1" } });
       } else {
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/agendamento" });
       }
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Erro ao atualizar senha");

@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const NAV = [
-  { to: "/dashboard", label: "Início", icon: LayoutDashboard, adminOnly: false },
+  { to: "/agendamento", label: "Início", icon: LayoutDashboard, adminOnly: false },
   { to: "/agenda", label: "Agenda", icon: Calendar, adminOnly: false },
   { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
   { to: "/perfil", label: "Perfil", icon: UserCircle2, adminOnly: false },
@@ -74,7 +74,7 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/dashboard" className="flex items-center">
+        <Link to="/agendamento" className="flex items-center">
           <SetaLogo variant="auto" />
         </Link>
 

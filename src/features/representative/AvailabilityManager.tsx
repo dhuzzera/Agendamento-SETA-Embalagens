@@ -518,7 +518,7 @@ function OnboardingCompleteBanner() {
       .update({ onboarding_completed: true })
       .eq("id", profile.id);
     await refresh();
-    window.location.href = "/dashboard";
+    window.location.href = "/agendamento";
   };
 
   return (

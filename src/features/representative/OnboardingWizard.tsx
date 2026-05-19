@@ -115,7 +115,7 @@ export function OnboardingWizard() {
         .update({ onboarding_completed: true })
         .eq("id", profile.id);
       await refresh();
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/agendamento" });
     } else {
       // Representante vai para o fluxo de perfil → disponibilidade
       navigate({ to: "/perfil", search: { setup: "1" } });

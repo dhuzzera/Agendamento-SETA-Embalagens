@@ -24,12 +24,12 @@ export const Route = createFileRoute("/_app/admin")({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      throw redirect({ to: user ? "/dashboard" : "/login" });
+      throw redirect({ to: user ? "/agendamento" : "/login" });
     }
     // Admin navegando no "modo Representante" não deve acessar páginas admin
     // mesmo digitando a URL diretamente.
     if (isAdmin && getViewMode() === "representative") {
-      throw redirect({ to: "/dashboard" });
+      throw redirect({ to: "/agendamento" });
     }
   },
   component: () => <Outlet />,

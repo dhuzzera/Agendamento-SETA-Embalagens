@@ -11,7 +11,7 @@ const AdminDashboard = lazy(() =>
   import("@/features/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })),
 );
 
-export const Route = createFileRoute("/_app/dashboard")({
+export const Route = createFileRoute("/_app/agendamento")({
   component: DashboardRouter,
 });
 
