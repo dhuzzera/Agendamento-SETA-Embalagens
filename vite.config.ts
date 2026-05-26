@@ -59,6 +59,7 @@ export default defineConfig({
           clientsClaim: true,
           skipWaiting: true,
           globPatterns: ["**/*.{js,css,html,svg,png,webp,ico,woff2}"],
+          importScripts: ["/sw-push.js"],
           runtimeCaching: [
             {
               urlPattern: ({ request }) => request.mode === "navigate",

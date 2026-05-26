@@ -6,6 +6,7 @@ import { toast } from "sonner";
 /**
  * Escuta novos agendamentos em tempo real e envia uma notificação
  * do navegador (Notification API) + toast para o representante logado.
+ * Também dispara push notification via Edge Function para quando o app está fechado.
  */
 export function useAppointmentNotifications() {
   const { user, role } = useAuth();
@@ -31,6 +32,7 @@ export function useAppointmentNotifications() {
         },
         async (payload) => {
           const newAppt = payload.new as {
+            id: string;
             representative_id: string;
             appointment_date: string;
             start_time: string;
@@ -60,7 +62,7 @@ export function useAppointmentNotifications() {
           // Toast no app
           toast.success(title, { description: body });
 
-          // Notificação do navegador
+          // Notificação do navegador (quando app está aberto)
           if (
             typeof window !== "undefined" &&
             "Notification" in window &&
@@ -70,9 +72,21 @@ export function useAppointmentNotifications() {
               body,
               icon: "/icon-192.png",
               badge: "/favicon-32.png",
-              tag: `appt-${payload.new.id}`,
+              tag: `appt-${newAppt.id}`,
             });
           }
+
+          // Dispara push via Edge Function (para quando o app está fechado)
+          // Fire-and-forget — não bloqueia a UI
+          void supabase.functions.invoke("send-push", {
+            body: {
+              userId: newAppt.representative_id,
+              title,
+              body,
+              url: "/agenda",
+              tag: `appt-${newAppt.id}`,
+            },
+          });
         },
       )
       .on(
@@ -84,6 +98,7 @@ export function useAppointmentNotifications() {
         },
         (payload) => {
           const updated = payload.new as {
+            id: string;
             meeting_result?: string;
             sale_value?: string;
             representative_id: string;
@@ -106,7 +121,7 @@ export function useAppointmentNotifications() {
               new Notification(title, {
                 body,
                 icon: "/icon-192.png",
-                tag: `sale-${payload.new.id}`,
+                tag: `sale-${updated.id}`,
               });
             }
           }

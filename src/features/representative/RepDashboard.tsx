@@ -16,6 +16,7 @@ import { HolidayConfirmDialog } from "./HolidayConfirmDialog";
 import { getQrCodeUrl, downloadQrCode } from "@/lib/qr-code";
 import { DayMapView } from "./DayMapView";
 import { FeedbackCard } from "./FeedbackCard";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
@@ -148,6 +149,7 @@ export function RepDashboard() {
           <p className="text-muted-foreground">Sua agenda comercial SETA.</p>
         </div>
         <div className="flex gap-2">
+          <PushNotificationToggle />
           {link && (
             <Button onClick={copyLink} variant="outline">
               <Copy className="mr-1.5 h-4 w-4" />
