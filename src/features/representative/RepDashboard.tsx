@@ -148,16 +148,16 @@ export function RepDashboard() {
           <h1 className="text-3xl font-bold">Olá, {profile?.full_name?.split(" ")[0]}</h1>
           <p className="text-muted-foreground">Sua agenda comercial SETA.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <PushNotificationToggle />
           {link && (
-            <Button onClick={copyLink} variant="outline">
+            <Button onClick={copyLink} variant="outline" size="sm">
               <Copy className="mr-1.5 h-4 w-4" />
-              Copiar meu link
+              Copiar link
             </Button>
           )}
           <Link to="/agenda">
-            <Button>
+            <Button size="sm">
               <Calendar className="mr-1.5 h-4 w-4" />
               Novo agendamento
             </Button>
