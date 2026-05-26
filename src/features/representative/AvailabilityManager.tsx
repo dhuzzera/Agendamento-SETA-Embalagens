@@ -420,13 +420,13 @@ function TravelSettingsCard() {
         .select("travel_buffer_minutes, max_distance_km")
         .eq("id", 1)
         .maybeSingle();
-      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
+      return data ?? { travel_buffer_minutes: 90, max_distance_km: 30 };
     },
   });
   const [bufferInput, setBufferInput] = useState("");
   const [distanceInput, setDistanceInput] = useState("");
   useEffect(() => {
-    if (settings && bufferInput === "") setBufferInput(String(settings.travel_buffer_minutes ?? 180));
+    if (settings && bufferInput === "") setBufferInput(String(settings.travel_buffer_minutes ?? 90));
     if (settings && distanceInput === "")
       setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
   }, [settings, bufferInput, distanceInput]);
@@ -479,7 +479,7 @@ function TravelSettingsCard() {
               onChange={(e) => setBufferInput(e.target.value)}
               disabled={!isAdmin}
             />
-            <p className="mt-1 text-xs text-muted-foreground">Padrão: 180 min (3h).</p>
+            <p className="mt-1 text-xs text-muted-foreground">Padrão: 90 min (1h30).</p>
           </div>
           <div className="flex-1">
             <Label className="text-xs">Raio máximo no mesmo dia (km)</Label>

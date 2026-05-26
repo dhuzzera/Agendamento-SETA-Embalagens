@@ -79,7 +79,7 @@ BEGIN
     SELECT travel_buffer_minutes, max_distance_km
       INTO buffer_min, max_km
       FROM public.app_settings WHERE id = 1;
-    IF buffer_min IS NULL THEN buffer_min := 180; END IF;
+    IF buffer_min IS NULL THEN buffer_min := 90; END IF;
     IF max_km IS NULL THEN max_km := 30; END IF;
 
     -- First presencial of the day defines region

@@ -159,14 +159,14 @@ export function AdminDashboard() {
         .select("travel_buffer_minutes, max_distance_km")
         .eq("id", 1)
         .maybeSingle();
-      return data ?? { travel_buffer_minutes: 180, max_distance_km: 30 };
+      return data ?? { travel_buffer_minutes: 90, max_distance_km: 30 };
     },
   });
   const [bufferInput, setBufferInput] = useState<string>("");
   const [distanceInput, setDistanceInput] = useState<string>("");
   useEffect(() => {
     if (settings && bufferInput === "") {
-      setBufferInput(String(settings.travel_buffer_minutes ?? 180));
+      setBufferInput(String(settings.travel_buffer_minutes ?? 90));
     }
     if (settings && distanceInput === "") {
       setDistanceInput(String((settings as { max_distance_km?: number }).max_distance_km ?? 30));
@@ -329,7 +329,7 @@ export function AdminDashboard() {
                 onChange={(e) => setBufferInput(e.target.value)}
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Bloqueia este intervalo antes/depois de cada visita. Padrão: 180 min (3h).
+                Bloqueia este intervalo antes/depois de cada visita. Padrão: 90 min (1h30).
               </p>
             </div>
             <div className="flex-1">

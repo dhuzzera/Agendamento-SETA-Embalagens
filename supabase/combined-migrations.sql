@@ -667,12 +667,12 @@ ALTER TABLE public.appointments
 -- 2) App settings (singleton row id=1)
 CREATE TABLE IF NOT EXISTS public.app_settings (
   id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  travel_buffer_minutes integer NOT NULL DEFAULT 180,
+  travel_buffer_minutes integer NOT NULL DEFAULT 90,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 INSERT INTO public.app_settings (id, travel_buffer_minutes)
-VALUES (1, 180)
+VALUES (1, 90)
 ON CONFLICT (id) DO NOTHING;
 
 ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
@@ -792,7 +792,7 @@ BEGIN
 
     -- Travel buffer: enforce N minutes between presenciais
     SELECT travel_buffer_minutes INTO buffer_min FROM public.app_settings WHERE id = 1;
-    IF buffer_min IS NULL THEN buffer_min := 180; END IF;
+    IF buffer_min IS NULL THEN buffer_min := 90; END IF;
     buffer_interval := make_interval(mins => buffer_min);
 
     SELECT ap.start_time, ap.end_time INTO travel_conflict
@@ -910,7 +910,7 @@ BEGIN
     SELECT travel_buffer_minutes, max_distance_km
       INTO buffer_min, max_km
       FROM public.app_settings WHERE id = 1;
-    IF buffer_min IS NULL THEN buffer_min := 180; END IF;
+    IF buffer_min IS NULL THEN buffer_min := 90; END IF;
     IF max_km IS NULL THEN max_km := 30; END IF;
 
     -- First presencial of the day defines region

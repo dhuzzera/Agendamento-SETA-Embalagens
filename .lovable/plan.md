@@ -12,7 +12,7 @@ Implementar restrição de região para reuniões presenciais com bloqueio autom
 
 **Tabela `app_settings`** (nova, singleton) — configurações globais editáveis pelo admin:
 - `id` (smallint PK fixo = 1)
-- `travel_buffer_minutes` (int, default 180)
+- `travel_buffer_minutes` (int, default 90)
 - RLS: leitura para todos autenticados; update apenas admin.
 - Seed da linha id=1.
 

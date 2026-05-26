@@ -1,47 +1,14 @@
+-- Atualiza o buffer de deslocamento padrão de 180 min (3h) para 90 min (1h30)
+UPDATE public.app_settings
+SET travel_buffer_minutes = 90
+WHERE id = 1 AND travel_buffer_minutes = 180;
 
--- 1) Add city/state to appointments
-ALTER TABLE public.appointments
-  ADD COLUMN IF NOT EXISTS city text,
-  ADD COLUMN IF NOT EXISTS state text;
-
--- 2) App settings (singleton row id=1)
-CREATE TABLE IF NOT EXISTS public.app_settings (
-  id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  travel_buffer_minutes integer NOT NULL DEFAULT 90,
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
-INSERT INTO public.app_settings (id, travel_buffer_minutes)
-VALUES (1, 90)
-ON CONFLICT (id) DO NOTHING;
-
-ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS app_settings_read ON public.app_settings;
-CREATE POLICY app_settings_read ON public.app_settings
-  FOR SELECT TO anon, authenticated USING (true);
-
-DROP POLICY IF EXISTS app_settings_admin_update ON public.app_settings;
-CREATE POLICY app_settings_admin_update ON public.app_settings
-  FOR UPDATE TO authenticated
-  USING (has_role(auth.uid(), 'admin'::app_role))
-  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
-
-CREATE OR REPLACE FUNCTION public.touch_app_settings()
-RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
-BEGIN NEW.updated_at = now(); RETURN NEW; END $$;
-
-DROP TRIGGER IF EXISTS trg_touch_app_settings ON public.app_settings;
-CREATE TRIGGER trg_touch_app_settings
-  BEFORE UPDATE ON public.app_settings
-  FOR EACH ROW EXECUTE FUNCTION public.touch_app_settings();
-
--- 3) Update validate_appointment to enforce region + travel buffer
+-- Atualiza o fallback no trigger validate_appointment
 CREATE OR REPLACE FUNCTION public.validate_appointment()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 DECLARE
   rep_active BOOLEAN;
@@ -49,9 +16,11 @@ DECLARE
   is_blocked BOOLEAN;
   has_conflict BOOLEAN;
   buffer_min INT;
-  region_row RECORD;
+  max_km INT;
+  first_appt RECORD;
   travel_conflict RECORD;
   buffer_interval INTERVAL;
+  dist_km DOUBLE PRECISION;
 BEGIN
   SELECT active INTO rep_active FROM public.profiles WHERE id = NEW.representative_id;
   IF rep_active IS NOT TRUE THEN
@@ -100,7 +69,6 @@ BEGIN
     RAISE EXCEPTION 'Horário já reservado';
   END IF;
 
-  -- Presencial-only rules: required fields, region lock, travel buffer
   IF NEW.meeting_type = 'presencial' THEN
     IF NEW.city IS NULL OR btrim(NEW.city) = ''
        OR NEW.state IS NULL OR btrim(NEW.state) = ''
@@ -108,8 +76,15 @@ BEGIN
       RAISE EXCEPTION 'Reuniões presenciais exigem cidade, estado (UF) e endereço.';
     END IF;
 
-    -- Region lock: same city/UF as the first presencial of the day
-    SELECT ap.city, ap.state INTO region_row
+    SELECT travel_buffer_minutes, max_distance_km
+      INTO buffer_min, max_km
+      FROM public.app_settings WHERE id = 1;
+    IF buffer_min IS NULL THEN buffer_min := 90; END IF;
+    IF max_km IS NULL THEN max_km := 30; END IF;
+
+    -- First presencial of the day defines region
+    SELECT ap.city, ap.state, ap.latitude, ap.longitude, ap.start_time
+      INTO first_appt
     FROM public.appointments ap
     WHERE ap.representative_id = NEW.representative_id
       AND ap.appointment_date = NEW.appointment_date
@@ -119,21 +94,38 @@ BEGIN
     ORDER BY ap.start_time ASC
     LIMIT 1;
 
-    IF region_row.city IS NOT NULL THEN
-      IF lower(btrim(region_row.city)) <> lower(btrim(NEW.city))
-         OR lower(btrim(region_row.state)) <> lower(btrim(NEW.state)) THEN
-        RAISE EXCEPTION 'Agenda de % bloqueada para % - %.',
-          to_char(NEW.appointment_date, 'DD/MM/YYYY'),
-          region_row.city,
-          upper(region_row.state);
+    IF first_appt.city IS NOT NULL THEN
+      -- Prefer distance check when coords available on both sides
+      IF first_appt.latitude IS NOT NULL AND first_appt.longitude IS NOT NULL
+         AND NEW.latitude IS NOT NULL AND NEW.longitude IS NOT NULL THEN
+        dist_km := 6371 * 2 * asin(
+          sqrt(
+            power(sin(radians((NEW.latitude - first_appt.latitude) / 2)), 2)
+            + cos(radians(first_appt.latitude)) * cos(radians(NEW.latitude))
+              * power(sin(radians((NEW.longitude - first_appt.longitude) / 2)), 2)
+          )
+        );
+        IF dist_km > max_km THEN
+          RAISE EXCEPTION 'Fora do raio de % km da primeira visita do dia (% - %). Distância: % km.',
+            max_km,
+            first_appt.city,
+            upper(first_appt.state),
+            round(dist_km::numeric, 1);
+        END IF;
+      ELSE
+        -- Fallback: same city/state when coords missing
+        IF lower(btrim(first_appt.city)) <> lower(btrim(NEW.city))
+           OR lower(btrim(first_appt.state)) <> lower(btrim(NEW.state)) THEN
+          RAISE EXCEPTION 'Agenda de % bloqueada para % - % (sem coordenadas para validar distância).',
+            to_char(NEW.appointment_date, 'DD/MM/YYYY'),
+            first_appt.city,
+            upper(first_appt.state);
+        END IF;
       END IF;
     END IF;
 
-    -- Travel buffer: enforce N minutes between presenciais
-    SELECT travel_buffer_minutes INTO buffer_min FROM public.app_settings WHERE id = 1;
-    IF buffer_min IS NULL THEN buffer_min := 90; END IF;
+    -- Travel buffer
     buffer_interval := make_interval(mins => buffer_min);
-
     SELECT ap.start_time, ap.end_time INTO travel_conflict
     FROM public.appointments ap
     WHERE ap.representative_id = NEW.representative_id

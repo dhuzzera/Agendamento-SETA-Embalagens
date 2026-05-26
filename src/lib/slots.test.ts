@@ -246,7 +246,7 @@ describe("slotsFor — buffer de deslocamento presencial", () => {
     expect(slots[0].start).toBe("11:30:00");
   });
 
-  it("bloqueia todos os slots com buffer de 180 min (padrão)", () => {
+  it("bloqueia todos os slots com buffer de 180 min", () => {
     const slots = slotsFor(
       MONDAY, [AVAIL_MON], [], [presAppt],
       "presencial", "Joinville", "SC",

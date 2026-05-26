@@ -181,7 +181,7 @@ export function PublicBooking({ slug }: { slug: string }) {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
-  const [travelBufferMin, setTravelBufferMin] = useState(180);
+  const [travelBufferMin, setTravelBufferMin] = useState(90);
   const [maxDistanceKm, setMaxDistanceKm] = useState(30);
 
   const requestGeolocation = () => {
@@ -275,7 +275,7 @@ export function PublicBooking({ slug }: { slug: string }) {
       supabase.from("app_settings").select("travel_buffer_minutes, max_distance_km").eq("id", 1).maybeSingle(),
     ]).then(([apptsRes, settingsRes]) => {
       setAppts((apptsRes.data as Appt[]) ?? []);
-      const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 180;
+      const buf = (settingsRes.data?.travel_buffer_minutes as number | undefined) ?? 90;
       const km = (settingsRes.data?.max_distance_km as number | undefined) ?? 30;
       setTravelBufferMin(buf);
       setMaxDistanceKm(km);
