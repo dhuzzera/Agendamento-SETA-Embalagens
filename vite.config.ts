@@ -95,6 +95,18 @@ export default defineConfig({
                 expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
               },
             },
+            {
+              // Cache Supabase REST API responses for offline access
+              urlPattern: ({ url }) =>
+                url.hostname.includes("supabase.co") && url.pathname.startsWith("/rest/"),
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "supabase-api",
+                networkTimeoutSeconds: 5,
+                expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
           ],
         },
       }),

@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { StatCardSkeleton, ListRowSkeleton } from "@/components/Skeletons";
 import { HolidayConfirmDialog } from "./HolidayConfirmDialog";
 import { getQrCodeUrl, downloadQrCode } from "@/lib/qr-code";
+import { DayMapView } from "./DayMapView";
+import { FeedbackCard } from "./FeedbackCard";
 
 export function RepDashboard() {
   const { profile, refresh } = useAuth();
@@ -259,6 +261,10 @@ export function RepDashboard() {
           </CardContent>
         </Card>
       )}
+
+      <DayMapView />
+
+      <FeedbackCard />
 
       <Card>
         <CardHeader className="flex-row items-center justify-between">

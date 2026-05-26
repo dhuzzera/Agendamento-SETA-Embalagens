@@ -42,6 +42,7 @@ export type Database = {
           client_id: string
           created_at: string
           end_time: string
+          feedback_rating: number | null
           id: string
           internal_notes: string | null
           latitude: number | null
@@ -61,6 +62,7 @@ export type Database = {
           client_id: string
           created_at?: string
           end_time: string
+          feedback_rating?: number | null
           id?: string
           internal_notes?: string | null
           latitude?: number | null
@@ -80,6 +82,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           end_time?: string
+          feedback_rating?: number | null
           id?: string
           internal_notes?: string | null
           latitude?: number | null
