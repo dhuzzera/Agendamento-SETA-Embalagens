@@ -370,305 +370,208 @@ export function AppointmentsList() {
         </div>
       </div>
 
-      {/* Calendário do mês com dias que possuem reuniões destacados */}
+      {/* Calendário + Filtros lado a lado */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            Calendário do mês
-            {monthLoading && (
-              <span className="text-xs font-normal text-muted-foreground">
-                carregando…
-              </span>
-            )}
-          </CardTitle>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary" />
-              dias com reuniões
-            </span>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col items-start gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <Calendar
-            mode="single"
-            locale={ptBR}
-            month={calMonth}
-            onMonthChange={setCalMonth}
-            selected={from && to && from === to ? parseISO(from) : undefined}
-            onSelect={(d) => {
-              if (!d) {
-                setFrom("");
-                setTo("");
-                return;
-              }
-              const s = format(d, "yyyy-MM-dd");
-              setFrom(s);
-              setTo(s);
-            }}
-            modifiers={{ hasMeeting: monthDates }}
-            modifiersClassNames={{
-              hasMeeting:
-                "relative font-semibold text-primary after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
-            }}
-            className="pointer-events-auto rounded-md border bg-card p-3"
-          />
-
-          <div className="flex-1 space-y-3 text-sm lg:max-w-xs">
-            <p className="font-medium">
-              {from && to && from === to
-                ? `Reuniões em ${format(parseISO(from), "dd 'de' MMMM", { locale: ptBR })}`
-                : "Selecione um dia"}
-            </p>
-            {from && to && from === to ? (
-              (() => {
-                const dayRows = rows.filter((r) =>
-                  isSameDay(parseISO(r.appointment_date), parseISO(from)),
-                );
-                if (dayRows.length === 0) {
-                  return (
-                    <p className="text-muted-foreground">
-                      Nenhuma reunião neste dia.
-                    </p>
-                  );
-                }
-                return (
-                  <ul className="space-y-2">
-                    {dayRows.map((r) => (
-                      <li
-                        key={r.id}
-                        className="flex items-center justify-between rounded-md border p-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="truncate font-medium">
-                            {r.client.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {r.start_time.slice(0, 5)} – {r.end_time.slice(0, 5)}
-                          </div>
-                        </div>
-                        <Badge
-                          variant={
-                            r.status === "scheduled"
-                              ? "default"
-                              : r.status === "cancelled"
-                                ? "destructive"
-                                : "secondary"
-                          }
-                        >
-                          {labelStatus(r.status)}
-                        </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                );
-              })()
-            ) : (
-              <p className="text-muted-foreground">
-                Clique em uma data para filtrar a lista abaixo. Os dias com
-                ponto azul possuem reuniões agendadas.
-              </p>
-            )}
-            {from && to && from === to && (() => {
-              const dayPresencial = rows
-                .filter(
-                  (r) =>
-                    isSameDay(parseISO(r.appointment_date), parseISO(from)) &&
-                    r.meeting_type === "presencial" &&
-                    r.status !== "cancelled",
-                )
-                .sort((a, b) => a.start_time.localeCompare(b.start_time));
-              const buildAddress = (r: (typeof rows)[number]) => {
-                if (r.latitude != null && r.longitude != null) {
-                  return `${r.latitude},${r.longitude}`;
-                }
-                return [r.location, r.city, r.state].filter(Boolean).join(", ");
-              };
-              const stops = dayPresencial.map(buildAddress).filter(Boolean);
-              const originParts = [
-                profile?.address,
-                profile?.address_number ? `nº ${profile.address_number}` : "",
-                profile?.city,
-                profile?.state,
-              ]
-                .filter(Boolean)
-                .join(", ");
-              const openRoute = () => {
-                if (stops.length === 0) return;
-                const destination = stops[stops.length - 1];
-                const waypoints = stops.slice(0, -1);
-                const params = new URLSearchParams({
-                  api: "1",
-                  travelmode: "driving",
-                  destination,
-                });
-                if (originParts) params.set("origin", originParts);
-                if (waypoints.length)
-                  params.set("waypoints", waypoints.join("|"));
-                window.open(
-                  `https://www.google.com/maps/dir/?${params.toString()}`,
-                  "_blank",
-                  "noopener,noreferrer",
-                );
-              };
-              return (
-                <div className="flex flex-col gap-2">
-                  {stops.length > 0 && (
-                    <Button
-                      size="sm"
-                      onClick={openRoute}
-                      title={
-                        originParts
-                          ? `Saindo de ${originParts}`
-                          : "Defina seu endereço no perfil para incluir o ponto de partida"
-                      }
-                    >
-                      <Navigation className="mr-1.5 h-3.5 w-3.5" />
-                      Rota no Google Maps ({stops.length})
-                    </Button>
+        <CardContent className="p-0">
+          <div className="grid lg:grid-cols-[auto_1fr]">
+            {/* Calendário */}
+            <div className="border-b p-4 lg:border-b-0 lg:border-r">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  Calendário
+                  {monthLoading && (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      carregando…
+                    </span>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setFrom("");
-                      setTo("");
-                    }}
-                  >
-                    <X className="mr-1 h-3.5 w-3.5" />
-                    Limpar dia
-                  </Button>
-                </div>
-              );
-            })()}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {isAdmin && (
-              <div>
-                <Label className="text-xs">Representante</Label>
-                <Select value={repFilter} onValueChange={setRepFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>Todos</SelectItem>
-                    {reps.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                </h3>
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                  com reuniões
+                </span>
               </div>
-            )}
-            <div>
-              <Label className="text-xs">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>Todos</SelectItem>
-                  <SelectItem value="scheduled">Agendado</SelectItem>
-                  <SelectItem value="completed">Concluído</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                  <SelectItem value="rescheduled">Remarcado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">De</Label>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Até</Label>
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Modalidade</Label>
-              <Select value={meetingTypeFilter} onValueChange={setMeetingTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>Todas</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="presencial">Presencial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Resultado</Label>
-              <Select value={resultFilter} onValueChange={setResultFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL}>Todos</SelectItem>
-                  <SelectItem value="venda_fechada">Venda fechada</SelectItem>
-                  <SelectItem value="em_negociacao">Em negociação</SelectItem>
-                  <SelectItem value="proposta_reprovada">Reprovada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Cidade</Label>
-              <Input
-                value={cityQuery}
-                onChange={(e) => setCityQuery(e.target.value)}
-                placeholder="Ex.: Joinville"
+              <Calendar
+                mode="single"
+                locale={ptBR}
+                month={calMonth}
+                onMonthChange={setCalMonth}
+                selected={from && to && from === to ? parseISO(from) : undefined}
+                onSelect={(d) => {
+                  if (!d) {
+                    setFrom("");
+                    setTo("");
+                    return;
+                  }
+                  const s = format(d, "yyyy-MM-dd");
+                  setFrom(s);
+                  setTo(s);
+                }}
+                modifiers={{ hasMeeting: monthDates }}
+                modifiersClassNames={{
+                  hasMeeting:
+                    "relative font-semibold text-primary after:absolute after:bottom-1 after:left-1/2 after:h-1 after:w-1 after:-translate-x-1/2 after:rounded-full after:bg-primary",
+                }}
+                className="pointer-events-auto rounded-md border bg-card p-3"
               />
+
+              {/* Resumo do dia selecionado */}
+              {from && to && from === to && (
+                <div className="mt-3 space-y-2 text-sm">
+                  <p className="font-medium">
+                    Reuniões em {format(parseISO(from), "dd 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  {(() => {
+                    const dayRows = rows.filter((r) =>
+                      isSameDay(parseISO(r.appointment_date), parseISO(from)),
+                    );
+                    if (dayRows.length === 0) {
+                      return <p className="text-muted-foreground">Nenhuma reunião neste dia.</p>;
+                    }
+                    return (
+                      <ul className="max-h-32 space-y-1.5 overflow-y-auto">
+                        {dayRows.slice(0, 5).map((r) => (
+                          <li key={r.id} className="flex items-center justify-between rounded-md border px-2 py-1.5 text-xs">
+                            <span className="truncate font-medium">{r.client.name}</span>
+                            <span className="shrink-0 text-muted-foreground">{r.start_time.slice(0, 5)}</span>
+                          </li>
+                        ))}
+                        {dayRows.length > 5 && (
+                          <li className="text-xs text-muted-foreground">+{dayRows.length - 5} mais</li>
+                        )}
+                      </ul>
+                    );
+                  })()}
+                  {(() => {
+                    const dayPresencial = rows
+                      .filter(
+                        (r) =>
+                          isSameDay(parseISO(r.appointment_date), parseISO(from)) &&
+                          r.meeting_type === "presencial" &&
+                          r.status !== "cancelled",
+                      )
+                      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+                    const buildAddress = (r: (typeof rows)[number]) => {
+                      if (r.latitude != null && r.longitude != null) {
+                        return `${r.latitude},${r.longitude}`;
+                      }
+                      return [r.location, r.city, r.state].filter(Boolean).join(", ");
+                    };
+                    const stops = dayPresencial.map(buildAddress).filter(Boolean);
+                    const originParts = [
+                      profile?.address,
+                      profile?.address_number ? `nº ${profile.address_number}` : "",
+                      profile?.city,
+                      profile?.state,
+                    ]
+                      .filter(Boolean)
+                      .join(", ");
+                    const openRoute = () => {
+                      if (stops.length === 0) return;
+                      const destination = stops[stops.length - 1];
+                      const waypoints = stops.slice(0, -1);
+                      const params = new URLSearchParams({
+                        api: "1",
+                        travelmode: "driving",
+                        destination,
+                      });
+                      if (originParts) params.set("origin", originParts);
+                      if (waypoints.length) params.set("waypoints", waypoints.join("|"));
+                      window.open(
+                        `https://www.google.com/maps/dir/?${params.toString()}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    };
+                    return (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {stops.length > 0 && (
+                          <Button size="sm" variant="outline" onClick={openRoute}>
+                            <Navigation className="mr-1.5 h-3.5 w-3.5" />
+                            Rota ({stops.length})
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => { setFrom(""); setTo(""); }}>
+                          <X className="mr-1 h-3.5 w-3.5" />
+                          Limpar
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
-            <div>
-              <Label className="text-xs">Endereço contém</Label>
-              <Input
-                value={addressQuery}
-                onChange={(e) => setAddressQuery(e.target.value)}
-                placeholder="Ex.: Av. Paulista"
-              />
+
+            {/* Filtros */}
+            <div className="p-4">
+              <h3 className="mb-3 text-sm font-semibold">Filtros</h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Resultado</Label>
+                  <Select value={resultFilter} onValueChange={setResultFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Todos</SelectItem>
+                      <SelectItem value="venda_fechada">Venda fechada</SelectItem>
+                      <SelectItem value="em_negociacao">Em negociação</SelectItem>
+                      <SelectItem value="proposta_reprovada">Reprovada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Cidade</Label>
+                  <Input
+                    value={cityQuery}
+                    onChange={(e) => setCityQuery(e.target.value)}
+                    placeholder="Ex.: Joinville"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">De</Label>
+                  <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Até</Label>
+                  <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label className="text-xs">Ordenar por</Label>
+                  <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date_desc">Data (mais recente)</SelectItem>
+                      <SelectItem value="date_asc">Data (mais antiga)</SelectItem>
+                      <SelectItem value="meeting_type">Modalidade</SelectItem>
+                      <SelectItem value="location">Endereço</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => setPeriod("today")}>
+                  Hoje
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setPeriod("week")}>
+                  Esta semana
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setPeriod("month")}>
+                  Este mês
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setPeriod("all")}>
+                  Tudo
+                </Button>
+                {hasFilters && (
+                  <Button size="sm" variant="ghost" onClick={clearFilters} className="ml-auto">
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    Limpar
+                  </Button>
+                )}
+              </div>
             </div>
-            <div>
-              <Label className="text-xs">Ordenar por</Label>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date_desc">Data (mais recente)</SelectItem>
-                  <SelectItem value="date_asc">Data (mais antiga)</SelectItem>
-                  <SelectItem value="meeting_type">Modalidade</SelectItem>
-                  <SelectItem value="location">Endereço</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setPeriod("today")}>
-              Hoje
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setPeriod("week")}>
-              Esta semana
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setPeriod("month")}>
-              Este mês
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setPeriod("all")}>
-              Todo o período
-            </Button>
-            {hasFilters && (
-              <Button size="sm" variant="ghost" onClick={clearFilters} className="ml-auto">
-                <X className="mr-1 h-3.5 w-3.5" />
-                Limpar
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
