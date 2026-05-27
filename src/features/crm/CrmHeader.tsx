@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   AlertTriangle,
   Settings2,
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ const CRM_NAV = [
   { to: "/crm/empresas", label: "Empresas", icon: Building2 },
   { to: "/crm/contatos", label: "Contatos", icon: Users },
   { to: "/crm/tarefas", label: "Tarefas", icon: CheckSquare },
+  { to: "/crm/analises", label: "Análises", icon: BarChart3 },
   { to: "/crm/duplicados", label: "Duplicados", icon: AlertTriangle },
   { to: "/crm/funis", label: "Funis", icon: Settings2 },
 ];

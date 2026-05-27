@@ -22,13 +22,16 @@ import {
   LogOut,
   Menu,
   ArrowLeft,
+  FileInput,
 } from "lucide-react";
 import { useState } from "react";
 
 const MKT_NAV = [
-  { to: "/marketing", label: "Campanhas", icon: Mail },
+  { to: "/marketing", label: "Início", icon: Megaphone },
+  { to: "/marketing/campanhas", label: "Campanhas", icon: Mail },
   { to: "/marketing/listas", label: "Listas", icon: Users },
   { to: "/marketing/templates", label: "Templates", icon: FileText },
+  { to: "/marketing/formularios", label: "Formulários", icon: FileInput },
   { to: "/marketing/automacoes", label: "Automações", icon: Zap },
   { to: "/marketing/scoring", label: "Lead Scoring", icon: Star },
 ];
