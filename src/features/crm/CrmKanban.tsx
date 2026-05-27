@@ -34,11 +34,13 @@ import {
   MessageSquare,
   CheckCircle2,
   ArrowRight,
+  Upload,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ImportLeadsDialog } from "./ImportLeadsDialog";
 
 type Stage = { id: string; name: string; position: number; color: string };
 type Deal = {
@@ -76,6 +78,7 @@ export function CrmKanban() {
 
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Load stages
   const { data: stages } = useQuery({
@@ -182,10 +185,16 @@ export function CrmKanban() {
           <h1 className="text-3xl font-bold">CRM</h1>
           <p className="text-muted-foreground">Pipeline de oportunidades comerciais.</p>
         </div>
-        <Button onClick={() => setNewDealOpen(true)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          Nova oportunidade
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="mr-1.5 h-4 w-4" />
+            Importar CSV
+          </Button>
+          <Button onClick={() => setNewDealOpen(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nova oportunidade
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -267,6 +276,13 @@ export function CrmKanban() {
           onClose={() => { setNewDealOpen(false); void refetchDeals(); }}
         />
       )}
+
+      {/* Import Leads Dialog */}
+      <ImportLeadsDialog
+        open={importOpen}
+        onClose={() => { setImportOpen(false); void refetchDeals(); }}
+        stages={stages ?? []}
+      />
 
       {/* Deal Detail Dialog */}
       {detailDeal && (
