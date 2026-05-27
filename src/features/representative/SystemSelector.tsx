@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { SetaLogo } from "@/components/SetaLogo";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, BarChart3, ArrowRight, Lock } from "lucide-react";
+import { Calendar, BarChart3, ArrowRight, Lock, Handshake } from "lucide-react";
 
 type SystemOption = {
   id: string;
@@ -21,6 +21,14 @@ const SYSTEMS: SystemOption[] = [
     description: "Gerencie reuniões, disponibilidade, clientes e resultados comerciais.",
     icon: Calendar,
     route: "/agendamento",
+    available: true,
+  },
+  {
+    id: "crm",
+    title: "CRM SETA Embalagens",
+    description: "Pipeline de oportunidades, funil de vendas e acompanhamento de negociações.",
+    icon: Handshake,
+    route: "/crm",
     available: true,
   },
   {
