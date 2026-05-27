@@ -181,6 +181,15 @@ export function CrmDealPage() {
 
   const markWon = async () => {
     const wonStage = stages?.find((s) => s.name === "Fechados" || s.name === "Fechada" || s.name === "Venda Fechada");
+    // Ask for value if not set
+    if (!deal.value) {
+      const valueStr = prompt("Valor da venda (R$):");
+      if (valueStr === null) return;
+      const parsed = parseFloat(valueStr.replace(/[^\d.,]/g, "").replace(",", "."));
+      if (!isNaN(parsed) && parsed > 0) {
+        await supabase.from("deals").update({ value: parsed }).eq("id", id);
+      }
+    }
     if (wonStage) await moveToStage(wonStage.id);
     toast.success("Negociação marcada como venda!");
   };

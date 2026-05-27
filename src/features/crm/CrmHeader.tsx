@@ -44,10 +44,17 @@ const CRM_NAV = [
 ];
 
 export function CrmHeader() {
-  const { profile, signOut } = useAuth();
+  const { profile, role, signOut } = useAuth();
+  const [viewMode] = useViewMode();
+  const isAdmin = role === "admin" && viewMode === "admin";
   const navigate = useNavigate();
   const { theme, toggle: toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Filter nav items by role
+  const navItems = isAdmin
+    ? CRM_NAV
+    : CRM_NAV.filter((n) => ["/crm", "/crm/tarefas"].includes(n.to));
 
   const handleLogout = async () => {
     await signOut();
@@ -74,7 +81,7 @@ export function CrmHeader() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {CRM_NAV.map((n) => (
+          {navItems.map((n) => (
             <Link
               key={n.to}
               to={n.to}
@@ -104,18 +111,22 @@ export function CrmHeader() {
                   Criar Negociação
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/crm/empresas" search={{ criar: true }} className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Criar Empresa
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/crm/contatos" search={{ criar: true }} className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Criar Contato
-                </Link>
-              </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/crm/empresas" search={{ criar: true }} className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Criar Empresa
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/crm/contatos" search={{ criar: true }} className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Criar Contato
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem asChild>
                 <Link to="/crm/tarefas" search={{ criar: true }} className="flex items-center gap-2">
                   <CheckSquare className="h-4 w-4" />
@@ -146,7 +157,7 @@ export function CrmHeader() {
                 <SheetTitle>CRM SETA</SheetTitle>
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-1">
-                {CRM_NAV.map((n) => (
+                {navItems.map((n) => (
                   <Link
                     key={n.to}
                     to={n.to}

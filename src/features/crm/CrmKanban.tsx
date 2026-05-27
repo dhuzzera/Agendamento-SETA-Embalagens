@@ -85,6 +85,7 @@ export function CrmKanban() {
   const [repFilter, setRepFilter] = useState("__all__");
   const [dealStatusFilter, setDealStatusFilter] = useState("__all__");
   const [selectedPipeline, setSelectedPipeline] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load pipelines
   const { data: pipelines } = useQuery({
@@ -200,17 +201,29 @@ export function CrmKanban() {
     },
   });
 
+  const filteredDeals = useMemo(() => {
+    if (!deals) return [];
+    if (!searchQuery.trim()) return deals;
+    const q = searchQuery.toLowerCase();
+    return deals.filter(
+      (d) =>
+        d.title.toLowerCase().includes(q) ||
+        (d.client_name ?? "").toLowerCase().includes(q) ||
+        (d.client_company ?? "").toLowerCase().includes(q),
+    );
+  }, [deals, searchQuery]);
+
   const dealsByStage = useMemo(() => {
     const map = new Map<string, Deal[]>();
     for (const stage of stages ?? []) {
       map.set(stage.id, []);
     }
-    for (const deal of deals ?? []) {
+    for (const deal of filteredDeals) {
       const arr = map.get(deal.stage_id);
       if (arr) arr.push(deal);
     }
     return map;
-  }, [stages, deals]);
+  }, [stages, filteredDeals]);
 
   const moveDeal = async (dealId: string, newStageId: string) => {
     const { error } = await supabase
@@ -233,17 +246,18 @@ export function CrmKanban() {
 
   // Stats
   const stats = useMemo(() => {
-    if (!deals) return { total: 0, value: 0, won: 0, wonValue: 0 };
-    const wonStage = stages?.find((s) => s.name === "Venda fechada");
-    const won = deals.filter((d) => d.stage_id === wonStage?.id);
-    const active = deals.filter((d) => d.stage_id !== wonStage?.id && d.stage_id !== stages?.find((s) => s.name === "Perdido")?.id);
+    if (!filteredDeals.length) return { total: 0, value: 0, won: 0, wonValue: 0 };
+    const wonStage = stages?.find((s) => s.name === "Fechados" || s.name === "Venda fechada" || s.name === "Fechada");
+    const lostStage = stages?.find((s) => s.name === "Perdidos" || s.name === "Perdido" || s.name === "Não Aprovada");
+    const won = filteredDeals.filter((d) => d.stage_id === wonStage?.id);
+    const active = filteredDeals.filter((d) => d.stage_id !== wonStage?.id && d.stage_id !== lostStage?.id);
     return {
       total: active.length,
       value: active.reduce((s, d) => s + (d.value ?? 0), 0),
       won: won.length,
       wonValue: won.reduce((s, d) => s + (d.value ?? 0), 0),
     };
-  }, [deals, stages]);
+  }, [filteredDeals, stages]);
 
   return (
     <div className="space-y-6">
@@ -305,8 +319,17 @@ export function CrmKanban() {
             </Select>
           </div>
         )}
+        <div className="flex-1">
+          <Label className="text-xs">Buscar</Label>
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filtrar por nome…"
+            className="max-w-xs"
+          />
+        </div>
         <div className="text-sm text-muted-foreground">
-          {deals?.length ?? 0} negociações
+          {filteredDeals?.length ?? 0} negociações
         </div>
       </div>
 
