@@ -183,58 +183,129 @@ export function ImportLeadsDialog({ open, onClose, stages }: Props) {
     let success = 0;
     let errors = 0;
 
+    // Pre-load existing companies and clients for matching
+    const { data: existingCompanies } = await supabase
+      .from("companies")
+      .select("id, name, cnpj");
+    const { data: existingClients } = await supabase
+      .from("clients")
+      .select("id, name, email, company, company_id");
+
+    const companyByName = new Map(
+      (existingCompanies ?? []).map((c) => [c.name.trim().toLowerCase(), c]),
+    );
+    const clientByEmail = new Map(
+      (existingClients ?? []).filter((c) => c.email).map((c) => [c.email.toLowerCase(), c]),
+    );
+    const clientByName = new Map(
+      (existingClients ?? []).map((c) => [c.name.trim().toLowerCase(), c]),
+    );
+
     for (const row of rows) {
       try {
-        // Create or find client
+        // 1. Find or create company
+        let companyId: string | null = null;
+        if (row.company) {
+          const companyKey = row.company.trim().toLowerCase();
+          const existingCo = companyByName.get(companyKey);
+          if (existingCo) {
+            companyId = existingCo.id;
+          } else {
+            const { data: newCo } = await supabase
+              .from("companies")
+              .insert({
+                name: row.company.trim(),
+                created_by: profile.id,
+              })
+              .select("id")
+              .single();
+            if (newCo) {
+              companyId = newCo.id;
+              companyByName.set(companyKey, { id: newCo.id, name: row.company.trim(), cnpj: null });
+            }
+          }
+        }
+
+        // 2. Find or create client (by email first, then by name+company)
         let clientId: string | null = null;
         if (row.email) {
-          const { data: existing } = await supabase
-            .from("clients")
-            .select("id")
-            .eq("email", row.email)
-            .maybeSingle();
-
-          if (existing) {
-            clientId = existing.id;
+          const emailKey = row.email.trim().toLowerCase();
+          const existingCli = clientByEmail.get(emailKey);
+          if (existingCli) {
+            clientId = existingCli.id;
+            // Update company_id if not set
+            if (companyId && !existingCli.company_id) {
+              await supabase.from("clients").update({ company_id: companyId }).eq("id", clientId);
+            }
           } else {
-            const { data: newClient } = await supabase
+            const { data: newCli } = await supabase
               .from("clients")
               .insert({
                 name: row.name || row.email.split("@")[0],
-                email: row.email,
+                email: row.email.trim(),
                 company: row.company || null,
+                company_id: companyId,
                 phone: row.phone || null,
               })
               .select("id")
               .single();
-            clientId = newClient?.id ?? null;
+            if (newCli) {
+              clientId = newCli.id;
+              clientByEmail.set(emailKey, { id: newCli.id, name: row.name, email: row.email, company: row.company, company_id: companyId });
+            }
           }
         } else if (row.name) {
-          // No email — create with placeholder
-          const { data: newClient } = await supabase
-            .from("clients")
-            .insert({
-              name: row.name,
-              email: `${row.name.toLowerCase().replace(/\s+/g, ".")}@importado.local`,
-              company: row.company || null,
-              phone: row.phone || null,
-            })
-            .select("id")
-            .single();
-          clientId = newClient?.id ?? null;
+          const nameKey = row.name.trim().toLowerCase();
+          const existingCli = clientByName.get(nameKey);
+          if (existingCli) {
+            clientId = existingCli.id;
+            if (companyId && !existingCli.company_id) {
+              await supabase.from("clients").update({ company_id: companyId }).eq("id", clientId);
+            }
+          } else {
+            const { data: newCli } = await supabase
+              .from("clients")
+              .insert({
+                name: row.name.trim(),
+                email: `${row.name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@importado.local`,
+                company: row.company || null,
+                company_id: companyId,
+                phone: row.phone || null,
+              })
+              .select("id")
+              .single();
+            if (newCli) {
+              clientId = newCli.id;
+              clientByName.set(nameKey, { id: newCli.id, name: row.name, email: "", company: row.company, company_id: companyId });
+            }
+          }
         }
 
-        // Parse value
+        // 3. Check if deal already exists (same title + same client)
+        const dealTitle = row.title || `${row.company || row.name} — Novo lead`;
+        if (clientId) {
+          const { data: existingDeal } = await supabase
+            .from("deals")
+            .select("id")
+            .eq("title", dealTitle)
+            .eq("client_id", clientId)
+            .maybeSingle();
+          if (existingDeal) {
+            // Deal already exists — skip, count as success (no duplicate)
+            success++;
+            continue;
+          }
+        }
+
+        // 4. Create deal
         const parsedValue = row.value
           ? parseFloat(row.value.replace(/[^\d.,]/g, "").replace(",", "."))
           : null;
 
-        // Create deal
-        const dealTitle = row.title || `${row.company || row.name} — Novo lead`;
-
         const { error } = await supabase.from("deals").insert({
           title: dealTitle,
           client_id: clientId,
+          company_id: companyId,
           representative_id: selectedRep || profile.id,
           stage_id: stageId,
           pipeline_id: selectedPipeline || null,
