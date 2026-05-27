@@ -86,18 +86,26 @@ export function CrmKanban() {
 
   // Load pipelines
   const { data: pipelines } = useQuery({
-    queryKey: ["crm-pipelines"],
+    queryKey: ["crm-pipelines", profile?.id, isAdmin],
+    enabled: !!profile,
     staleTime: 10 * 60_000,
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("pipelines")
-        .select("id, name, position")
+        .select("id, name, position, owner_id")
         .order("position");
-      return (data ?? []) as { id: string; name: string; position: number }[];
+
+      // Representante só vê o funil dele
+      if (!isAdmin) {
+        q = q.eq("owner_id", profile!.id);
+      }
+
+      const { data } = await q;
+      return (data ?? []) as { id: string; name: string; position: number; owner_id: string | null }[];
     },
   });
 
-  // Auto-select first pipeline
+  // Auto-select first pipeline (or the only one for reps)
   useEffect(() => {
     if (pipelines?.length && !selectedPipeline) {
       setSelectedPipeline(pipelines[0].id);
@@ -264,19 +272,21 @@ export function CrmKanban() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3">
-        <div>
-          <Label className="text-xs">Funil</Label>
-          <Select value={selectedPipeline} onValueChange={setSelectedPipeline}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder="Selecionar funil" />
-            </SelectTrigger>
-            <SelectContent>
-              {(pipelines ?? []).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {isAdmin && (
+          <div>
+            <Label className="text-xs">Funil</Label>
+            <Select value={selectedPipeline} onValueChange={setSelectedPipeline}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="Selecionar funil" />
+              </SelectTrigger>
+              <SelectContent>
+                {(pipelines ?? []).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {isAdmin && (
           <div>
             <Label className="text-xs">Responsável</Label>
