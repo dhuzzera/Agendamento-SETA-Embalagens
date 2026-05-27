@@ -551,26 +551,14 @@ export function AppointmentsList() {
                   </Select>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => setPeriod("today")}>
-                  Hoje
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setPeriod("week")}>
-                  Esta semana
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setPeriod("month")}>
-                  Este mês
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setPeriod("all")}>
-                  Tudo
-                </Button>
-                {hasFilters && (
-                  <Button size="sm" variant="ghost" onClick={clearFilters} className="ml-auto">
+              {hasFilters && (
+                <div className="mt-3">
+                  <Button size="sm" variant="ghost" onClick={clearFilters}>
                     <X className="mr-1 h-3.5 w-3.5" />
-                    Limpar
+                    Limpar filtros
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
