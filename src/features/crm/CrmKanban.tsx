@@ -59,6 +59,7 @@ type Deal = {
   client_company?: string | null;
   client_email?: string;
   rep_name?: string;
+  next_activity?: { type: string; due_date: string; subject: string | null } | null;
 };
 
 type Activity = {
@@ -79,6 +80,19 @@ export function CrmKanban() {
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [repFilter, setRepFilter] = useState("__all__");
+  const [dealStatusFilter, setDealStatusFilter] = useState("__all__");
+
+  // Load reps for filter
+  const { data: reps } = useQuery({
+    queryKey: ["crm-reps"],
+    enabled: isAdmin,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name").order("full_name");
+      return (data ?? []) as { id: string; full_name: string }[];
+    },
+  });
 
   // Load stages
   const { data: stages } = useQuery({
@@ -95,7 +109,7 @@ export function CrmKanban() {
 
   // Load deals
   const { data: deals, refetch: refetchDeals } = useQuery({
-    queryKey: ["crm-deals", profile?.id, isAdmin],
+    queryKey: ["crm-deals", profile?.id, isAdmin, repFilter],
     enabled: !!profile,
     staleTime: 30_000,
     queryFn: async () => {
@@ -105,6 +119,7 @@ export function CrmKanban() {
         .order("updated_at", { ascending: false });
 
       if (!isAdmin) q = q.eq("representative_id", profile!.id);
+      else if (repFilter !== "__all__") q = q.eq("representative_id", repFilter);
 
       const { data } = await q;
       if (!data?.length) return [];
@@ -112,16 +127,33 @@ export function CrmKanban() {
       // Enrich with client and rep names
       const clientIds = [...new Set(data.map((d) => d.client_id).filter(Boolean))] as string[];
       const repIds = [...new Set(data.map((d) => d.representative_id))];
+      const dealIds = data.map((d) => d.id);
 
-      const [{ data: clients }, { data: reps }] = await Promise.all([
+      const [{ data: clients }, { data: repsData }, { data: nextActivities }] = await Promise.all([
         clientIds.length
           ? supabase.from("clients").select("id, name, company, email").in("id", clientIds)
           : { data: [] as { id: string; name: string; company: string | null; email: string }[] },
         supabase.from("profiles").select("id, full_name").in("id", repIds),
+        // Fetch next pending activity for each deal
+        supabase
+          .from("deal_activities")
+          .select("deal_id, type, due_date, subject")
+          .in("deal_id", dealIds)
+          .eq("completed", false)
+          .not("due_date", "is", null)
+          .order("due_date", { ascending: true }),
       ]);
 
       const clientMap = new Map((clients ?? []).map((c) => [c.id, c]));
-      const repMap = new Map((reps ?? []).map((r) => [r.id, r.full_name]));
+      const repMap = new Map((repsData ?? []).map((r) => [r.id, r.full_name]));
+
+      // Group next activity per deal (first one = soonest)
+      const nextActivityMap = new Map<string, { type: string; due_date: string; subject: string | null }>();
+      for (const act of nextActivities ?? []) {
+        if (!nextActivityMap.has(act.deal_id)) {
+          nextActivityMap.set(act.deal_id, { type: act.type, due_date: act.due_date!, subject: act.subject });
+        }
+      }
 
       return data.map((d) => ({
         ...d,
@@ -129,6 +161,7 @@ export function CrmKanban() {
         client_company: d.client_id ? clientMap.get(d.client_id)?.company : undefined,
         client_email: d.client_id ? clientMap.get(d.client_id)?.email : undefined,
         rep_name: repMap.get(d.representative_id) ?? "—",
+        next_activity: nextActivityMap.get(d.id) ?? null,
       })) as Deal[];
     },
   });
@@ -205,11 +238,35 @@ export function CrmKanban() {
         <MiniStat icon={<DollarSign className="h-4 w-4 text-green-500" />} label="Valor ganho" value={`R$ ${stats.wonValue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`} />
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap items-end gap-3">
+        {isAdmin && (
+          <div>
+            <Label className="text-xs">Representante</Label>
+            <Select value={repFilter} onValueChange={setRepFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todos</SelectItem>
+                {(reps ?? []).map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="text-sm text-muted-foreground">
+          {deals?.length ?? 0} negociações
+        </div>
+      </div>
+
       {/* Kanban */}
       <ScrollArea className="w-full">
         <div className="flex gap-4 pb-4" style={{ minWidth: `${(stages?.length ?? 6) * 280}px` }}>
           {(stages ?? []).map((stage) => {
             const stageDeals = dealsByStage.get(stage.id) ?? [];
+            const stageValue = stageDeals.reduce((s, d) => s + (d.value ?? 0), 0);
             return (
               <div
                 key={stage.id}
@@ -224,10 +281,13 @@ export function CrmKanban() {
                   <div className="flex items-center gap-2">
                     <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
                     <h3 className="text-sm font-semibold">{stage.name}</h3>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {stageDeals.length}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {stageDeals.length}
-                  </Badge>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    R$ {stageValue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
+                  </span>
                 </div>
 
                 <div className="space-y-2">
@@ -255,6 +315,17 @@ export function CrmKanban() {
                         <p className="mt-2 text-xs font-semibold text-green-600 dark:text-green-400">
                           R$ {Number(deal.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </p>
+                      )}
+                      {/* Next activity */}
+                      {deal.next_activity && (
+                        <div className="mt-2 flex items-center gap-1.5 rounded-md bg-primary/5 px-2 py-1 text-[10px] font-medium text-primary">
+                          <span>📋</span>
+                          <span className="uppercase">{deal.next_activity.type === "call" ? "Ligação" : deal.next_activity.type === "visit" ? "Visita" : deal.next_activity.type === "whatsapp" ? "Whats" : deal.next_activity.type === "meeting" ? "Reunião" : deal.next_activity.type === "email" ? "E-mail" : "Tarefa"}</span>
+                          <span>{format(new Date(deal.next_activity.due_date), "dd/MM HH:mm")}</span>
+                        </div>
+                      )}
+                      {!deal.next_activity && (
+                        <p className="mt-2 text-[10px] text-muted-foreground/60">Sem tarefas</p>
                       )}
                       {isAdmin && deal.rep_name && (
                         <p className="mt-1 text-[10px] text-muted-foreground">{deal.rep_name}</p>
