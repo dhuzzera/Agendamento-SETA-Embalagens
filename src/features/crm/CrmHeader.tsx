@@ -28,6 +28,7 @@ import {
   Menu,
   ArrowLeft,
   AlertTriangle,
+  Settings2,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ const CRM_NAV = [
   { to: "/crm/contatos", label: "Contatos", icon: Users },
   { to: "/crm/tarefas", label: "Tarefas", icon: CheckSquare },
   { to: "/crm/duplicados", label: "Duplicados", icon: AlertTriangle },
+  { to: "/crm/funis", label: "Funis", icon: Settings2 },
 ];
 
 export function CrmHeader() {
