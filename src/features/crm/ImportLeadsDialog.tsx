@@ -47,26 +47,68 @@ export function ImportLeadsDialog({ open, onClose, stages }: Props) {
   const [fileName, setFileName] = useState("");
 
   const parseCSV = (text: string): ParsedRow[] => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    let lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) return [];
+
+    // RD Station exports start with "sep=," — skip it
+    if (lines[0].startsWith("sep=")) {
+      lines = lines.slice(1);
+    }
     if (lines.length < 2) return [];
 
     // Detect separator (;  or ,)
-    const sep = lines[0].includes(";") ? ";" : ",";
-    const headers = lines[0].split(sep).map((h) => h.trim().toLowerCase().replace(/"/g, ""));
+    const sep = lines[0].includes(";") && !lines[0].includes('",') ? ";" : ",";
 
-    // Map columns flexibly
+    // Parse CSV respecting quoted fields
+    const parseLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === sep && !inQuotes) {
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const headers = parseLine(lines[0]).map((h) => h.toLowerCase().replace(/"/g, ""));
+
+    // Map columns flexibly — supports both simple format and RD Station export
     const colMap = {
-      name: headers.findIndex((h) => /nome|name|contato/.test(h)),
+      name: headers.findIndex((h) => /^nome$|^name$|^contatos?$/.test(h)),
       email: headers.findIndex((h) => /email|e-mail/.test(h)),
-      company: headers.findIndex((h) => /empresa|company|razao|razão/.test(h)),
+      company: headers.findIndex((h) => /^empresa$|^company$|^razao|^razão/.test(h)),
       phone: headers.findIndex((h) => /telefone|phone|celular|fone/.test(h)),
       title: headers.findIndex((h) => /titulo|title|oportunidade|deal/.test(h)),
-      value: headers.findIndex((h) => /valor|value|preço|preco/.test(h)),
+      value: headers.findIndex((h) => /valor único|valor|value|preço|preco/.test(h)),
+      stage: headers.findIndex((h) => /^etapa$|^stage$/.test(h)),
+      state: headers.findIndex((h) => /^estado$|estado \(uf\)/.test(h)),
+      city: headers.findIndex((h) => /^cidade$/.test(h)),
+      cnpj: headers.findIndex((h) => /cnpj/.test(h)),
+      segment: headers.findIndex((h) => /segmento/.test(h)),
+      cargo: headers.findIndex((h) => /^cargo$/.test(h)),
     };
+
+    // If "nome" not found but "contatos" exists at end (RD deal export), use first column
+    if (colMap.name < 0) colMap.name = 0;
 
     const parsed: ParsedRow[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(sep).map((c) => c.trim().replace(/^"|"$/g, ""));
+      if (!lines[i].trim()) continue;
+      const cols = parseLine(lines[i]);
       const row: ParsedRow = {
         name: colMap.name >= 0 ? cols[colMap.name] ?? "" : "",
         email: colMap.email >= 0 ? cols[colMap.email] ?? "" : "",
