@@ -99,6 +99,7 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const submit = async () => {
     if (!name.trim() || !subject.trim() || !body.trim()) { toast.error("Preencha todos os campos"); return; }
@@ -117,15 +118,29 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Novo template</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div><Label className="text-xs">Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Boas-vindas" /></div>
-          <div><Label className="text-xs">Assunto *</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Bem-vindo à SETA!" /></div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-3">
+            <div><Label className="text-xs">Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Boas-vindas" /></div>
+            <div><Label className="text-xs">Assunto *</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Bem-vindo à SETA!" /></div>
+            <div>
+              <Label className="text-xs">Corpo do e-mail (HTML) *</Label>
+              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="<h1>Olá {{nome}}</h1>" />
+              <p className="mt-1 text-xs text-muted-foreground">Variáveis: {"{{nome}}"}, {"{{empresa}}"}, {"{{email}}"}</p>
+            </div>
+          </div>
           <div>
-            <Label className="text-xs">Corpo do e-mail (HTML) *</Label>
-            <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} placeholder="<h1>Olá {{nome}}</h1>" />
-            <p className="mt-1 text-xs text-muted-foreground">Variáveis: {"{{nome}}"}, {"{{empresa}}"}, {"{{email}}"}</p>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-xs">Pré-visualização</Label>
+            </div>
+            <div className="rounded-lg border bg-white p-4 text-sm text-black min-h-[200px] max-h-[400px] overflow-y-auto">
+              {body ? (
+                <div dangerouslySetInnerHTML={{ __html: body.replace(/\{\{nome\}\}/gi, "João").replace(/\{\{empresa\}\}/gi, "Empresa X").replace(/\{\{email\}\}/gi, "joao@empresa.com") }} />
+              ) : (
+                <p className="text-gray-400 italic">O preview aparece aqui conforme você digita o HTML…</p>
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>

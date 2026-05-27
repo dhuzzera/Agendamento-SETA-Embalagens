@@ -190,7 +190,28 @@ function CreateCampaignDialog({ lists, onClose }: { lists: { id: string; name: s
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [listId, setListId] = useState("");
+  const [templateId, setTemplateId] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Load templates
+  const { data: templates } = useQuery({
+    queryKey: ["marketing-templates-select"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("email_templates").select("id, name, subject, html_body");
+      return (data ?? []) as { id: string; name: string; subject: string; html_body: string }[];
+    },
+  });
+
+  const applyTemplate = (id: string) => {
+    setTemplateId(id);
+    const tpl = templates?.find((t) => t.id === id);
+    if (tpl) {
+      setSubject(tpl.subject);
+      setBody(tpl.html_body);
+      toast.success(`Template "${tpl.name}" aplicado`);
+    }
+  };
 
   const submit = async () => {
     if (!name.trim() || !subject.trim() || !body.trim()) {
@@ -202,6 +223,7 @@ function CreateCampaignDialog({ lists, onClose }: { lists: { id: string; name: s
       name: name.trim(),
       subject: subject.trim(),
       html_body: body.trim(),
+      template_id: templateId || null,
       list_id: listId || null,
       status: "draft",
       created_by: profile?.id,
@@ -214,32 +236,57 @@ function CreateCampaignDialog({ lists, onClose }: { lists: { id: string; name: s
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova campanha</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Nome da campanha *</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Promoção de inverno" />
+        <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Nome da campanha *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Promoção de inverno" />
+            </div>
+            <div>
+              <Label className="text-xs">Usar template</Label>
+              <Select value={templateId} onValueChange={applyTemplate}>
+                <SelectTrigger><SelectValue placeholder="Selecionar template (opcional)" /></SelectTrigger>
+                <SelectContent>
+                  {(templates ?? []).map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Assunto do e-mail *</Label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Novidades SETA Embalagens" />
+            </div>
+            <div>
+              <Label className="text-xs">Lista de destinatários</Label>
+              <Select value={listId} onValueChange={setListId}>
+                <SelectTrigger><SelectValue placeholder="Todos os contatos" /></SelectTrigger>
+                <SelectContent>
+                  {lists.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">Se não selecionar, envia pra todos os contatos.</p>
+            </div>
+            <div>
+              <Label className="text-xs">Conteúdo do e-mail (HTML) *</Label>
+              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} placeholder="<h1>Olá {{nome}}</h1><p>...</p>" />
+              <p className="mt-1 text-xs text-muted-foreground">Variáveis: {"{{nome}}"}, {"{{empresa}}"}, {"{{email}}"}</p>
+            </div>
           </div>
+          {/* Preview */}
           <div>
-            <Label className="text-xs">Assunto do e-mail *</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Novidades SETA Embalagens" />
-          </div>
-          <div>
-            <Label className="text-xs">Lista de destinatários</Label>
-            <Select value={listId} onValueChange={setListId}>
-              <SelectTrigger><SelectValue placeholder="Selecionar lista" /></SelectTrigger>
-              <SelectContent>
-                {lists.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Conteúdo do e-mail (HTML) *</Label>
-            <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} placeholder="<h1>Olá {{nome}}</h1><p>...</p>" />
-            <p className="mt-1 text-xs text-muted-foreground">Use {"{{nome}}"}, {"{{empresa}}"} como variáveis.</p>
+            <Label className="text-xs mb-2 block">Pré-visualização</Label>
+            <div className="rounded-lg border bg-white p-3 text-sm text-black min-h-[200px] max-h-[350px] overflow-y-auto">
+              {body ? (
+                <div dangerouslySetInnerHTML={{ __html: body.replace(/\{\{nome\}\}/gi, "João").replace(/\{\{empresa\}\}/gi, "Empresa X").replace(/\{\{email\}\}/gi, "joao@empresa.com") }} />
+              ) : (
+                <p className="text-gray-400 italic">Preview do e-mail…</p>
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>
