@@ -62,6 +62,17 @@ function AppLayout() {
     );
   }
 
+  // CRM: tem seu próprio header, não mostra o AppHeader do agendamento
+  if (location.pathname.startsWith("/crm")) {
+    return (
+      <div className="min-h-screen bg-secondary/40">
+        <main className="page-fade-in">
+          {profile ? <Outlet /> : <PageHeaderSkeleton />}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary/40">
       <AppHeader />
