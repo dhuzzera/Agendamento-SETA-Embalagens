@@ -63,7 +63,7 @@ function AppLayout() {
   }
 
   // CRM: tem seu próprio header, não mostra o AppHeader do agendamento
-  if (location.pathname.startsWith("/crm")) {
+  if (location.pathname.startsWith("/crm") || location.pathname.startsWith("/marketing")) {
     return (
       <div className="min-h-screen bg-secondary/40">
         <main className="page-fade-in">
