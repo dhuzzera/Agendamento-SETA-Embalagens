@@ -1,4 +1,5 @@
 import { useCallback, useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   ReactFlow,
   addEdge,
@@ -245,8 +246,8 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
     toast.success("Fluxo salvo!");
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-background" style={{ width: "100vw", height: "100vh" }}>
       {/* Toolbar */}
       <div className="flex h-[49px] shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-3">
@@ -269,9 +270,9 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex" style={{ height: "calc(100vh - 49px)" }}>
         {/* Sidebar — Node palette */}
-        <div className="w-64 shrink-0 overflow-y-auto border-r bg-muted/20 p-3">
+        <div className="w-64 shrink-0 overflow-y-auto border-r bg-muted/20 p-3" style={{ height: "calc(100vh - 49px)" }}>
           <p className="mb-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Arraste para adicionar
           </p>
@@ -293,7 +294,7 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
         </div>
 
         {/* Canvas */}
-        <div className="flex-1" style={{ height: "calc(100vh - 49px)" }}>
+        <div className="flex-1" style={{ height: "calc(100vh - 49px)", width: "calc(100vw - 256px)" }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -316,6 +317,7 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
           </ReactFlow>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
