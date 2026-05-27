@@ -14,6 +14,7 @@ import {
   Sun,
   ArrowLeft,
   Handshake,
+  ChevronDown,
 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
@@ -21,6 +22,12 @@ import { useViewMode, ViewModePermissionError } from "@/lib/view-mode";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -30,15 +37,6 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-const NAV = [
-  { to: "/agendamento", label: "Início", icon: LayoutDashboard, adminOnly: false },
-  { to: "/agenda", label: "Agenda", icon: Calendar, adminOnly: false },
-  { to: "/negociacoes", label: "Negociações", icon: Handshake, adminOnly: false },
-  { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
-  { to: "/perfil", label: "Perfil", icon: UserCircle2, adminOnly: false },
-  { to: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
-] as const;
 
 export function AppHeader() {
   const { profile, role, signOut } = useAuth();
@@ -68,11 +66,31 @@ export function AppHeader() {
   };
 
   const isAdmin = role === "admin";
-  // Itens admin só aparecem para administradores E quando o modo de
-  // visualização atual é "admin". No modo Representante (mesmo para um
-  // admin), apenas as opções do representante são exibidas.
   const showAdminItems = isAdmin && mode === "admin";
-  const navItems = NAV.filter((n) => !n.adminOnly || showAdminItems);
+
+  // Navegação principal (sem Perfil/Disponibilidade — vão em submenu)
+  const mainNav = [
+    { to: "/agendamento", label: "Início", icon: LayoutDashboard },
+    { to: "/agenda", label: "Agenda", icon: Calendar, badge: pendingCount > 0 ? pendingCount : undefined },
+    { to: "/negociacoes", label: "Negociações", icon: Handshake },
+  ];
+
+  // Mobile nav items (todos flat)
+  const mobileNav = [
+    { to: "/agendamento", label: "Início", icon: LayoutDashboard },
+    { to: "/agenda", label: "Agenda", icon: Calendar },
+    { to: "/negociacoes", label: "Negociações", icon: Handshake },
+    ...(showAdminItems
+      ? [
+          { to: "/admin/usuarios", label: "Usuários", icon: Users },
+          { to: "/perfil", label: "Perfil", icon: UserCircle2 },
+          { to: "/disponibilidade", label: "Disponibilidade", icon: Settings },
+        ]
+      : [
+          { to: "/perfil", label: "Perfil", icon: UserCircle2 },
+          { to: "/disponibilidade", label: "Disponibilidade", icon: Settings },
+        ]),
+  ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -89,11 +107,71 @@ export function AppHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((n) => (
-            <NavLink key={n.to} to={n.to} icon={<n.icon className="h-4 w-4" />} badge={n.to === "/agenda" && pendingCount > 0 ? pendingCount : undefined}>
+          {mainNav.map((n) => (
+            <NavLink key={n.to} to={n.to} icon={<n.icon className="h-4 w-4" />} badge={n.badge}>
               {n.label}
             </NavLink>
           ))}
+
+          {/* Admin: Usuários com submenu Perfil + Disponibilidade */}
+          {showAdminItems && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                  <Users className="h-4 w-4" />
+                  Usuários
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/usuarios" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Gestão de usuários
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/perfil" className="flex items-center gap-2">
+                    <UserCircle2 className="h-4 w-4" />
+                    Meu perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/disponibilidade" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Disponibilidade
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Representante: Perfil com submenu Disponibilidade */}
+          {!showAdminItems && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                  <UserCircle2 className="h-4 w-4" />
+                  Perfil
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link to="/perfil" className="flex items-center gap-2">
+                    <UserCircle2 className="h-4 w-4" />
+                    Meu perfil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/disponibilidade" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Disponibilidade
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -138,7 +216,7 @@ export function AppHeader() {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 flex flex-col gap-1">
-                {navItems.map((n) => (
+                {mobileNav.map((n) => (
                   <Link
                     key={n.to}
                     to={n.to}
