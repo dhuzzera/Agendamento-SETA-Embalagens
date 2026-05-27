@@ -117,6 +117,7 @@ serve(async (req) => {
             to: [recipient.email],
             subject: subject,
             html: html,
+            tags: [{ name: "campaign_id", value: campaignId }],
           }),
         });
 
