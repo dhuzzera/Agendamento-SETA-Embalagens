@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useViewMode } from "@/lib/view-mode";
@@ -76,6 +77,7 @@ export function CrmKanban() {
   const [viewMode] = useViewMode();
   const isAdmin = role === "admin" && viewMode === "admin";
   const queryClient = useQueryClient();
+  const nav = useNavigate();
 
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
@@ -343,7 +345,7 @@ export function CrmKanban() {
                       key={deal.id}
                       draggable
                       onDragStart={(e) => e.dataTransfer.setData("dealId", deal.id)}
-                      onClick={() => setDetailDeal(deal)}
+                      onClick={() => nav({ to: "/crm/deal/$id", params: { id: deal.id } })}
                       className="cursor-pointer rounded-lg border bg-card p-3 shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
                     >
                       <div className="flex items-start justify-between gap-2">
