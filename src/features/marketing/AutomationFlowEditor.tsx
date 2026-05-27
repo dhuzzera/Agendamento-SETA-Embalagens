@@ -248,7 +248,7 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b px-4 py-2">
+      <div className="flex h-[49px] shrink-0 items-center justify-between border-b px-4">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-bold">Editor de Automação</h2>
           {selectedNode && (
@@ -293,7 +293,7 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
         </div>
 
         {/* Canvas */}
-        <div className="flex-1">
+        <div className="flex-1" style={{ height: "calc(100vh - 49px)" }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -304,14 +304,15 @@ export function AutomationFlowEditor({ automationId, initialNodes, initialEdges,
             onPaneClick={() => setSelectedNode(null)}
             nodeTypes={nodeTypes}
             fitView
-            className="bg-muted/10"
+            style={{ background: "var(--color-secondary, #1a1a2e)" }}
           >
-            <Controls />
+            <Controls className="!bg-card !border-border !shadow-md [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground" />
             <MiniMap
               nodeStrokeWidth={3}
-              className="!bg-card !border-border"
+              className="!bg-card !border-border !rounded-lg"
+              maskColor="rgba(0,0,0,0.3)"
             />
-            <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="rgba(100,100,100,0.3)" />
           </ReactFlow>
         </div>
       </div>
