@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
+import { useViewMode } from "@/lib/view-mode";
 import { useTheme } from "@/hooks/use-theme";
 import { SetaLogo } from "@/components/SetaLogo";
 import { Button } from "@/components/ui/button";

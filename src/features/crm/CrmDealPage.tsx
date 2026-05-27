@@ -73,6 +73,32 @@ export function CrmDealPage() {
   const queryClient = useQueryClient();
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [transferOpen, setTransferOpen] = useState(false);
+
+  // Load reps for assignment
+  const { data: allReps } = useQuery({
+    queryKey: ["crm-all-reps"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("id, full_name").order("full_name");
+      return (data ?? []) as { id: string; full_name: string }[];
+    },
+  });
+
+  const changeResponsible = async (newRepId: string) => {
+    const { error } = await supabase.from("deals").update({ representative_id: newRepId }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    const repName = allReps?.find((r) => r.id === newRepId)?.full_name ?? "";
+    await supabase.from("deal_activities").insert({
+      deal_id: id,
+      user_id: profile?.id,
+      type: "stage_change",
+      description: `Responsável alterado para ${repName}`,
+    });
+    toast.success("Responsável atualizado");
+    void refetch();
+    void refetchActivities();
+  };
 
   // Load deal
   const { data: deal, refetch } = useQuery({
@@ -219,6 +245,10 @@ export function CrmDealPage() {
             )}
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setTransferOpen(true)}>
+              <ArrowRight className="mr-1.5 h-4 w-4" />
+              Transferir
+            </Button>
             <Button variant="destructive" size="sm" onClick={markLost}>
               <XCircle className="mr-1.5 h-4 w-4" />
               Marcar perda
@@ -275,9 +305,20 @@ export function CrmDealPage() {
                     </dd>
                   </div>
                 )}
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <dt className="text-muted-foreground">Responsável</dt>
-                  <dd>{deal.rep_name}</dd>
+                  <dd>
+                    <Select value={deal.representative_id} onValueChange={changeResponsible}>
+                      <SelectTrigger className="h-7 w-40 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(allReps ?? []).map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </dd>
                 </div>
                 {deal.lost_reason && (
                   <div className="flex justify-between">
@@ -466,6 +507,15 @@ export function CrmDealPage() {
           onClose={() => { setCreateTaskOpen(false); void refetchActivities(); }}
         />
       )}
+
+      {/* Transfer Dialog */}
+      {transferOpen && (
+        <TransferDealDialog
+          dealId={id}
+          currentPipelineId={deal.pipeline_id}
+          onClose={() => { setTransferOpen(false); void refetch(); void refetchActivities(); }}
+        />
+      )}
     </div>
   );
 }
@@ -542,6 +592,121 @@ function CreateTaskInDealDialog({ dealId, dealTitle, onClose }: { dealId: string
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
           <Button onClick={submit} disabled={busy}>{busy ? "Criando…" : "Salvar"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TransferDealDialog({ dealId, currentPipelineId, onClose }: { dealId: string; currentPipelineId: string | null; onClose: () => void }) {
+  const { profile } = useAuth();
+  const [pipelines, setPipelines] = useState<{ id: string; name: string }[]>([]);
+  const [stages, setStages] = useState<{ id: string; name: string }[]>([]);
+  const [reps, setReps] = useState<{ id: string; full_name: string }[]>([]);
+  const [targetPipeline, setTargetPipeline] = useState("");
+  const [targetStage, setTargetStage] = useState("");
+  const [targetRep, setTargetRep] = useState(profile?.id ?? "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void supabase.from("pipelines").select("id, name").order("position").then(({ data }) => {
+      const list = (data ?? []) as { id: string; name: string }[];
+      setPipelines(list);
+      // Pre-select a different pipeline than current
+      const other = list.find((p) => p.id !== currentPipelineId);
+      if (other) setTargetPipeline(other.id);
+      else if (list.length) setTargetPipeline(list[0].id);
+    });
+    void supabase.from("profiles").select("id, full_name").order("full_name").then(({ data }) => {
+      setReps((data ?? []) as { id: string; full_name: string }[]);
+    });
+  }, [currentPipelineId]);
+
+  useEffect(() => {
+    if (!targetPipeline) return;
+    void supabase
+      .from("deal_stages")
+      .select("id, name")
+      .eq("pipeline_id", targetPipeline)
+      .order("position")
+      .then(({ data }) => {
+        const list = (data ?? []) as { id: string; name: string }[];
+        setStages(list);
+        if (list.length) setTargetStage(list[0].id);
+      });
+  }, [targetPipeline]);
+
+  const submit = async () => {
+    if (!targetPipeline || !targetStage) { toast.error("Selecione funil e estágio"); return; }
+    setBusy(true);
+
+    const { error } = await supabase.from("deals").update({
+      pipeline_id: targetPipeline,
+      stage_id: targetStage,
+      representative_id: targetRep || undefined,
+    }).eq("id", dealId);
+
+    if (error) { toast.error(error.message); setBusy(false); return; }
+
+    const pipelineName = pipelines.find((p) => p.id === targetPipeline)?.name ?? "";
+    const repName = reps.find((r) => r.id === targetRep)?.full_name ?? "";
+
+    await supabase.from("deal_activities").insert({
+      deal_id: dealId,
+      user_id: profile?.id,
+      type: "stage_change",
+      description: `Transferido para funil "${pipelineName}"${repName ? ` — responsável: ${repName}` : ""}`,
+    });
+
+    setBusy(false);
+    toast.success("Negociação transferida!");
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Transferir negociação</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">Funil destino *</Label>
+            <Select value={targetPipeline} onValueChange={setTargetPipeline}>
+              <SelectTrigger><SelectValue placeholder="Selecionar funil" /></SelectTrigger>
+              <SelectContent>
+                {pipelines.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Estágio de entrada *</Label>
+            <Select value={targetStage} onValueChange={setTargetStage}>
+              <SelectTrigger><SelectValue placeholder="Selecionar estágio" /></SelectTrigger>
+              <SelectContent>
+                {stages.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Novo responsável</Label>
+            <Select value={targetRep} onValueChange={setTargetRep}>
+              <SelectTrigger><SelectValue placeholder="Manter atual" /></SelectTrigger>
+              <SelectContent>
+                {reps.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={submit} disabled={busy}>{busy ? "Transferindo…" : "Transferir"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
