@@ -75,10 +75,24 @@ export function MarketingCampaigns() {
 
   const sendCampaign = async (id: string) => {
     if (!confirm("Enviar esta campanha agora? Os e-mails serão disparados imediatamente.")) return;
-    // In production, this would call an Edge Function
-    const { error } = await supabase.from("campaigns").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Campanha marcada como enviada!");
+
+    toast.info("Enviando campanha…");
+
+    const { data, error } = await supabase.functions.invoke("send-campaign", {
+      body: { campaignId: id },
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar: " + error.message);
+      return;
+    }
+
+    const result = data as { sent?: number; total?: number; error?: string };
+    if (result.error) {
+      toast.error(result.error);
+    } else {
+      toast.success(`Campanha enviada! ${result.sent ?? 0} de ${result.total ?? 0} e-mails disparados.`);
+    }
     void refetch();
   };
 
