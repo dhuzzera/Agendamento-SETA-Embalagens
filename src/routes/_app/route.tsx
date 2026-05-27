@@ -53,6 +53,15 @@ function AppLayout() {
   // Marca onboarding como completo quando chega na disponibilidade via setup
   // (removido - agora é feito por botão explícito na disponibilidade)
 
+  // Tela de seleção de sistema: sem header, layout próprio
+  if (location.pathname === "/selecionar") {
+    return (
+      <div className="min-h-screen bg-secondary/40">
+        {profile ? <Outlet /> : <PageHeaderSkeleton />}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary/40">
       <AppHeader />
