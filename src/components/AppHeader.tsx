@@ -13,6 +13,7 @@ import {
   Moon,
   Sun,
   ArrowLeft,
+  Handshake,
 } from "lucide-react";
 import { SetaLogo } from "./SetaLogo";
 import { useAuth } from "@/lib/auth-context";
@@ -33,6 +34,7 @@ import { toast } from "sonner";
 const NAV = [
   { to: "/agendamento", label: "Início", icon: LayoutDashboard, adminOnly: false },
   { to: "/agenda", label: "Agenda", icon: Calendar, adminOnly: false },
+  { to: "/negociacoes", label: "Negociações", icon: Handshake, adminOnly: false },
   { to: "/disponibilidade", label: "Disponibilidade", icon: Settings, adminOnly: false },
   { to: "/perfil", label: "Perfil", icon: UserCircle2, adminOnly: false },
   { to: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
