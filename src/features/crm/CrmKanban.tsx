@@ -82,6 +82,27 @@ export function CrmKanban() {
   const [importOpen, setImportOpen] = useState(false);
   const [repFilter, setRepFilter] = useState("__all__");
   const [dealStatusFilter, setDealStatusFilter] = useState("__all__");
+  const [selectedPipeline, setSelectedPipeline] = useState<string>("");
+
+  // Load pipelines
+  const { data: pipelines } = useQuery({
+    queryKey: ["crm-pipelines"],
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pipelines")
+        .select("id, name, position")
+        .order("position");
+      return (data ?? []) as { id: string; name: string; position: number }[];
+    },
+  });
+
+  // Auto-select first pipeline
+  useEffect(() => {
+    if (pipelines?.length && !selectedPipeline) {
+      setSelectedPipeline(pipelines[0].id);
+    }
+  }, [pipelines, selectedPipeline]);
 
   // Load reps for filter
   const { data: reps } = useQuery({
@@ -94,14 +115,16 @@ export function CrmKanban() {
     },
   });
 
-  // Load stages
+  // Load stages for selected pipeline
   const { data: stages } = useQuery({
-    queryKey: ["crm-stages"],
+    queryKey: ["crm-stages", selectedPipeline],
+    enabled: !!selectedPipeline,
     staleTime: 10 * 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("deal_stages")
         .select("*")
+        .eq("pipeline_id", selectedPipeline)
         .order("position");
       return (data ?? []) as Stage[];
     },
@@ -109,13 +132,14 @@ export function CrmKanban() {
 
   // Load deals
   const { data: deals, refetch: refetchDeals } = useQuery({
-    queryKey: ["crm-deals", profile?.id, isAdmin, repFilter],
-    enabled: !!profile,
+    queryKey: ["crm-deals", profile?.id, isAdmin, repFilter, selectedPipeline],
+    enabled: !!profile && !!selectedPipeline,
     staleTime: 30_000,
     queryFn: async () => {
       let q = supabase
         .from("deals")
         .select("*")
+        .eq("pipeline_id", selectedPipeline)
         .order("updated_at", { ascending: false });
 
       if (!isAdmin) q = q.eq("representative_id", profile!.id);
@@ -240,9 +264,22 @@ export function CrmKanban() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <Label className="text-xs">Funil</Label>
+          <Select value={selectedPipeline} onValueChange={setSelectedPipeline}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Selecionar funil" />
+            </SelectTrigger>
+            <SelectContent>
+              {(pipelines ?? []).map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {isAdmin && (
           <div>
-            <Label className="text-xs">Representante</Label>
+            <Label className="text-xs">Responsável</Label>
             <Select value={repFilter} onValueChange={setRepFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -344,6 +381,7 @@ export function CrmKanban() {
       {newDealOpen && (
         <NewDealDialog
           stages={stages ?? []}
+          pipelineId={selectedPipeline}
           onClose={() => { setNewDealOpen(false); void refetchDeals(); }}
         />
       )}
@@ -367,7 +405,7 @@ export function CrmKanban() {
   );
 }
 
-function NewDealDialog({ stages, onClose }: { stages: Stage[]; onClose: () => void }) {
+function NewDealDialog({ stages, pipelineId, onClose }: { stages: Stage[]; pipelineId: string; onClose: () => void }) {
   const { profile } = useAuth();
   const [title, setTitle] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -414,6 +452,7 @@ function NewDealDialog({ stages, onClose }: { stages: Stage[]; onClose: () => vo
         client_id: clientId,
         representative_id: profile.id,
         stage_id: stageId,
+        pipeline_id: pipelineId || null,
         value: value ? parseFloat(value.replace(/[^\d.,]/g, "").replace(",", ".")) : null,
         notes: notes.trim() || null,
       });

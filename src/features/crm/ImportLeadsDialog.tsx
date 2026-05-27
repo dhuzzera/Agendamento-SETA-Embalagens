@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -45,6 +45,42 @@ export function ImportLeadsDialog({ open, onClose, stages }: Props) {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: number; errors: number } | null>(null);
   const [fileName, setFileName] = useState("");
+
+  // Pipeline and rep selectors
+  const [pipelines, setPipelines] = useState<{ id: string; name: string }[]>([]);
+  const [selectedPipeline, setSelectedPipeline] = useState("");
+  const [pipelineStages, setPipelineStages] = useState<Stage[]>([]);
+  const [reps, setReps] = useState<{ id: string; full_name: string }[]>([]);
+  const [selectedRep, setSelectedRep] = useState(profile?.id ?? "");
+
+  useEffect(() => {
+    if (!open) return;
+    void supabase.from("pipelines").select("id, name").order("position").then(({ data }) => {
+      const list = (data ?? []) as { id: string; name: string }[];
+      setPipelines(list);
+      if (list.length > 0 && !selectedPipeline) setSelectedPipeline(list[0].id);
+    });
+    void supabase.from("profiles").select("id, full_name").order("full_name").then(({ data }) => {
+      setReps((data ?? []) as { id: string; full_name: string }[]);
+    });
+  }, [open]);
+
+  useEffect(() => {
+    if (!selectedPipeline) return;
+    void supabase
+      .from("deal_stages")
+      .select("id, name")
+      .eq("pipeline_id", selectedPipeline)
+      .order("position")
+      .then(({ data }) => {
+        const list = (data ?? []) as Stage[];
+        setPipelineStages(list);
+        if (list.length > 0) setStageId(list[0].id);
+      });
+  }, [selectedPipeline]);
+
+  // Use pipeline stages if available, otherwise fall back to prop stages
+  const activeStages = pipelineStages.length > 0 ? pipelineStages : stages;
 
   const parseCSV = (text: string): ParsedRow[] => {
     let lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -199,8 +235,9 @@ export function ImportLeadsDialog({ open, onClose, stages }: Props) {
         const { error } = await supabase.from("deals").insert({
           title: dealTitle,
           client_id: clientId,
-          representative_id: profile.id,
+          representative_id: selectedRep || profile.id,
           stage_id: stageId,
+          pipeline_id: selectedPipeline || null,
           value: parsedValue && !isNaN(parsedValue) ? parsedValue : null,
         });
 
@@ -300,14 +337,42 @@ export function ImportLeadsDialog({ open, onClose, stages }: Props) {
                   </div>
 
                   <div>
+                    <Label className="text-xs">Funil:</Label>
+                    <Select value={selectedPipeline} onValueChange={setSelectedPipeline}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Selecionar funil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pipelines.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
                     <Label className="text-xs">Importar para o estágio:</Label>
                     <Select value={stageId} onValueChange={setStageId}>
                       <SelectTrigger className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {stages.map((s) => (
+                        {activeStages.map((s) => (
                           <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Responsável:</Label>
+                    <Select value={selectedRep} onValueChange={setSelectedRep}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Selecionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {reps.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.full_name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
