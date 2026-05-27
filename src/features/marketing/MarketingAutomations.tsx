@@ -22,9 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Zap, Trash2 } from "lucide-react";
+import { Plus, Zap, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { ListRowSkeleton } from "@/components/Skeletons";
+import { AutomationFlowEditor } from "./AutomationFlowEditor";
+import type { Node, Edge } from "@xyflow/react";
 
 const TRIGGER_LABELS: Record<string, string> = {
   deal_inactive: "Deal inativo por X dias",
@@ -44,6 +46,8 @@ const ACTION_LABELS: Record<string, string> = {
 export function MarketingAutomations() {
   const { profile } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState<string | null>(null);
+  const [editorData, setEditorData] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null);
 
   const { data: automations, isLoading, refetch } = useQuery({
     queryKey: ["marketing-automations"],
@@ -105,6 +109,14 @@ export function MarketingAutomations() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch checked={a.active} onCheckedChange={() => void toggleActive(a.id, a.active)} />
+                    <Button size="sm" variant="outline" onClick={() => {
+                      const flowData = a.trigger_config as { nodes?: Node[]; edges?: Edge[] } | null;
+                      setEditorData({ nodes: flowData?.nodes ?? [], edges: flowData?.edges ?? [] });
+                      setEditorOpen(a.id);
+                    }}>
+                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                      Editar fluxo
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => void deleteAutomation(a.id)}>
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </Button>
@@ -117,6 +129,23 @@ export function MarketingAutomations() {
       </Card>
 
       {createOpen && <CreateAutomationDialog onClose={() => { setCreateOpen(false); void refetch(); }} />}
+
+      {editorOpen && editorData && (
+        <AutomationFlowEditor
+          automationId={editorOpen}
+          initialNodes={editorData.nodes}
+          initialEdges={editorData.edges}
+          onSave={async (nodes, edges) => {
+            await supabase.from("automations").update({
+              trigger_config: { nodes, edges },
+            }).eq("id", editorOpen);
+            setEditorOpen(null);
+            setEditorData(null);
+            void refetch();
+          }}
+          onClose={() => { setEditorOpen(null); setEditorData(null); }}
+        />
+      )}
     </div>
   );
 }
