@@ -209,7 +209,7 @@ export function AdminDashboard() {
             const mEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
             const { data: appts } = await supabase
               .from("appointments")
-              .select("appointment_date, start_time, end_time, status, meeting_type, representative_id, client_id")
+              .select("appointment_date, start_time, end_time, status, meeting_type, representative_id, client_id, city, state, notes, meeting_result, sale_value")
               .gte("appointment_date", mStart)
               .lte("appointment_date", mEnd)
               .order("appointment_date")
@@ -219,17 +219,27 @@ export function AdminDashboard() {
             const cliIds = [...new Set(appts.map((a) => a.client_id))];
             const [{ data: reps }, { data: clis }] = await Promise.all([
               supabase.from("profiles").select("id, full_name").in("id", repIds),
-              supabase.from("clients").select("id, name").in("id", cliIds),
+              supabase.from("clients").select("id, name, company").in("id", cliIds),
             ]);
             const repMap = new Map(reps?.map((r) => [r.id, r.full_name]) ?? []);
-            const cliMap = new Map(clis?.map((c) => [c.id, c.name]) ?? []);
+            const cliMap = new Map(clis?.map((c) => [c.id, { name: c.name, company: c.company }]) ?? []);
             const statusLabel: Record<string, string> = { scheduled: "Agendado", completed: "Concluído", cancelled: "Cancelado", rescheduled: "Remarcado" };
-            const repCounts = new Map<string, number>();
-            for (const a of appts) { repCounts.set(a.representative_id, (repCounts.get(a.representative_id) ?? 0) + 1); }
-            const topReps = [...repCounts.entries()]
-              .map(([id, total]) => ({ name: repMap.get(id) ?? "—", total }))
+            const resultLabel: Record<string, string> = { venda_fechada: "Venda fechada", em_negociacao: "Em negociação", proposta_reprovada: "Reprovada" };
+
+            // Stats por representante
+            const repStats = new Map<string, { total: number; completed: number; value: number }>();
+            for (const a of appts) {
+              const cur = repStats.get(a.representative_id) ?? { total: 0, completed: 0, value: 0 };
+              cur.total++;
+              if (a.status === "completed") cur.completed++;
+              if (a.sale_value) cur.value += parseFloat(String(a.sale_value).replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+              repStats.set(a.representative_id, cur);
+            }
+            const topReps = [...repStats.entries()]
+              .map(([id, s]) => ({ name: repMap.get(id) ?? "—", total: s.total, completed: s.completed, value: s.value > 0 ? s.value : undefined }))
               .sort((a, b) => b.total - a.total)
-              .slice(0, 5);
+              .slice(0, 10);
+
             generatePdfReport({
               title: "Relatório Mensal — SETA Embalagens",
               period: format(new Date(), "MMMM 'de' yyyy", { locale: ptBR }),
@@ -237,16 +247,23 @@ export function AdminDashboard() {
                 { label: "Total de agendamentos", value: appts.length },
                 { label: "Concluídos", value: appts.filter((a) => a.status === "completed").length },
                 { label: "Cancelados", value: appts.filter((a) => a.status === "cancelled").length },
+                { label: "Pendentes", value: appts.filter((a) => a.status === "scheduled").length },
                 { label: "Representantes ativos", value: repIds.length },
+                { label: "Vendas fechadas", value: appts.filter((a) => a.meeting_result === "venda_fechada").length },
               ],
               topReps,
               appointments: appts.map((a) => ({
                 date: a.appointment_date.split("-").reverse().join("/"),
                 time: a.start_time.slice(0, 5) + " – " + a.end_time.slice(0, 5),
-                client: cliMap.get(a.client_id) ?? "—",
+                client: cliMap.get(a.client_id)?.name ?? "—",
+                company: cliMap.get(a.client_id)?.company ?? undefined,
                 representative: repMap.get(a.representative_id) ?? "—",
                 type: a.meeting_type === "presencial" ? "Presencial" : "Online",
                 status: statusLabel[a.status] ?? a.status,
+                city: a.city ? `${a.city}${a.state ? ` - ${a.state}` : ""}` : undefined,
+                result: a.meeting_result ? resultLabel[a.meeting_result] : undefined,
+                value: a.sale_value ?? undefined,
+                notes: a.notes ?? undefined,
               })),
             });
           }}
