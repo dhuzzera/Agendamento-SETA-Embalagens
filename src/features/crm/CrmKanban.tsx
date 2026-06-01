@@ -36,7 +36,9 @@ import {
   CheckCircle2,
   ArrowRight,
   Upload,
+  Download,
 } from "lucide-react";
+import { format } from "date-fns";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -267,6 +269,40 @@ export function CrmKanban() {
           <p className="text-muted-foreground">Pipeline de oportunidades comerciais.</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => {
+            if (!deals?.length) { toast.info("Nenhum deal para exportar."); return; }
+            const headers = ["Título", "Cliente", "Empresa", "Representante", "Estágio", "Valor", "Criado em"];
+            const stageMap = new Map((stages ?? []).map((s) => [s.id, s.name]));
+            const esc = (v: string | null | undefined) => {
+              const s = (v ?? "").toString().replace(/"/g, '""');
+              return /[",;\n]/.test(s) ? `"${s}"` : s;
+            };
+            const lines = [
+              headers.join(";"),
+              ...deals.map((d) => [
+                d.title,
+                d.client_name ?? "—",
+                d.client_company ?? "—",
+                d.rep_name ?? "—",
+                stageMap.get(d.stage_id) ?? "—",
+                d.value != null ? `R$ ${Number(d.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—",
+                format(new Date(d.created_at), "dd/MM/yyyy"),
+              ].map(esc).join(";"))
+            ];
+            const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `deals_${format(new Date(), "yyyy-MM-dd")}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            toast.success(`${deals.length} deals exportados`);
+          }}>
+            <Download className="mr-1.5 h-4 w-4" />
+            Exportar CSV
+          </Button>
           <Button variant="outline" onClick={() => setImportOpen(true)}>
             <Upload className="mr-1.5 h-4 w-4" />
             Importar CSV

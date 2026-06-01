@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { ListRowSkeleton } from "@/components/Skeletons";
+import { EmailBlockEditor } from "./EmailBlockEditor";
 
 export function MarketingTemplates() {
   const { profile } = useAuth();
@@ -125,15 +126,10 @@ function CreateTemplateDialog({ onClose }: { onClose: () => void }) {
             <div><Label className="text-xs">Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Boas-vindas" /></div>
             <div><Label className="text-xs">Assunto *</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Bem-vindo à SETA!" /></div>
             <div>
-              <Label className="text-xs">Corpo do e-mail (HTML) *</Label>
-              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12} placeholder="<h1>Olá {{nome}}</h1>" />
-              <p className="mt-1 text-xs text-muted-foreground">Variáveis: {"{{nome}}"}, {"{{empresa}}"}, {"{{email}}"}</p>
+              <EmailBlockEditor value={body} onChange={setBody} />
             </div>
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs">Pré-visualização</Label>
-            </div>
+          <div className="hidden">
             <div className="rounded-lg border bg-white p-4 text-sm text-black min-h-[200px] max-h-[400px] overflow-y-auto">
               {body ? (
                 <div dangerouslySetInnerHTML={{ __html: body.replace(/\{\{nome\}\}/gi, "João").replace(/\{\{empresa\}\}/gi, "Empresa X").replace(/\{\{email\}\}/gi, "joao@empresa.com") }} />

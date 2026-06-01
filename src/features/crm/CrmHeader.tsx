@@ -33,10 +33,11 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const CRM_NAV = [
-  { to: "/crm", label: "Negociações", icon: Handshake },
+  { to: "/crm", label: "Início", icon: Handshake },
+  { to: "/crm/negociacoes", label: "Negociações", icon: Handshake },
   { to: "/crm/empresas", label: "Empresas", icon: Building2 },
   { to: "/crm/contatos", label: "Contatos", icon: Users },
   { to: "/crm/tarefas", label: "Tarefas", icon: CheckSquare },

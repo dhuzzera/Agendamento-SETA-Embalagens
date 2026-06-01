@@ -667,6 +667,19 @@ function TransferDealDialog({ dealId, currentPipelineId, onClose }: { dealId: st
       description: `Transferido para funil "${pipelineName}"${repName ? ` — responsável: ${repName}` : ""}`,
     });
 
+    // Notifica o novo responsável via push
+    if (targetRep && targetRep !== profile?.id) {
+      void supabase.functions.invoke("send-push", {
+        body: {
+          userId: targetRep,
+          title: "Nova negociação transferida para você",
+          body: `Um deal foi transferido para o funil "${pipelineName}"`,
+          url: `/crm/deal/${dealId}`,
+          tag: `deal-transfer-${dealId}`,
+        },
+      });
+    }
+
     setBusy(false);
     toast.success("Negociação transferida!");
     onClose();

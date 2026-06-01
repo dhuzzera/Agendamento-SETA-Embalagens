@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { ListRowSkeleton } from "@/components/Skeletons";
+import { EmailBlockEditor } from "./EmailBlockEditor";
 
 type Campaign = {
   id: string;
@@ -272,14 +273,11 @@ function CreateCampaignDialog({ lists, onClose }: { lists: { id: string; name: s
               <p className="mt-1 text-xs text-muted-foreground">Se não selecionar, envia pra todos os contatos.</p>
             </div>
             <div>
-              <Label className="text-xs">Conteúdo do e-mail (HTML) *</Label>
-              <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={8} placeholder="<h1>Olá {{nome}}</h1><p>...</p>" />
-              <p className="mt-1 text-xs text-muted-foreground">Variáveis: {"{{nome}}"}, {"{{empresa}}"}, {"{{email}}"}</p>
+              <EmailBlockEditor value={body} onChange={setBody} />
             </div>
           </div>
-          {/* Preview */}
-          <div>
-            <Label className="text-xs mb-2 block">Pré-visualização</Label>
+          {/* Preview hidden — EmailBlockEditor has its own preview */}
+          <div className="hidden">
             <div className="rounded-lg border bg-white p-3 text-sm text-black min-h-[200px] max-h-[350px] overflow-y-auto">
               {body ? (
                 <div dangerouslySetInnerHTML={{ __html: body.replace(/\{\{nome\}\}/gi, "João").replace(/\{\{empresa\}\}/gi, "Empresa X").replace(/\{\{email\}\}/gi, "joao@empresa.com") }} />

@@ -205,8 +205,13 @@ export function AdminDashboard() {
         <Button
           variant="outline"
           onClick={async () => {
-            const mStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
-            const mEnd = format(endOfMonth(new Date()), "yyyy-MM-dd");
+            // Pede período customizado
+            const startInput = prompt("Data inicial (AAAA-MM-DD):", format(startOfMonth(new Date()), "yyyy-MM-dd"));
+            if (!startInput) return;
+            const endInput = prompt("Data final (AAAA-MM-DD):", format(endOfMonth(new Date()), "yyyy-MM-dd"));
+            if (!endInput) return;
+            const mStart = startInput;
+            const mEnd = endInput;
             const { data: appts } = await supabase
               .from("appointments")
               .select("appointment_date, start_time, end_time, status, meeting_type, representative_id, client_id, city, state, notes, meeting_result, sale_value")
