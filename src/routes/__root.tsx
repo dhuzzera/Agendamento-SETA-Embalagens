@@ -154,6 +154,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
+        <div className="border-t border-border/60 bg-background px-4 py-3 text-center text-xs text-muted-foreground">
+          Desenvolvido por <a href="https://www.instagram.com/emf.digital/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">@emf.digital</a>
+        </div>
         <Toaster richColors position="top-right" />
         <PwaRegister />
       </AuthProvider>
